@@ -13,6 +13,29 @@ type ProjectCardProps = {
   className?: string;
 };
 
+const stackColorClassMap: Record<string, string> = {
+  javascript: 'border-ctp-yellow/40 text-ctp-yellow',
+  typescript: 'border-ctp-blue/40 text-ctp-blue',
+  react: 'border-ctp-sky/40 text-ctp-sky',
+  'node.js': 'border-ctp-green/40 text-ctp-green',
+  nodejs: 'border-ctp-green/40 text-ctp-green',
+  express: 'border-ctp-subtext-1/40 text-ctp-subtext-1',
+  html: 'border-ctp-peach/40 text-ctp-peach',
+  css: ' border-ctp-sapphire/40 text-ctp-sapphire',
+  'tailwind css': 'border-ctp-teal/40 text-ctp-teal',
+  vite: 'border-ctp-lavender/40 text-ctp-lavender',
+  'react leaflet': 'border-ctp-green/40 text-ctp-green',
+};
+
+const getStackBadgeClassName = (stack: string) => {
+  const key = stack.trim().toLowerCase();
+
+  return (
+    stackColorClassMap[key] ??
+    'border-ctp-crust/30 bg-ctp-crust/40 text-ctp-text'
+  );
+};
+
 function ProjectCard({
   title,
   description,
@@ -28,12 +51,19 @@ function ProjectCard({
   return (
     <Card fileName={fileName} className={cn('w-full', className)}>
       <article className="space-y-4">
-        <img
-          src={img}
-          alt={imgAlt}
-          className="h-44 w-full rounded-md border border-ctp-crust/30 object-cover"
-          loading="lazy"
-        />
+        <a
+          href={repoUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="text-ctp-accent hover:underline underline-offset-4"
+        >
+          <img
+            src={img}
+            alt={imgAlt}
+            className="rounded-md border border-ctp-crust/30 object-cover"
+            loading="lazy"
+          />
+        </a>
 
         <div>
           <h3 className="text-lg font-bold text-ctp-text">{title}</h3>
@@ -50,7 +80,10 @@ function ProjectCard({
             {stacks.map((stack) => (
               <li
                 key={stack}
-                className="rounded-md border border-ctp-crust/30 bg-ctp-crust/40 px-2 py-1 text-xs text-ctp-text"
+                className={cn(
+                  'rounded-md border px-2 py-1 text-xs',
+                  getStackBadgeClassName(stack)
+                )}
               >
                 {stack}
               </li>

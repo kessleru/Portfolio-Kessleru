@@ -37,14 +37,14 @@ function Home() {
               aprofundados, o que me permite consolidar conceitos por meio da
               aplicação real e do desenvolvimento de soluções funcionais.
             </p>
-            <div className="mt-4 flex items-center gap-4 text-ctp-subtext-0">
+            <div className="mt-4 flex items-center gap-4 text-accent">
               <p className="text-ctp-accent text-sm">Conecte-se</p>
-              <ArrowRight size={16} />
+              <ArrowRight size={16} color='currentColor'/>
               <a
                 href="https://github.com/kessleru"
                 target="_blank"
                 rel="noreferrer"
-                className="transition-colors hover:text-ctp-accent"
+                className="transition-colors text-ctp-subtext-0 hover:text-ctp-accent"
                 aria-label="GitHub"
               >
                 <SiGithub size={20} />
@@ -54,7 +54,7 @@ function Home() {
                 href="https://www.linkedin.com/in/otavio-ustra-8b50bb364/"
                 target="_blank"
                 rel="noreferrer"
-                className="transition-colors hover:text-ctp-accent"
+                className="transition-colors text-ctp-subtext-0 hover:text-ctp-accent"
                 aria-label="LinkedIn"
               >
                 <SiLinkedin size={20} />
