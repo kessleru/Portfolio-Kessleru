@@ -3,6 +3,9 @@ import SkillsLoop from '@/components/ui/SkillsLoop';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 import CommitHeatmapCard from '@/components/ui/CommitHeatmapCard';
 import Header from '@/components/layout/Header';
+import { SiGithub, SiLinkedin } from 'react-icons/si';
+import { ArrowRight } from 'lucide-react';
+
 
 function Home() {
   return (
@@ -34,6 +37,29 @@ function Home() {
               aprofundados, o que me permite consolidar conceitos por meio da
               aplicação real e do desenvolvimento de soluções funcionais.
             </p>
+            <div className="mt-4 flex items-center gap-4 text-ctp-subtext-0">
+              <p className="text-ctp-accent text-sm">Conecte-se</p>
+              <ArrowRight size={16} />
+              <a
+                href="https://github.com/kessleru"
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors hover:text-ctp-accent"
+                aria-label="GitHub"
+              >
+                <SiGithub size={20} />
+              </a>
+              <span className='text-accent'>/</span>
+              <a
+                href="https://www.linkedin.com/in/otavio-ustra-8b50bb364/"
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors hover:text-ctp-accent"
+                aria-label="LinkedIn"
+              >
+                <SiLinkedin size={20} />
+              </a>
+            </div>
           </div>
         </div>
         <div className='max-lg:mt-8'>
