@@ -1,6 +1,6 @@
 import { type ComponentType, type ReactNode } from 'react';
 import TextType from '@/components/react-bits/text-type/TextType';
-import Card from '@/components/ui/Card';
+import Card from '@/components/ui/Cards/Card';
 
 type ProfileTextTypeProps = {
   as?: string;

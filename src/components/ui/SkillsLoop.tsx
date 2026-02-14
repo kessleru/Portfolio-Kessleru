@@ -14,7 +14,7 @@ import {
   SiTypescript,
   SiTailwindcss,
 } from 'react-icons/si';
-import Card from './Card';
+import Card from './Cards/Card';
 
 type TechLogoItem = { node: ReactNode; title: string; href: string };
 

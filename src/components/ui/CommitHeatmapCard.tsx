@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import Card from '@/components/ui/Card';
+import Card from '@/components/ui/Cards/Card';
 
 type Contribution = {
   date: string;
@@ -17,6 +17,67 @@ type CommitHeatmapCardProps = {
   username?: string;
   className?: string;
 };
+
+type CachedContributions = {
+  data: Contribution[];
+  total: number;
+  fetchedAt: number;
+};
+
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+let contributionsCache: CachedContributions | null = null;
+let inFlightRequest: Promise<CachedContributions> | null = null;
+
+function getValidCachedContributions() {
+  const cached = contributionsCache;
+
+  if (!cached) return null;
+
+  const isExpired = Date.now() - cached.fetchedAt > CACHE_TTL_MS;
+  if (isExpired) {
+    contributionsCache = null;
+    return null;
+  }
+
+  return cached;
+}
+
+async function fetchContributions(
+  username: string
+): Promise<CachedContributions> {
+  const existingRequest = inFlightRequest;
+  if (existingRequest) return existingRequest;
+
+  const request = (async () => {
+    const response = await fetch(
+      `https://github-contributions-api.jogruber.de/v4/${username}?y=last`
+    );
+
+    if (!response.ok) {
+      throw new Error('Não foi possível buscar as contribuições.');
+    }
+
+    const json = (await response.json()) as ContributionsResponse;
+
+    const result = {
+      data: json.contributions ?? [],
+      total: json.total?.lastYear ?? 0,
+      fetchedAt: Date.now(),
+    };
+
+    contributionsCache = result;
+
+    return result;
+  })();
+
+  inFlightRequest = request;
+
+  try {
+    return await request;
+  } finally {
+    inFlightRequest = null;
+  }
+}
 
 function getIntensity(count: number, maxCount: number) {
   if (count <= 0) return 0;
@@ -78,33 +139,41 @@ function CommitHeatmapCard({
   username = 'kessleru',
   className = '',
 }: CommitHeatmapCardProps) {
-  const [data, setData] = useState<Contribution[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const cachedInitial = getValidCachedContributions();
+
+  const [data, setData] = useState<Contribution[]>(
+    () => cachedInitial?.data ?? []
+  );
+  const [total, setTotal] = useState(() => cachedInitial?.total ?? 0);
+  const [loading, setLoading] = useState(() => !cachedInitial);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
+
+    const cached = getValidCachedContributions();
+
+    if (cached) {
+      setData(cached.data);
+      setTotal(cached.total);
+      setError(null);
+      setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
 
     async function load() {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `https://github-contributions-api.jogruber.de/v4/${username}?y=last`
-        );
-
-        if (!response.ok) {
-          throw new Error('Não foi possível buscar as contribuições.');
-        }
-
-        const json = (await response.json()) as ContributionsResponse;
+        const result = await fetchContributions(username);
 
         if (!mounted) return;
 
-        setData(json.contributions ?? []);
-        setTotal(json.total?.lastYear ?? 0);
+        setData(result.data);
+        setTotal(result.total);
       } catch {
         if (!mounted) return;
         setError('Falha ao carregar contribuições do GitHub.');
