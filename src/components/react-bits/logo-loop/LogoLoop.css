@@ -106,7 +106,7 @@
 }
 
 .logoloop__link:hover {
-  color: var(--ctp-green);
+  color: var(--ctp-accent);
 }
 
 .logoloop__link:focus-visible {

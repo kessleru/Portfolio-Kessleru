@@ -69,10 +69,7 @@ const techLogos = [
 
 function SkillsLoop() {
   return (
-    <Card
-      className="text-ctp-subtext-0 max-w-fit"
-      fileName="SkillsLoop.tsx"
-    >
+    <Card className="w-full text-ctp-subtext-0" fileName="Skills.tsx">
       <TypedLogoLoop
         logos={techLogos}
         speed={50}

@@ -63,7 +63,7 @@ function highlightCode(text: string): ReactNode {
 
 function ProfileCard() {
   return (
-    <Card fileName="Perfil.tsx" className="w-full justify-self-start">
+    <Card fileName="Profile.tsx" className="w-full justify-self-start">
       <TypedTextType
         as="pre"
         className="overflow-x-auto text-xs sm:text-[14px] leading-relaxed text-ctp-code"
