@@ -34,7 +34,7 @@ function Header() {
   }, []);
 
   return (
-    <header className="mb-8 flex items-center justify-between rounded-full border-2 border-ctp-crust/20 bg-ctp-mantle px-3 py-2 shadow-md sm:mb-12 sm:px-4 sm:py-2.5 lg:mb-16">
+    <header className="mb-8 flex items-center justify-between rounded-lg border-2 border-ctp-crust/20 bg-ctp-mantle px-3 py-2 shadow-lg sm:mb-12 sm:px-4 sm:py-2.5 lg:mb-16">
       <div className='text-sm sm:text-base tracking-widest relative after:content-[""] after:ml-0.5 after:inline-block after:w-2 after:h-4 after:bg-ctp-accent after:top-1 after:absolute after:cursor-blink *:mr-px'>
         <Link to="/">
           <span className="text-ctp-accent font-medium hover:text-ctp-subtext-0">

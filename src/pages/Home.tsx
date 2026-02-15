@@ -16,7 +16,7 @@ function Home() {
           <div className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl font-bold">
             <span className="text-ctp-accent max-sm:hidden">&gt;</span>
             <h1>
-              Olá! Sou o <span className="text-ctp-accent">Kessleru</span>
+              Olá! Sou o <span className="text-ctp-accent">Kessleru.</span>
             </h1>
           </div>
           <div className="w-full text-balance max-w-[60ch] text-sm sm:text-base text-ctp-subtext-0">
