@@ -12,7 +12,7 @@ function Home() {
     <>
       <Header />
       <section className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
-        <div className="space-y-4">
+        <div className="space-y-6 lg:pb-4">
           <div className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl font-bold">
             <span className="text-ctp-accent max-sm:hidden">&gt;</span>
             <h1>
