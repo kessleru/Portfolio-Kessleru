@@ -74,6 +74,36 @@ const projects = [
     repoUrl: 'https://github.com/kessleru/Todo-List-js',
     liveUrl: 'https://kessleru.github.io/Todo-List-js/',
   },
+  {
+    title: 'Bikcraft Web',
+    description:
+      'E-commerce de bicicletas elétricas com vanilla JS, CSS Grid e arquitetura modular. Mobile-first, acessível e otimizado para performance.',
+    img: githubPreview('Bikcraft-Web'),
+    imgAlt: 'Preview do repositório Bikcraft Web',
+    stacks: ['HTML', 'CSS', 'JavaScript'],
+    repoUrl: 'https://github.com/kessleru/Bikcraft-Web',
+    liveUrl: 'https://kessleru.github.io/Bikcraft-Web/',
+  },
+  {
+    title: 'The Odin Library',
+    description:
+      'Biblioteca de livros com vanilla JS, inspirado no projeto The Odin Project.',
+    img: githubPreview('TheOdin-Library'),
+    imgAlt: 'Preview do repositório The Odin Library',
+    stacks: ['HTML', 'CSS', 'JavaScript'],
+    repoUrl: 'https://github.com/kessleru/TheOdin-Library',
+    liveUrl: 'https://kessleru.github.io/TheOdin-Library/',
+  },
+  {
+    title: 'Wildbeast Web',
+    description:
+      'Site informativo sobre animais selvagens com design moderno. O projeto demonstra boas práticas de desenvolvimento web, design responsivo e interface intuitiva.',
+    img: githubPreview('Wildbeast-Web'),
+    imgAlt: 'Preview do repositório Wildbeast Web',
+    stacks: ['HTML', 'CSS'],
+    repoUrl: 'https://github.com/kessleru/Wildbeast-Web',
+    liveUrl: 'https://kessleru.github.io/Wildbeast-Web/',
+  },
 ];
 
 function Projects() {
