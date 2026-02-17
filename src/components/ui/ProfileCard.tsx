@@ -65,7 +65,7 @@ function highlightCode(text: string): ReactNode {
 
     if (lineMatch) {
       output.push(
-        <span key={`ln-${lineIndex}`} className="mr-4 text-ctp-subtext-0/50">
+        <span key={`ln-${lineIndex}`} className="mr-2 text-ctp-subtext-0/50">
           {lineMatch[1]}
         </span>
       );
