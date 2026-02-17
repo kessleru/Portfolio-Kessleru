@@ -118,7 +118,7 @@ function ProfileCard() {
       <TypedTextType
         as="pre"
         className="overflow-x-auto text-xs sm:text-[14px] leading-relaxed text-ctp-code"
-        text={` 1 const pessoa = {\n 2   nome: 'Otávio Kessler Ustra',\n 3   idade: 20,\n 4   localizacao: 'Ituiutaba, MG - Brasil',\n 5   formacao: {\n 6     curso: 'Ciência da Computação',\n 7     instituicao: 'IFTM Ituiutaba',\n 8     status: 'Em andamento',\n 9   },\n10 };`}
+        text={` 1 const pessoa = {\n 2   nome: 'Otávio Kessler Ustra',\n 3   idade: 20,\n 4   local: 'Ituiutaba, MG - Brasil',\n 5   formacao: {\n 6     curso: 'Ciência da Computação',\n 7     instituicao: 'IFTM Ituiutaba',\n 8     status: 'Em andamento',\n 9   },\n10 };`}
         typingSpeed={20}
         showCursor={false}
         loop={false}
