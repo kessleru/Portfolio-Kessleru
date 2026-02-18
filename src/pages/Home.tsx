@@ -68,8 +68,8 @@ function Home() {
         <div className="mt-8 hidden lg:col-span-2 lg:block">
           <SkillsLoop />
         </div>
-        <ThemeSwitcher className="mt-8 lg:h-full" />
-        <CommitHeatmapCard className="mt-8 mb-8 lg:mb-0 lg:h-full" />
+        <ThemeSwitcher className="mt-8" />
+        <CommitHeatmapCard className="mt-8" />
       </section>
     </>
   );
