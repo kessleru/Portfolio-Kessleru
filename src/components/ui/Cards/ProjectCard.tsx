@@ -1,4 +1,4 @@
-import { Tag } from 'lucide-react';
+import { Link, Tag } from 'lucide-react';
 import Card from '@/components/ui/Cards/Card';
 import { cn } from '@/lib/utils';
 
@@ -65,7 +65,7 @@ function ProjectCard({
           />
         </a>
 
-        <div>
+        <div className='mt-4'>
           <h3 className="text-lg font-bold text-ctp-text">{title}</h3>
           <p className="mt-2 text-sm text-ctp-subtext-0">{description}</p>
         </div>
@@ -92,27 +92,30 @@ function ProjectCard({
         </div>
 
         {(repoUrl || liveUrl) && (
-          <div className="flex items-center gap-4 text-sm">
-            {repoUrl && (
-              <a
-                href={repoUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-ctp-accent hover:underline underline-offset-4"
-              >
-                Repositório
-              </a>
-            )}
-            {liveUrl && (
-              <a
-                href={liveUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-ctp-accent hover:underline underline-offset-4"
-              >
-                Demo
-              </a>
-            )}
+          <div className='flex items-center gap-2'>
+            <Link className="h-4 w-4 text-ctp-accent" aria-hidden="true" />
+            <div className="flex items-center gap-4 text-sm">
+              {repoUrl && (
+                <a
+                  href={repoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-ctp-accent hover:underline underline-offset-4 max-sm:underline"
+                >
+                  Repositório
+                </a>
+              )}
+              {liveUrl && (
+                <a
+                  href={liveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-ctp-accent hover:underline underline-offset-4 max-sm:underline"
+                >
+                  Demo
+                </a>
+              )}
+            </div>
           </div>
         )}
       </article>
