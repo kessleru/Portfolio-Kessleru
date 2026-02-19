@@ -5,12 +5,15 @@ import Projects from './pages/Projects';
 import Training from './pages/Training';
 import Contact from './pages/Contact';
 import NotFound from './pages/404';
+import Footer from './components/layout/Footer';
+import Header from './components/layout/Header';
 
 export default function App() {
   return (
     <ThemeProvider>
       <div className="container py-4 sm:py-6 lg:py-8">
         <BrowserRouter>
+          <Header />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/projects" element={<Projects />} />
@@ -18,6 +21,7 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Footer />
         </BrowserRouter>
       </div>
     </ThemeProvider>

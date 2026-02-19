@@ -1,12 +1,9 @@
-import Header from '@/components/layout/Header';
 import { TriangleAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function NotFound() {
   return (
     <section>
-      <Header />
-
       <div className="flex min-h-[55vh] flex-col items-start justify-center gap-4">
         <p className="flex items-center gap-2 text-sm font-medium text-ctp-accent">
           <TriangleAlert size={16} />

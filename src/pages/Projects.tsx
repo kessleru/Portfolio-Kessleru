@@ -1,4 +1,3 @@
-import Header from '@/components/layout/Header';
 import ProjectCard from '@/components/ui/Cards/ProjectCard';
 
 const githubPreview = (repo: string) =>
@@ -110,7 +109,6 @@ function Projects() {
   return (
     <>
       <section>
-        <Header />
         <div className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl font-bold mb-8">
           <span className="text-ctp-accent max-sm:hidden">&gt;</span>
           <h1>Projetos</h1>
