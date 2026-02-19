@@ -62,7 +62,7 @@ function Home() {
         <div className="max-lg:mt-8">
           <ProfileCard />
         </div>
-        <div className="mt-8 lg:col-span-2 lg:block">
+        <div className="mt-8 lg:col-span-2 lg:block hidden">
           <SkillsLoop />
         </div>
         <ThemeSwitcher className="mt-8" />
