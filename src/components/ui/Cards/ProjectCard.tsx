@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, Tag } from 'lucide-react';
 import Card from '@/components/ui/Cards/Card';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,15 @@ function ProjectCard({
   className,
 }: ProjectCardProps) {
   const fileName = `${title.replace(/\s+/g, '')}.tsx`;
+  const [imageState, setImageState] = useState({
+    src: img,
+    isLoaded: false,
+    hasError: false,
+  });
+
+  const isCurrentImage = imageState.src === img;
+  const isImageLoaded = isCurrentImage && imageState.isLoaded;
+  const hasImageError = isCurrentImage && imageState.hasError;
 
   return (
     <Card fileName={fileName} className={cn('w-full', className)}>
@@ -57,15 +67,39 @@ function ProjectCard({
           rel="noreferrer"
           className="text-ctp-accent hover:underline underline-offset-4"
         >
-          <img
-            src={img}
-            alt={imgAlt}
-            className="rounded-md border border-ctp-crust/30 object-cover"
-            loading="lazy"
-          />
+          <div className="relative overflow-hidden rounded-md border border-ctp-crust/30">
+            {(!isImageLoaded || hasImageError) && (
+              <div
+                className={cn(
+                  'aspect-[16/9] w-full bg-ctp-crust/40',
+                  !hasImageError && 'animate-pulse'
+                )}
+                aria-hidden="true"
+              />
+            )}
+
+            {!hasImageError && (
+              <img
+                src={img}
+                alt={imgAlt}
+                className={cn(
+                  'aspect-[16/9] w-full object-cover transition-opacity duration-300',
+                  isImageLoaded ? 'opacity-100' : 'opacity-0'
+                )}
+                loading="lazy"
+                fetchPriority="low"
+                onLoad={() =>
+                  setImageState({ src: img, isLoaded: true, hasError: false })
+                }
+                onError={() =>
+                  setImageState({ src: img, isLoaded: false, hasError: true })
+                }
+              />
+            )}
+          </div>
         </a>
 
-        <div className='mt-4'>
+        <div className="mt-4">
           <h3 className="text-lg font-bold text-ctp-text">{title}</h3>
           <p className="mt-2 text-sm text-ctp-subtext-0">{description}</p>
         </div>
@@ -92,7 +126,7 @@ function ProjectCard({
         </div>
 
         {(repoUrl || liveUrl) && (
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <Link className="h-4 w-4 text-ctp-accent" aria-hidden="true" />
             <div className="flex items-center gap-4 text-sm">
               {repoUrl && (

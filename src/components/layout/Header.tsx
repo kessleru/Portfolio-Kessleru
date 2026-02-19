@@ -83,6 +83,7 @@ function Header() {
                     key={item.to}
                     to={item.to}
                     className="block text-sm sm:text-base cursor-pointer hover:text-ctp-accent"
+                    onClick={() => setIsOpen(false)}
                   >
                     {item.label}
                   </Link>
