@@ -7,10 +7,12 @@ import Contact from './pages/Contact';
 import NotFound from './pages/404';
 import Footer from './components/layout/Footer';
 import Header from './components/layout/Header';
+import { Analytics } from "@vercel/analytics/react"
 
 export default function App() {
   return (
     <ThemeProvider>
+      <Analytics />
       <div className="container py-4 sm:py-6 lg:py-8">
         <BrowserRouter>
           <Header />
