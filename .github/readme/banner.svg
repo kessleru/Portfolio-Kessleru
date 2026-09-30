@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-label="Portfolio Kessleru — Portfólio com cara de editor de código">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#11111b"/>
+      <stop offset="100%" stop-color="#313244"/>
+    </linearGradient>
+    <filter id="sombra" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000000" flood-opacity=".28"/>
+    </filter>
+    <clipPath id="recorte"><rect width="428" height="252" rx="18"/></clipPath>
+    <clipPath id="moldura"><rect width="1200" height="380" rx="24"/></clipPath>
+  </defs>
+
+  <rect width="1200" height="380" rx="24" fill="url(#bg)"/>
+  <circle cx="1105" cy="60" r="190" fill="#a6e3a1" opacity="0.06"/>
+  <circle cx="110" cy="360" r="150" fill="#a6e3a1" opacity="0.048"/>
+  <g clip-path="url(#moldura)">
+  
+  <g transform="translate(700,30)" filter="url(#sombra)">
+    <rect width="300" height="170" rx="12" fill="#eff1f5" stroke="#9ca0b0" stroke-opacity=".35"/>
+    <path d="M0 12a12 12 0 0 1 12-12h276a12 12 0 0 1 12 12v44H0z" fill="#e6e9ef"/>
+    <circle cx="16" cy="14" r="4" fill="#f38ba8"/><circle cx="30" cy="14" r="4" fill="#f9e2af"/><circle cx="44" cy="14" r="4" fill="#a6e3a1"/>
+    <text x="150" y="18" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="9" fill="#9ca0b0">Portfolio — Latte</text>
+    <text x="14" y="44" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#8839ef">~/início/<tspan fill="#8839ef">▌</tspan></text>
+    <g font-family="ui-monospace,Consolas,monospace" font-size="12">
+      <text x="14" y="80" fill="#8839ef">&gt; <tspan fill="#4c4f69">Olá! Sou o</tspan> Kessleru.</text>
+      <text x="14" y="104" fill="#4c4f69">const <tspan fill="#4c4f69">pessoa</tspan> = {</text>
+      <text x="30" y="122" fill="#4c4f69">tema: <tspan fill="#8839ef">'latte'</tspan>,</text>
+      <text x="14" y="140" fill="#4c4f69">};</text>
+    </g>
+  </g>
+  <g transform="translate(744,74)" filter="url(#sombra)">
+    <rect width="300" height="170" rx="12" fill="#303446" stroke="#737994" stroke-opacity=".35"/>
+    <path d="M0 12a12 12 0 0 1 12-12h276a12 12 0 0 1 12 12v44H0z" fill="#292c3c"/>
+    <circle cx="16" cy="14" r="4" fill="#f38ba8"/><circle cx="30" cy="14" r="4" fill="#f9e2af"/><circle cx="44" cy="14" r="4" fill="#a6e3a1"/>
+    <text x="150" y="18" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="9" fill="#737994">Portfolio — Frappé</text>
+    <text x="14" y="44" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#ef9f76">~/início/<tspan fill="#ef9f76">▌</tspan></text>
+    <g font-family="ui-monospace,Consolas,monospace" font-size="12">
+      <text x="14" y="80" fill="#ef9f76">&gt; <tspan fill="#c6d0f5">Olá! Sou o</tspan> Kessleru.</text>
+      <text x="14" y="104" fill="#c6d0f5">const <tspan fill="#c6d0f5">pessoa</tspan> = {</text>
+      <text x="30" y="122" fill="#c6d0f5">tema: <tspan fill="#ef9f76">'frappé'</tspan>,</text>
+      <text x="14" y="140" fill="#c6d0f5">};</text>
+    </g>
+  </g>
+  <g transform="translate(788,118)" filter="url(#sombra)">
+    <rect width="300" height="170" rx="12" fill="#24273a" stroke="#6e738d" stroke-opacity=".35"/>
+    <path d="M0 12a12 12 0 0 1 12-12h276a12 12 0 0 1 12 12v44H0z" fill="#1e2030"/>
+    <circle cx="16" cy="14" r="4" fill="#f38ba8"/><circle cx="30" cy="14" r="4" fill="#f9e2af"/><circle cx="44" cy="14" r="4" fill="#a6e3a1"/>
+    <text x="150" y="18" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="9" fill="#6e738d">Portfolio — Macchiato</text>
+    <text x="14" y="44" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#8aadf4">~/início/<tspan fill="#8aadf4">▌</tspan></text>
+    <g font-family="ui-monospace,Consolas,monospace" font-size="12">
+      <text x="14" y="80" fill="#8aadf4">&gt; <tspan fill="#cad3f5">Olá! Sou o</tspan> Kessleru.</text>
+      <text x="14" y="104" fill="#cad3f5">const <tspan fill="#cad3f5">pessoa</tspan> = {</text>
+      <text x="30" y="122" fill="#cad3f5">tema: <tspan fill="#8aadf4">'macchiato'</tspan>,</text>
+      <text x="14" y="140" fill="#cad3f5">};</text>
+    </g>
+  </g>
+  <g transform="translate(832,162)" filter="url(#sombra)">
+    <rect width="300" height="170" rx="12" fill="#1e1e2e" stroke="#6c7086" stroke-opacity=".35"/>
+    <path d="M0 12a12 12 0 0 1 12-12h276a12 12 0 0 1 12 12v44H0z" fill="#181825"/>
+    <circle cx="16" cy="14" r="4" fill="#f38ba8"/><circle cx="30" cy="14" r="4" fill="#f9e2af"/><circle cx="44" cy="14" r="4" fill="#a6e3a1"/>
+    <text x="150" y="18" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="9" fill="#6c7086">Portfolio — Mocha</text>
+    <text x="14" y="44" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#a6e3a1">~/início/<tspan fill="#a6e3a1">▌</tspan></text>
+    <g font-family="ui-monospace,Consolas,monospace" font-size="12">
+      <text x="14" y="80" fill="#a6e3a1">&gt; <tspan fill="#cdd6f4">Olá! Sou o</tspan> Kessleru.</text>
+      <text x="14" y="104" fill="#cdd6f4">const <tspan fill="#cdd6f4">pessoa</tspan> = {</text>
+      <text x="30" y="122" fill="#cdd6f4">tema: <tspan fill="#a6e3a1">'mocha'</tspan>,</text>
+      <text x="14" y="140" fill="#cdd6f4">};</text>
+    </g>
+  </g>
+  <g transform="translate(74,330)">
+    <circle cx="0" cy="0" r="7" fill="#f5e0dc"/><circle cx="22" cy="0" r="7" fill="#f2cdcd"/><circle cx="44" cy="0" r="7" fill="#f5c2e7"/><circle cx="66" cy="0" r="7" fill="#cba6f7"/><circle cx="88" cy="0" r="7" fill="#f38ba8"/><circle cx="110" cy="0" r="7" fill="#eba0ac"/><circle cx="132" cy="0" r="7" fill="#fab387"/><circle cx="154" cy="0" r="7" fill="#f9e2af"/><circle cx="176" cy="0" r="7" fill="#a6e3a1"/><circle cx="198" cy="0" r="7" fill="#94e2d5"/><circle cx="220" cy="0" r="7" fill="#89dceb"/><circle cx="242" cy="0" r="7" fill="#74c7ec"/><circle cx="264" cy="0" r="7" fill="#89b4fa"/><circle cx="286" cy="0" r="7" fill="#b4befe"/>
+  </g>
+  </g>
+
+  <text x="72" y="148" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="44" font-weight="800" letter-spacing="-1" fill="#cdd6f4">Portfolio Kessleru</text>
+  <text x="74" y="196" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="24" font-weight="600" fill="#cdd6f4">Portfólio com cara de editor de código</text>
+  <text x="74" y="232" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="17" fill="#a6adc8">React · TypeScript · Vite · Tailwind v4 · shadcn/ui</text>
+
+  <g font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="14" font-weight="600">
+    <rect x="74" y="262" width="103" height="32" rx="16" fill="rgba(166,227,161,.14)"/>
+    <circle cx="94" cy="278" r="4" fill="#a6e3a1"/><text x="106" y="283" fill="#a6e3a1">4 temas</text>
+    <rect x="187" y="262" width="143" height="32" rx="16" fill="rgba(203,166,247,.16)"/>
+    <circle cx="207" cy="278" r="4" fill="#cba6f7"/><text x="219" y="283" fill="#cba6f7">14 destaques</text>
+    <rect x="340" y="262" width="192" height="32" rx="16" fill="rgba(137,180,250,.16)"/>
+    <circle cx="360" cy="278" r="4" fill="#89b4fa"/><text x="372" y="283" fill="#89b4fa">Heatmap de commits</text>
+  </g>
+
+
+</svg>
