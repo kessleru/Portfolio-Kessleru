@@ -73,7 +73,21 @@ No celular o menu vira um botão que abre a navegação e fecha ao escolher uma 
 | ⌨️ **Efeito de digitação** | O `Profile.tsx` é "digitado" na tela (componente `TextType`, do [React Bits](https://reactbits.dev)) |
 | 🔁 **Faixa de skills** | Logos das tecnologias em loop contínuo (`LogoLoop`, também do React Bits) |
 | 🧭 **Rotas reais** | `/`, `/projects`, `/training`, `/contact` e página 404 |
+| 🤖 **Kess, o mascote** | Mascote 3D que cumprimenta no início, fica triste na 404 e concentrado nas páginas em construção. Reage ao mouse e a bolinha segue a cor de destaque do tema |
 | 📈 **Analytics** | [Vercel Analytics](https://vercel.com/analytics) |
+
+## Kess, o mascote
+
+O Kess é um Web Component (`<kess-mascot>`) em `src/lib/kess/kess.js`, usado pelo wrapper React
+`src/components/kess/Kess.tsx`. O código dele (e o Three.js, via CDN) só é baixado quando um Kess aparece na tela.
+
+```tsx
+<Kess mood="triste" size="lg" />                  // emoção e tamanho
+<Kess mood="normal" followAccent />               // bolinha na cor de destaque do Theme.tsx
+```
+
+No início, o `KessGreeter` reage ao visitante: qualquer elemento com `data-kess-mood="animado"`
+(ou outra emoção) muda a expressão no hover/foco, o clique deixa ele feliz e, após 30 s parado, ele dorme.
 
 ## Stack
 

@@ -1,9 +1,12 @@
 import { TriangleAlert } from 'lucide-react';
+import Kess from '@/components/kess/Kess';
 
 function Training() {
   return (
     <section>
       <div className="flex min-h-[55vh] flex-col items-start justify-center gap-3">
+        <Kess mood="concentrado" size="clamp(72px, 9vw, 96px)" label="Kess concentrado: página em construção" />
+
         <p className="flex items-center gap-2 text-sm font-medium text-ctp-accent">
           <TriangleAlert size={16} />
           Aviso
