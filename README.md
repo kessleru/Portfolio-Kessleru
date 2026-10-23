@@ -5,8 +5,8 @@
 **Meu portfólio pessoal, desenhado como uma janela de editor de código: quatro temas Catppuccin, 14 cores de destaque, heatmap de commits e vitrine de projetos.**
 
 [![Demo](https://img.shields.io/badge/demo-ao%20vivo-a6e3a1?style=for-the-badge&logo=vercel&logoColor=black)](https://portfolio-kessleru.vercel.app)
-[![React](https://img.shields.io/github/package-json/dependency-version/kessleru/Portfolio-kessleru/react?style=for-the-badge&logo=react&logoColor=white&color=313244)](package.json)
-[![Último commit](https://img.shields.io/github/last-commit/kessleru/Portfolio-kessleru?style=for-the-badge&color=cba6f7)](https://github.com/kessleru/Portfolio-kessleru/commits/main)
+[![React](https://img.shields.io/github/package-json/dependency-version/kessleru/Portfolio-Kessleru/react?style=for-the-badge&logo=react&logoColor=white&color=313244)](package.json)
+[![Último commit](https://img.shields.io/github/last-commit/kessleru/Portfolio-Kessleru?style=for-the-badge&color=cba6f7)](https://github.com/kessleru/Portfolio-Kessleru/commits/main)
 
 <p><b><a href="https://portfolio-kessleru.vercel.app">→ Abrir o portfólio</a></b></p>
 
@@ -90,8 +90,8 @@ No celular o menu vira um botão que abre a navegação e fecha ao escolher uma 
 ## Rodando localmente
 
 ```bash
-git clone https://github.com/kessleru/Portfolio-kessleru.git
-cd Portfolio-kessleru
+git clone https://github.com/kessleru/Portfolio-Kessleru.git
+cd Portfolio-Kessleru
 pnpm install
 pnpm dev
 ```

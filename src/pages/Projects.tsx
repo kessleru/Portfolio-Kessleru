@@ -8,10 +8,10 @@ const projects = [
     title: 'FinAPI Express',
     description:
       'API financeira com Express para criação de contas, depósitos, saques, extrato e consulta de saldo.',
-    img: githubPreview('FinAPI-express'),
+    img: githubPreview('FinAPI-Express'),
     imgAlt: 'Preview do repositório FinAPI Express',
     stacks: ['Node.js', 'Express', 'JavaScript'],
-    repoUrl: 'https://github.com/kessleru/FinAPI-express',
+    repoUrl: 'https://github.com/kessleru/FinAPI-Express',
   },
   {
     title: 'Sky Atlas',
@@ -67,11 +67,11 @@ const projects = [
     title: 'Todo List JS',
     description:
       'Lista de tarefas minimalista com filtros, persistência em LocalStorage e tema dinâmico por horário.',
-    img: githubPreview('Todo-List-js'),
+    img: githubPreview('Todo-List-JS'),
     imgAlt: 'Preview do repositório Todo List JS',
     stacks: ['HTML', 'CSS', 'JavaScript'],
-    repoUrl: 'https://github.com/kessleru/Todo-List-js',
-    liveUrl: 'https://kessleru.github.io/Todo-List-js/',
+    repoUrl: 'https://github.com/kessleru/Todo-List-JS',
+    liveUrl: 'https://kessleru.github.io/Todo-List-JS/',
   },
   {
     title: 'Bikcraft Web',
