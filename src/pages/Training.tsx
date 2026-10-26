@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import Card from '@/components/ui/Cards/Card';
-import KessGreeter from '@/components/kess/KessGreeter';
+import KessSpot from '@/components/kess/KessSpot';
 import BranchList from '@/components/training/BranchList';
 import CommitDetails from '@/components/training/CommitDetails';
 import Extensions from '@/components/training/Extensions';
@@ -39,7 +39,7 @@ function Training() {
     <section className="space-y-8">
       <div className="space-y-6">
         <div className="flex items-center gap-3 sm:gap-4">
-          <KessGreeter className="-my-2 shrink-0" />
+          <KessSpot className="-my-2" />
           <div className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-2xl">
             <span className="text-ctp-accent max-sm:hidden">&gt;</span>
             <h1>Formação</h1>
@@ -65,11 +65,7 @@ function Training() {
       </Card>
 
       <Card fileName="GitGraph.tsx" className="w-full">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-ctp-crust/60 pb-3 text-xs sm:text-sm">
-          <p className="text-ctp-subtext-0">
-            <span className="text-ctp-accent">$</span> git log --graph{' '}
-            <span className="text-ctp-text">{focus ?? '--all'}</span>
-          </p>
+        <div className="flex justify-end text-xs sm:text-sm">
           <div className="flex items-center gap-4">
             {focus && (
               <button

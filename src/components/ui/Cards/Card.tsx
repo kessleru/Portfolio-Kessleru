@@ -23,7 +23,9 @@ function Card({ children, fileName = 'nome.tsx', className = '' }: CardProps) {
         <span>{fileName}</span>
       </div>
 
-      <div className="h-full rounded-b-lg rounded-tr-lg border-2 border-ctp-crust/20 bg-ctp-mantle p-4 shadow-lg overflow-x-hidden">
+      <div
+        data-kess-perch=""
+        className="h-full rounded-b-lg rounded-tr-lg border-2 border-ctp-crust/20 bg-ctp-mantle p-4 shadow-lg overflow-x-hidden">
         {children}
       </div>
     </div>

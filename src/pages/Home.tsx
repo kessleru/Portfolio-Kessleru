@@ -4,7 +4,7 @@ import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 import CommitHeatmapCard from '@/components/ui/CommitHeatmapCard';
 import { SiGithub, SiLinkedin } from 'react-icons/si';
 import { ArrowRight } from 'lucide-react';
-import KessGreeter from '@/components/kess/KessGreeter';
+import KessSpot from '@/components/kess/KessSpot';
 
 function Home() {
   return (
@@ -12,7 +12,7 @@ function Home() {
       <section className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
         <div className="space-y-6 lg:pb-4">
           <div className="flex items-center gap-3 sm:gap-4">
-            <KessGreeter className="shrink-0 -my-2" />
+            <KessSpot className="-my-2" />
             <div className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl font-bold">
               <span className="text-ctp-accent max-sm:hidden">&gt;</span>
               <h1>
