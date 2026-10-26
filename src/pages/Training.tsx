@@ -65,11 +65,7 @@ function Training() {
       </Card>
 
       <Card fileName="GitGraph.tsx" className="w-full">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-ctp-crust/60 pb-3 text-xs sm:text-sm">
-          <p className="text-ctp-subtext-0">
-            <span className="text-ctp-accent">$</span> git log --graph{' '}
-            <span className="text-ctp-text">{focus ?? '--all'}</span>
-          </p>
+        <div className="flex justify-end text-xs sm:text-sm">
           <div className="flex items-center gap-4">
             {focus && (
               <button

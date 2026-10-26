@@ -106,7 +106,7 @@ function ExtensionCard({
         </span>
 
         <span className="relative min-w-0 flex-1">
-          <span className="line-clamp-2 text-sm leading-5 font-semibold text-ctp-text">
+          <span className="line-clamp-2 min-h-10 text-sm leading-5 font-semibold text-ctp-text">
             {certificate.name}
           </span>
           <span className="mt-0.5 block truncate text-xs text-ctp-subtext-0">

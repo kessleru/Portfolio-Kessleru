@@ -231,7 +231,7 @@ function CommitHeatmapCard({
                       <span
                         key={day.date}
                         title={`${formatDate(day.date)}: ${day.count} commits`}
-                        className="h-3 w-3 rounded-[3px] border border-ctp-overlay-0/30"
+                        className="h-3 w-3 rounded-[3px]"
                         style={
                           intensity === 0
                             ? { backgroundColor: 'var(--ctp-surface-0)' }
@@ -255,7 +255,7 @@ function CommitHeatmapCard({
             {[0, 1, 2, 3, 4].map((intensity) => (
               <span
                 key={intensity}
-                className="h-3 w-3 rounded-[3px] border border-ctp-overlay-0/30"
+                className="h-3 w-3 rounded-[3px]"
                 style={
                   intensity === 0
                     ? { backgroundColor: 'var(--ctp-surface-0)' }
