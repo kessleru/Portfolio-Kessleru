@@ -120,6 +120,11 @@ marcam onde ele pode ficar:
   ninguém mexer, dorme. Acompanha a rolagem com o olhar.
 - **Visitante:** elementos com `data-kess-mood="animado"` (ou outra emoção) mudam a expressão no
   hover/foco, e o clique deixa ele feliz. O switch em `Theme.tsx` esconde o Kess (fica salvo no navegador).
+- **Personalidade:** boca e bochechas em cada emoção (olhos de coração, de estrela e de espiral), emotes
+  (♥, z, !, ?, ♪) e poucas falas curtas e úteis em `src/components/kess/kessLines.ts`: cumprimento pela hora,
+  dica ao abrir uma página, "copiado!", troca de tema, volta para a aba e quem digitar "kess". Clique, vários
+  cliques (tonto) e mouse parado em cima (tímido) mudam a expressão. Qualquer parte do site pode pedir uma
+  reação com `kessEvent({ say, mood, emote })`. No celular ele não aparece.
 - **Acessibilidade e peso:** com "reduzir movimento" ligado, ele só troca de lugar, sem pular. O canvas é
   desenhado no tamanho em que ele aparece e cai para 30 quadros por segundo quando ele está só respirando.
 

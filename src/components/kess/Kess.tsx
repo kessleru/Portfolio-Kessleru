@@ -13,6 +13,8 @@ type KessProps = {
   noFollow?: boolean;
   /** Apoiado em algo da página: sem sombra própria e sem flutuar. */
   grounded?: boolean;
+  /** Cor do contorno fino (CSS ou var(--x)); separa o corpo preto de fundos escuros. */
+  outline?: string;
   label?: string;
   className?: string;
   style?: CSSProperties;
@@ -26,9 +28,12 @@ function loadKess() {
   return loader;
 }
 
-function readAccent() {
+// var(--x) vira a cor de verdade do tema atual (o canvas do Kess não entende variáveis CSS)
+function readVar(value: string) {
+  const name = /^var\(\s*(--[\w-]+)/.exec(value)?.[1];
+  if (!name) return value;
   return getComputedStyle(document.documentElement)
-    .getPropertyValue('--ctp-accent')
+    .getPropertyValue(name)
     .trim();
 }
 
@@ -39,6 +44,7 @@ function Kess({
   noHop = false,
   noFollow = false,
   grounded = false,
+  outline,
   label = 'Kess, mascote do Kessleru',
   className,
   style,
@@ -47,6 +53,7 @@ function Kess({
   const ref = useRef<KessMascotElement>(null);
   const { theme, accent } = useTheme();
   const [accentColor, setAccentColor] = useState<string>();
+  const [outlineColor, setOutlineColor] = useState<string>();
 
   useEffect(() => {
     void loadKess();
@@ -54,10 +61,13 @@ function Kess({
 
   // O ThemeProvider aplica as variáveis CSS no efeito dele; lê a cor no quadro seguinte.
   useEffect(() => {
-    if (!followAccent) return;
-    const id = requestAnimationFrame(() => setAccentColor(readAccent()));
+    if (!followAccent && !outline) return;
+    const id = requestAnimationFrame(() => {
+      if (followAccent) setAccentColor(readVar('var(--ctp-accent)'));
+      if (outline) setOutlineColor(readVar(outline));
+    });
     return () => cancelAnimationFrame(id);
-  }, [followAccent, theme, accent]);
+  }, [followAccent, outline, theme, accent]);
 
   useEffect(() => {
     const el = ref.current;
@@ -75,6 +85,7 @@ function Kess({
       no-hop={noHop ? '' : undefined}
       no-follow={noFollow ? '' : undefined}
       grounded={grounded ? '' : undefined}
+      outline={outline ? outlineColor : undefined}
       aria-label={label}
       className={className}
       style={style}

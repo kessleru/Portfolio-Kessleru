@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Card from '@/components/ui/Cards/Card';
 import { cn } from '@/lib/utils';
+import { kessEvent } from '@/components/kess/kessPreference';
 
 const CODE = [
   'const pessoa = {',
@@ -114,6 +115,7 @@ function ProfileCard() {
         timer = window.setTimeout(step, delayAfter(undefined));
       } else {
         setDone(true);
+        kessEvent({ emote: 'sparkle' });
       }
     }
 

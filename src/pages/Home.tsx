@@ -57,6 +57,7 @@ function Home() {
                 data-kess-mood="animado"
                 className="transition-colors text-ctp-subtext-0 hover:text-ctp-accent"
                 aria-label="GitHub"
+                data-kess-say="os repositórios estão lá"
               >
                 <SiGithub size={20} />
               </a>
@@ -68,6 +69,7 @@ function Home() {
                 data-kess-mood="animado"
                 className="transition-colors text-ctp-subtext-0 hover:text-ctp-accent"
                 aria-label="LinkedIn"
+                data-kess-say="vamos conversar?"
               >
                 <SiLinkedin size={20} />
               </a>

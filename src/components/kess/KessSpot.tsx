@@ -12,7 +12,7 @@ type KessSpotProps = {
 /**
  * Lugar reservado para o Kess numa página. Não desenha nada: o KessCompanion
  * pula até aqui enquanto o espaço está na tela, no tamanho e com a emoção do spot.
- * Com o Kess desligado no Theme.tsx, o espaço some junto.
+ * Com o Kess desligado no Theme.tsx, o espaço some junto; no celular também (CSS .kess-only).
  */
 function KessSpot({
   mood = 'normal',
@@ -30,7 +30,7 @@ function KessSpot({
     <div
       aria-hidden="true"
       data-kess-spot={mood}
-      className={cn('aspect-square shrink-0', className)}
+      className={cn('kess-only aspect-square shrink-0', className)}
       style={{ width: size }}
     />
   );

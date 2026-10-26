@@ -494,6 +494,14 @@ body {
   position: relative;
 }
 
+/* No celular o Kess não aparece: nem o lugar reservado para ele, nem o switch no Theme.tsx.
+   A mesma regra está em kessPreference.ts. */
+@media (max-width: 767px), (pointer: coarse) and (max-height: 520px) {
+  .kess-only {
+    display: none !important;
+  }
+}
+
 .kess-layer {
   position: absolute;
   inset: 0;
@@ -525,4 +533,68 @@ body {
   border-radius: 50%;
   background: var(--ctp-overlay-1);
   pointer-events: none;
+}
+
+/* Emotes (coração, zzz, !, ?…) que saem da cabeça do Kess. */
+.kess-emote {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.35));
+}
+
+.kess-emote svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Balão de fala: mesmo visual dos cards, com uma pontinha virada para o Kess. */
+.kess-bubble {
+  --bubble-border: color-mix(in srgb, var(--ctp-accent) 45%, var(--ctp-surface-1));
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 5px 10px;
+  border: 2px solid var(--bubble-border);
+  border-radius: 10px;
+  background: var(--ctp-mantle);
+  color: var(--ctp-text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.22);
+  transform-origin: 0 100%;
+}
+
+.kess-bubble[data-side='left'] {
+  transform-origin: 100% 100%;
+}
+
+.kess-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 10px;
+  width: 9px;
+  height: 9px;
+  background: var(--ctp-mantle);
+  border-right: 2px solid var(--bubble-border);
+  border-bottom: 2px solid var(--bubble-border);
+  rotate: 45deg;
+}
+
+.kess-bubble[data-side='left']::after {
+  left: auto;
+  right: 10px;
+}
+
+/* foco do teclado no Kess: contorno arredondado, colado nele */
+.kess-body kess-mascot:focus-visible {
+  outline-offset: -10px;
+  border-radius: 40%;
 }

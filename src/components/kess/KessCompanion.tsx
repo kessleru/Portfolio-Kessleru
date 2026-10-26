@@ -6,9 +6,19 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 import type { KessMascotElement } from '@/lib/kess/kess';
 import Kess, { type KessMood } from './Kess';
-import { getKessEnabled, subscribeKess } from './kessPreference';
+import { createBubble, hideBubble, spawnEmote, type Emote } from './kessEmotes';
+import { greeting, lines, pageLines, pick } from './kessLines';
+import {
+  getKessEnabled,
+  KESS_EVENT,
+  kessFitsScreen,
+  subscribeKess,
+  subscribeScreen,
+  type KessEventDetail,
+} from './kessPreference';
 
 // O Kess é renderizado neste tamanho e reduzido com scale: fica nítido e o canvas não muda a cada quadro.
 const BASE = 120;
@@ -17,11 +27,44 @@ const FOOT = 0.86;
 // Gravidade em px/s². É ela que tira a sensação de voo: sobe desacelerando e cai acelerando.
 const GRAVITY = 2600;
 const IDLE_MS = 30_000;
+const YAWN_MS = 1_600;
 // Enquanto a pessoa rola, o Kess fica no lugar dele (e sai da tela junto com o conteúdo);
 // só escolhe outro lugar quando a rolagem para por este tempo. Sem isso, subindo e descendo
 // rápido ele passaria o tempo todo no ar, perseguindo a página.
 const SETTLE_MS = 220;
-const POKE_MS = 2_500;
+// Fala sozinho (sem ninguém mexer nele) no máximo uma vez a cada 45 s.
+const IDLE_LINE_MS = 45_000;
+const HELLO_KEY = 'kess-oi';
+const PERCH = 46;
+
+// Emote que sai quando a emoção começa…
+const MOOD_EMOTE: Partial<Record<KessMood, Emote>> = {
+  surpreso: 'bang',
+  confuso: 'question',
+  curioso: 'question',
+  inspiracao: 'sparkle',
+  animado: 'sparkle',
+  bravo: 'anger',
+  feliz: 'note',
+  triste: 'sweat',
+  apaixonado: 'heart',
+  timido: 'heart',
+};
+// …e os que se repetem enquanto ela dura.
+const MOOD_LOOP: Partial<Record<KessMood, [Emote, number]>> = {
+  sono: ['z', 1400],
+  apaixonado: ['heart', 1100],
+  timido: ['heart', 1500],
+  tonto: ['star', 420],
+  triste: ['sweat', 4200],
+};
+
+type Actions = {
+  emote(kind: Emote): void;
+  say(text: string): void;
+  wave(): void;
+  hop(power?: number): void;
+};
 
 type Ground = {
   el: Element;
@@ -51,7 +94,6 @@ type Flight = {
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
-const perchSize = () => (window.innerWidth < 640 ? 40 : 46);
 
 function measure(el: Element): Ground | null {
   if (!el.isConnected) return null;
@@ -73,7 +115,7 @@ function measure(el: Element): Ground | null {
     };
   }
 
-  const size = perchSize();
+  const size = PERCH;
   if (r.width < size * 3) return null;
   return {
     el,
@@ -100,7 +142,7 @@ function visibleSpot() {
 /** A borda de card mais perto da linha de leitura, com espaço para o Kess caber inteiro. */
 function bestPerch(nearX: number) {
   const vh = window.innerHeight;
-  const size = perchSize();
+  const size = PERCH;
   const line = vh * 0.38;
   let best: Ground | null = null;
   let bestScore = Infinity;
@@ -124,14 +166,23 @@ function bestPerch(nearX: number) {
  * Um Kess só para o site todo, que mora na página como um bichinho de plataforma:
  * fica em pé no lugar dele no topo (KessSpot), na borda de cima dos cards e no rodapé,
  * e se move com gravidade, pulando de um lugar para outro conforme a leitura avança.
- * Parado, passeia, olha em volta e dorme. Quando não há onde pousar, espia da borda da tela.
+ * Parado, passeia gingando, olha em volta, cantarola, fala uma coisinha de vez em quando e dorme.
+ * Reage a clique (e a muitos cliques), carinho com o mouse, troca de tema, texto copiado,
+ * volta para a aba e a quem digitar "kess". Quando não há onde pousar, espia da borda da tela.
  */
 function KessCompanion() {
-  const enabled = useSyncExternalStore(
+  const wanted = useSyncExternalStore(
     subscribeKess,
     getKessEnabled,
     () => true
   );
+  const fits = useSyncExternalStore(
+    subscribeScreen,
+    kessFitsScreen,
+    () => false
+  );
+  const enabled = wanted && fits;
+  const { pathname } = useLocation();
   // Na pré-renderização (build) não há document: o Kess só existe no navegador.
   const [layer] = useState(() => {
     if (typeof document === 'undefined') return null;
@@ -143,10 +194,22 @@ function KessCompanion() {
   const shadowRef = useRef<HTMLDivElement>(null);
   const [baseMood, setBaseMood] = useState<KessMood>('normal');
   const [hoverMood, setHoverMood] = useState<KessMood | null>(null);
-  const [pokeMood, setPokeMood] = useState<KessMood | null>(null);
-  const [sleeping, setSleeping] = useState(false);
-  const sleepingRef = useRef(false);
-  const pokeTimer = useRef<number>(undefined);
+  const [flashMood, setFlashMood] = useState<KessMood | null>(null);
+  const [petting, setPetting] = useState(false);
+  const [sleep, setSleep] = useState<'awake' | 'yawn' | 'sleep'>('awake');
+  const sleepRef = useRef(sleep);
+  const flashTimer = useRef<number>(undefined);
+  const actions = useRef<Actions | null>(null);
+  const pokes = useRef<number[]>([]);
+
+  // Emoção passageira (clique, troca de tema, susto…), por cima de todas as outras.
+  const flash = useCallback((next: KessMood, ms: number) => {
+    setFlashMood(next);
+    window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlashMood(null), ms);
+  }, []);
+
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
 
   useEffect(() => {
     if (!enabled || !layer) return;
@@ -155,10 +218,10 @@ function KessCompanion() {
   }, [enabled, layer]);
 
   useEffect(() => {
-    sleepingRef.current = sleeping;
-  }, [sleeping]);
+    sleepRef.current = sleep;
+  }, [sleep]);
 
-  // posição, pulos e comportamento
+  // posição, pulos, caminhada e comportamento
   useEffect(() => {
     if (!enabled || !layer) return;
     const host = layer;
@@ -173,22 +236,26 @@ function KessCompanion() {
 
     const s = {
       ready: false,
-      mode: 'sit' as 'sit' | 'prep' | 'air' | 'peek',
+      mode: 'sit' as 'sit' | 'prep' | 'air' | 'walk' | 'peek',
       x: 0,
       y: 0,
-      size: perchSize(),
+      size: PERCH,
       rot: 0,
       ground: null as Ground | null,
       flight: null as Flight | null,
       launchAt: 0,
       launch: null as null | (() => void),
       peekSince: 0,
-      wanderTo: null as number | null,
+      walkTo: null as number | null,
+      lastFrame: 0,
       nextIdle: performance.now() + 6000,
       dirty: true,
       lastEval: 0,
       lastScrollY: window.scrollY,
       scrolledAt: 0,
+      bubble: null as null | { el: HTMLElement; timer: number },
+      lastSay: 0,
+      saidFooter: false,
     };
     let settleTimer = 0;
     let raf = 0;
@@ -228,6 +295,16 @@ function KessCompanion() {
       wrap!.style.transform = `translate3d(${s.x - BASE / 2}px, ${s.y - BASE * FOOT}px, 0) rotate(${s.rot}deg) scale(${k})`;
       if (wrap!.dataset.mode !== s.mode) wrap!.dataset.mode = s.mode;
 
+      // O balão acompanha a cabeça; vai para a esquerda quando não cabe à direita.
+      if (s.bubble) {
+        const el = s.bubble.el;
+        const right = s.x < window.scrollX + window.innerWidth - 260;
+        const side = right ? 'right' : 'left';
+        if (el.dataset.side !== side) el.dataset.side = side;
+        const x = s.x + (right ? 1 : -1) * s.size * 0.18;
+        el.style.transform = `translate3d(${x}px, ${s.y - s.size * 0.72}px, 0) translate(${right ? '0' : '-100%'}, -100%)`;
+      }
+
       // A sombra fica no chão, não grudada no Kess: some quando ele sobe e reaparece no pouso.
       const f = s.flight;
       const groundY = f
@@ -247,6 +324,48 @@ function KessCompanion() {
       shadow!.style.width = `${w}px`;
       shadow!.style.height = `${s.size * 0.18}px`;
     }
+
+    // ---------- falas e emotes ----------
+    function say(text: string) {
+      s.lastSay = performance.now();
+      if (s.bubble) {
+        window.clearTimeout(s.bubble.timer);
+        hideBubble(s.bubble.el);
+      }
+      const el = createBubble(host, text, reduce);
+      const timer = window.setTimeout(
+        () => {
+          if (s.bubble?.el !== el) return;
+          hideBubble(el);
+          s.bubble = null;
+        },
+        2200 + text.length * 45
+      );
+      s.bubble = { el, timer };
+      render();
+    }
+
+    const lastEmote = new Map<Emote, number>();
+    function emote(kind: Emote) {
+      const now = performance.now();
+      if (now - (lastEmote.get(kind) ?? 0) < 350) return;
+      lastEmote.set(kind, now);
+      spawnEmote(
+        host,
+        kind,
+        s.x + s.size * 0.28,
+        s.y - s.size * 0.7,
+        s.size,
+        reduce
+      );
+    }
+
+    actions.current = {
+      emote,
+      say,
+      wave: () => kess()?.wave(),
+      hop: (power) => kess()?.hop(power),
+    };
 
     function setGround(ground: Ground) {
       s.ground = ground;
@@ -299,6 +418,29 @@ function KessCompanion() {
         ],
         { duration: 320, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
       );
+    }
+
+    // ---------- caminhada: gingando pela borda do card, sem pular ----------
+    function startWalk(target: number) {
+      const el = kess();
+      s.walkTo = target;
+      s.mode = 'walk';
+      s.lastFrame = performance.now();
+      if (el) {
+        el.walking = true;
+        el.gaze = { x: Math.sign(target - s.x) * 0.9, y: 0.15 };
+      }
+      wake();
+    }
+
+    function stopWalk() {
+      const el = kess();
+      s.walkTo = null;
+      if (el) el.walking = false;
+      if (s.mode === 'walk') s.mode = 'sit';
+      later(() => {
+        if (s.mode === 'sit' && el) el.gaze = null;
+      }, 300);
     }
 
     function startFlight(to: Ground, toX: number, small: boolean, now: number) {
@@ -357,6 +499,7 @@ function KessCompanion() {
 
     // Antecipação: olha para onde vai, agacha e só então pula.
     function jumpTo(to: Ground, toX: number, now: number, small = false) {
+      if (s.mode === 'walk') stopWalk();
       const el = kess();
       const dx = toX - s.x;
       const dy = to.feet - s.y;
@@ -369,6 +512,7 @@ function KessCompanion() {
         wrap!.style.opacity = '0';
         later(() => {
           place(to, toX);
+          s.mode = 'sit';
           render();
           wrap!.style.opacity = '1';
         }, 160);
@@ -411,32 +555,25 @@ function KessCompanion() {
         later(() => {
           if (s.mode === 'sit' && el) el.gaze = null;
         }, 380);
+      } else if (el) {
+        later(() => s.mode === 'sit' && (el.gaze = null), 300);
       }
-      // passeando: emenda o próximo passinho
-      if (s.wanderTo !== null && Math.abs(s.wanderTo - s.x) > 3) {
-        later(() => walkStep(performance.now()), 40);
-      } else {
-        s.wanderTo = null;
-        if (f.step && el)
-          later(() => s.mode === 'sit' && (el.gaze = null), 300);
+      // chegou no fim da página
+      if (fresh.el.tagName === 'FOOTER' && !s.saidFooter) {
+        s.saidFooter = true;
+        later(() => say(pick(lines.footer)), 250);
       }
       s.nextIdle = now + 4000 + Math.random() * 5000;
       s.dirty = true;
     }
 
-    function walkStep(now: number) {
-      if (s.mode !== 'sit' || !s.ground || s.wanderTo === null) return;
-      const dx = s.wanderTo - s.x;
-      if (Math.abs(dx) <= 3) {
-        s.wanderTo = null;
-        return;
-      }
-      const stride = Math.sign(dx) * Math.min(Math.abs(dx), s.size * 0.75);
-      jumpTo(s.ground, s.x + stride, now, true);
-    }
-
     function idle(now: number) {
-      if (reduce || sleepingRef.current || s.mode !== 'sit' || !s.ground)
+      if (
+        reduce ||
+        sleepRef.current !== 'awake' ||
+        s.mode !== 'sit' ||
+        !s.ground
+      )
         return;
       s.nextIdle = now + 5000 + Math.random() * 6000;
       const el = kess();
@@ -444,27 +581,40 @@ function KessCompanion() {
       const roll = Math.random();
       const g = s.ground;
 
-      if (roll < 0.4 && g.kind === 'perch' && g.right - g.left > s.size * 2) {
+      if (roll < 0.14 && now - s.lastSay > IDLE_LINE_MS) {
+        // fala uma coisinha
+        say(pick(lines.idle));
+      } else if (
+        roll < 0.45 &&
+        g.kind === 'perch' &&
+        g.right - g.left > s.size * 2
+      ) {
         // passeia pela borda do card
         let target = g.left + Math.random() * (g.right - g.left);
         if (Math.abs(target - s.x) < s.size * 1.2)
           target = s.x > (g.left + g.right) / 2 ? g.left + s.size : g.right;
-        s.wanderTo = clamp(target, g.left, g.right);
-        walkStep(now);
-      } else if (roll < 0.65) {
+        startWalk(clamp(target, g.left, g.right));
+      } else if (roll < 0.58) {
         // olha em volta
         look(-0.9, -0.1, 700);
         later(() => s.mode === 'sit' && look(0.9, -0.1, 700), 750);
-      } else if (roll < 0.8) {
+      } else if (roll < 0.68) {
         // espia o conteúdo do card
         look(0, 0.8, 1200);
+      } else if (roll < 0.8) {
+        // cantarola
+        flash('feliz', 1700);
+        emote('note');
+        later(() => emote('note'), 600);
+      } else if (roll < 0.9) {
+        el.wave();
       } else {
         el.hop(2.6);
       }
     }
 
     function peekPosition() {
-      s.size = perchSize();
+      s.size = PERCH;
       const rise = clamp((performance.now() - s.peekSince) / 450, 0, 1);
       const ease = 1 - Math.pow(1 - rise, 3);
       s.x = window.scrollX + window.innerWidth - s.size * 0.75;
@@ -499,7 +649,7 @@ function KessCompanion() {
       // Continua onde está enquanto ele mesmo estiver na tela: só pula quando precisa.
       const sy = window.scrollY;
       const vh = window.innerHeight;
-      if (s.mode === 'sit' && s.ground) {
+      if ((s.mode === 'sit' || s.mode === 'walk') && s.ground) {
         const fresh = measure(s.ground.el);
         const visible =
           fresh &&
@@ -513,9 +663,12 @@ function KessCompanion() {
             s.y = fresh.feet;
             s.ground = fresh;
             s.x = clamp(s.x, fresh.left, fresh.right);
+            if (s.walkTo !== null)
+              s.walkTo = clamp(s.walkTo, fresh.left, fresh.right);
           }
           return;
         }
+        if (s.mode === 'walk') stopWalk();
       }
 
       const perch = bestPerch(s.x);
@@ -532,7 +685,6 @@ function KessCompanion() {
       if (s.mode !== 'peek') {
         s.mode = 'peek';
         s.ground = null;
-        s.wanderTo = null;
         s.peekSince = now;
         setBaseMood('curioso');
         const el = kess();
@@ -566,9 +718,19 @@ function KessCompanion() {
             el.crouch = f.step ? 0.04 : clamp(Math.abs(vy) / 3800, 0, 0.16);
           s.rot = f.step ? 0 : clamp(f.vx / 110, -7, 7);
         }
+      } else if (s.mode === 'walk' && s.walkTo !== null) {
+        const dt = Math.min((now - s.lastFrame) / 1000, 0.05);
+        const dir = Math.sign(s.walkTo - s.x);
+        s.x += dir * s.size * 1.4 * dt;
+        if (dir === 0 || (dir > 0 ? s.x >= s.walkTo : s.x <= s.walkTo)) {
+          s.x = s.walkTo;
+          stopWalk();
+          s.nextIdle = now + 4000 + Math.random() * 5000;
+        }
       } else if (s.mode === 'peek') {
         peekPosition();
       }
+      s.lastFrame = now;
 
       if (s.mode === 'sit' && now >= s.nextIdle) idle(now);
 
@@ -599,6 +761,19 @@ function KessCompanion() {
       if (s.mode === 'peek') wake();
     }
 
+    // carinho: o mouse parado em cima dele por um instante
+    let petTimer = 0;
+    const petStart = () => {
+      petTimer = window.setTimeout(() => setPetting(true), 450);
+    };
+    const petEnd = () => {
+      window.clearTimeout(petTimer);
+      setPetting(false);
+    };
+    const kessEl = kess();
+    kessEl?.addEventListener('pointerenter', petStart);
+    kessEl?.addEventListener('pointerleave', petEnd);
+
     const idleTimer = window.setInterval(() => {
       if (s.mode === 'sit' && performance.now() >= s.nextIdle) wake();
     }, 1000);
@@ -618,20 +793,56 @@ function KessCompanion() {
     wake();
 
     return () => {
+      actions.current = null;
       cancelAnimationFrame(raf);
       window.clearInterval(idleTimer);
       window.clearTimeout(settleTimer);
+      window.clearTimeout(petTimer);
       timers.forEach((id) => window.clearTimeout(id));
+      if (s.bubble) {
+        window.clearTimeout(s.bubble.timer);
+        s.bubble.el.remove();
+      }
+      kessEl?.removeEventListener('pointerenter', petStart);
+      kessEl?.removeEventListener('pointerleave', petEnd);
       mutations.disconnect();
       resize.disconnect();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', wake);
     };
-  }, [enabled, layer]);
+  }, [enabled, layer, flash]);
 
-  // expressões vindas de elementos marcados com data-kess-mood
+  // Ao chegar: na primeira página da visita, cumprimenta (pela hora, dia ou data especial);
+  // nas seguintes, às vezes comenta a página. No 404, sempre.
   useEffect(() => {
     if (!enabled) return;
+    const id = window.setTimeout(() => {
+      const a = actions.current;
+      if (!a) return;
+      let first = false;
+      try {
+        first = !sessionStorage.getItem(HELLO_KEY);
+        sessionStorage.setItem(HELLO_KEY, '1');
+      } catch {
+        // sem sessionStorage: não cumprimenta de novo nesta página
+      }
+      if (first) {
+        a.wave();
+        a.say(greeting());
+        flash('feliz', 1800);
+        return;
+      }
+      const lost = document.querySelector('[data-kess-spot="triste"]');
+      const options = lost ? pageLines['404'] : pageLines[pathname];
+      if (options && (lost || Math.random() < 0.6)) a.say(pick(options));
+    }, 1100);
+    return () => window.clearTimeout(id);
+  }, [enabled, pathname, flash]);
+
+  // expressões vindas de elementos marcados com data-kess-mood (e falas de data-kess-say)
+  useEffect(() => {
+    if (!enabled) return;
+    const said = new WeakSet<Element>();
     function moodFrom(target: EventTarget | null) {
       const el =
         target instanceof Element
@@ -639,7 +850,17 @@ function KessCompanion() {
           : null;
       return (el?.dataset.kessMood as KessMood | undefined) ?? null;
     }
-    const enter = (e: Event) => setHoverMood(moodFrom(e.target));
+    const enter = (e: Event) => {
+      setHoverMood(moodFrom(e.target));
+      const sayEl =
+        e.target instanceof Element
+          ? e.target.closest<HTMLElement>('[data-kess-say]')
+          : null;
+      if (sayEl && !said.has(sayEl)) {
+        said.add(sayEl);
+        actions.current?.say(sayEl.dataset.kessSay ?? '');
+      }
+    };
     const leave = (e: Event) => {
       const next = (e as PointerEvent | FocusEvent).relatedTarget;
       setHoverMood(moodFrom(next));
@@ -657,14 +878,25 @@ function KessCompanion() {
     };
   }, [enabled]);
 
-  // dorme quando a página fica parada
+  // boceja e dorme quando a página fica parada; acorda num susto
   useEffect(() => {
     if (!enabled) return;
-    let timer = window.setTimeout(() => setSleeping(true), IDLE_MS);
-    const wake = () => {
-      setSleeping(false);
+    let timer = 0;
+    const doze = () => {
+      setSleep('yawn');
+      timer = window.setTimeout(() => setSleep('sleep'), YAWN_MS);
+    };
+    timer = window.setTimeout(doze, IDLE_MS);
+    const activity = () => {
       window.clearTimeout(timer);
-      timer = window.setTimeout(() => setSleeping(true), IDLE_MS);
+      if (sleepRef.current === 'sleep') {
+        sleepRef.current = 'awake';
+        flash('surpreso', 900);
+        actions.current?.hop(3);
+      }
+      if (sleepRef.current !== 'awake') sleepRef.current = 'awake';
+      setSleep('awake');
+      timer = window.setTimeout(doze, IDLE_MS);
     };
     const events = [
       'pointermove',
@@ -674,26 +906,133 @@ function KessCompanion() {
       'touchstart',
     ] as const;
     events.forEach((ev) =>
-      window.addEventListener(ev, wake, { passive: true })
+      window.addEventListener(ev, activity, { passive: true })
     );
     return () => {
       window.clearTimeout(timer);
-      events.forEach((ev) => window.removeEventListener(ev, wake));
+      events.forEach((ev) => window.removeEventListener(ev, activity));
     };
-  }, [enabled]);
+  }, [enabled, flash]);
 
-  useEffect(() => () => window.clearTimeout(pokeTimer.current), []);
+  // troca de tema ou de cor de destaque (ele gosta: a cor dele muda junto), texto copiado,
+  // volta para a aba, alguém digitando "kess" e pedidos do resto do site
+  useEffect(() => {
+    if (!enabled) return;
+    let hiddenAt = 0;
+    let typed = '';
+    const html = document.documentElement;
+    const readTheme = () => ({
+      theme: html.dataset.theme ?? 'mocha',
+      accent: html.style.getPropertyValue('--ctp-accent'),
+    });
+    let shown = readTheme();
+    const themeWatch = new MutationObserver(() => {
+      const next = readTheme();
+      const prev = shown;
+      shown = next;
+      if (prev.theme === next.theme && prev.accent === next.accent) return;
+      flash('animado', 1400);
+      if (prev.theme !== next.theme) actions.current?.say(pick(lines.theme));
+      else actions.current?.say(pick(lines.accent));
+    });
+    themeWatch.observe(html, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'style'],
+    });
+    const onCopy = () => {
+      flash('feliz', 1400);
+      actions.current?.emote('sparkle');
+      actions.current?.say(pick(lines.copy));
+    };
+    const onVisibility = () => {
+      if (document.hidden) {
+        hiddenAt = Date.now();
+        return;
+      }
+      if (hiddenAt && Date.now() - hiddenAt > 20_000) {
+        flash('animado', 1600);
+        actions.current?.hop(3.2);
+        actions.current?.say(pick(lines.back));
+      }
+      hiddenAt = 0;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.isContentEditable ||
+          /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+      )
+        return;
+      typed = (typed + e.key.toLowerCase()).slice(-4);
+      if (typed !== 'kess') return;
+      typed = '';
+      flash('animado', 1600);
+      actions.current?.wave();
+      actions.current?.hop(3.4);
+      actions.current?.say(pick(lines.called));
+    };
+    const onRequest = (e: Event) => {
+      const detail = (e as CustomEvent<KessEventDetail>).detail;
+      if (detail.mood) flash(detail.mood, detail.ms ?? 1600);
+      if (detail.emote) actions.current?.emote(detail.emote);
+      if (detail.say) actions.current?.say(detail.say);
+    };
+    document.addEventListener('copy', onCopy);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener(KESS_EVENT, onRequest);
+    return () => {
+      themeWatch.disconnect();
+      document.removeEventListener('copy', onCopy);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(KESS_EVENT, onRequest);
+    };
+  }, [enabled, flash]);
 
+  // Clique: feliz; vários seguidos: apaixonado; muitos: fica tonto.
   const handlePoke = useCallback(() => {
-    setPokeMood((prev) => (prev === 'feliz' ? 'apaixonado' : 'feliz'));
-    window.clearTimeout(pokeTimer.current);
-    pokeTimer.current = window.setTimeout(() => setPokeMood(null), POKE_MS);
-  }, []);
-
-  if (!enabled || !layer) return null;
+    const now = performance.now();
+    pokes.current = [...pokes.current.filter((t) => now - t < 1600), now];
+    const count = pokes.current.length;
+    if (count >= 6) {
+      pokes.current = [];
+      flash('tonto', 2600);
+    } else if (count >= 3) {
+      flash('apaixonado', 2200);
+    } else {
+      flash('feliz', 1600);
+    }
+  }, [flash]);
 
   const mood: KessMood =
-    pokeMood ?? hoverMood ?? (sleeping ? 'sono' : baseMood);
+    flashMood ??
+    (petting ? 'timido' : null) ??
+    hoverMood ??
+    (sleep === 'sleep' ? 'sono' : sleep === 'yawn' ? 'bocejo' : baseMood);
+
+  // emotes da emoção: um quando ela começa e, em algumas, outros enquanto dura
+  const lastMoodEmote = useRef(new Map<Emote, number>());
+  useEffect(() => {
+    if (!enabled) return;
+    const once = MOOD_EMOTE[mood];
+    const now = performance.now();
+    if (once && now - (lastMoodEmote.current.get(once) ?? 0) > 1500) {
+      lastMoodEmote.current.set(once, now);
+      actions.current?.emote(once);
+    }
+    const loop = MOOD_LOOP[mood];
+    if (!loop) return;
+    const id = window.setInterval(
+      () => actions.current?.emote(loop[0]),
+      loop[1]
+    );
+    return () => window.clearInterval(id);
+  }, [enabled, mood]);
+
+  if (!enabled || !layer) return null;
 
   return createPortal(
     <>
