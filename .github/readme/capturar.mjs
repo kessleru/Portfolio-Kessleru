@@ -17,9 +17,17 @@ const BASE_PADRAO = 'http://localhost:4173';
 // O tema e a cor de destaque ficam no localStorage; cada captura escolhe um.
 const tema = (flavor, destaque) => ({ 'portfolio-theme': flavor, 'portfolio-accent': destaque });
 
+// Rola até um elemento, deixando `folga` px acima dele.
+const rolarAte = (seletor, folga) =>
+  `scrollTo(0, document.querySelector('${seletor}').getBoundingClientRect().top + scrollY - ${folga})`;
+
 const TELAS = [
   { arquivo: 'home.png', caminho: '/', largura: 1440, altura: 900, espera: 5000, armazenamento: tema('mocha', 'green') },
   { arquivo: 'projetos.png', caminho: '/projects', largura: 1440, altura: 900, espera: 5000, armazenamento: tema('mocha', 'green') },
+  {
+    arquivo: 'formacao.png', caminho: '/training', largura: 1440, altura: 900, espera: 3000, armazenamento: tema('mocha', 'green'),
+    antes: rolarAte('svg[aria-label^="Linha do tempo"]', 100),
+  },
   { arquivo: 'latte.png', caminho: '/', largura: 1440, altura: 900, espera: 5000, armazenamento: tema('latte', 'mauve') },
   { arquivo: 'macchiato.png', caminho: '/', largura: 1440, altura: 900, espera: 5000, armazenamento: tema('macchiato', 'peach') },
   { arquivo: 'mobile.png', caminho: '/', largura: 500, altura: 1000, mobile: true, espera: 5000, armazenamento: tema('mocha', 'green') },

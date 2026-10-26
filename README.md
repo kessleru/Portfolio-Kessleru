@@ -14,8 +14,8 @@
 
 </div>
 
-> **Nota:** o portfólio está em construção — as páginas **Formação** e **Contato** ainda mostram um
-> aviso de "em construção".
+> **Nota:** o portfólio está em construção — a página **Contato** ainda mostra um aviso de
+> "em construção".
 
 ## Sobre
 
@@ -50,6 +50,16 @@ stack e links para o código e a demo.
 
 <img src=".github/readme/projetos.png" alt="Página de projetos com cards de FinAPI Express, Sky Atlas e Dogs Rede Social" width="100%">
 
+### Formação
+
+A formação vira um grafo do git na horizontal: a `main` começa no Ensino Médio e dela saem a
+graduação (`iftm`), o PET (`pet`) e o estágio (`sae`). As linhas se desenham da esquerda para a
+direita quando o grafo entra na tela, e a formatura aparece tracejada como o merge da `iftm` na
+`main`. Logo abaixo, os certificados ficam num painel no estilo das Extensões do VS Code, com filtro
+por competência.
+
+<img src=".github/readme/formacao.png" alt="Página de formação: grafo horizontal com as branches main, iftm, pet e sae e o painel de certificados" width="100%">
+
 ### Celular
 
 <table>
@@ -72,6 +82,8 @@ No celular o menu vira um botão que abre a navegação e fecha ao escolher uma 
 | 🗂️ **Vitrine de projetos** | 10 repositórios com imagem de Open Graph do GitHub, stack e links |
 | ⌨️ **Efeito de digitação** | O `Profile.tsx` é "digitado" na tela (componente `TextType`, do [React Bits](https://reactbits.dev)) |
 | 🔁 **Faixa de skills** | Logos das tecnologias em loop contínuo (`LogoLoop`, também do React Bits) |
+| 🌿 **Formação em grafo** | Linha do tempo desenhada como `git log --graph`, animada com [Motion](https://motion.dev); clicar numa branch destaca o caminho dela e num commit mostra os detalhes |
+| 🧩 **Certificados como extensões** | 20 certificados agrupados por emissor, filtráveis por competência, com o código da credencial para copiar |
 | 🧭 **Rotas reais** | `/`, `/projects`, `/training`, `/contact` e página 404 |
 | 🤖 **Kess, o mascote** | Mascote 3D que cumprimenta no início, fica triste na 404 e concentrado nas páginas em construção. Reage ao mouse e a bolinha segue a cor de destaque do tema |
 | 📈 **Analytics** | [Vercel Analytics](https://vercel.com/analytics) |
@@ -97,7 +109,7 @@ No início, o `KessGreeter` reage ao visitante: qualquer elemento com `data-kess
 | Build | [Vite](https://vite.dev) |
 | Estilo | [Tailwind CSS v4](https://tailwindcss.com), [shadcn/ui](https://ui.shadcn.com) e a paleta [Catppuccin](https://catppuccin.com) |
 | Rotas | [React Router](https://reactrouter.com) |
-| Animação | [GSAP](https://gsap.com) (cursor do `TextType`) |
+| Animação | [GSAP](https://gsap.com) (cursor do `TextType`) e [Motion](https://motion.dev) (página de formação) |
 | Ícones | [Lucide](https://lucide.dev) e [React Icons](https://react-icons.github.io/react-icons/) |
 | Deploy | [Vercel](https://vercel.com) |
 
@@ -130,6 +142,7 @@ src/
 ├── components/
 │   ├── layout/              # Header (janela do editor) e Footer
 │   ├── theme/               # ThemeProvider: sabor + destaque no localStorage
+│   ├── training/            # grafo da formação, painel de certificados e os dados de ambos
 │   ├── ui/                  # ProfileCard, SkillsLoop, CommitHeatmapCard, ThemeSwitcher, Cards…
 │   └── react-bits/          # LogoLoop e TextType
 └── styles/index.css         # tokens do Catppuccin (4 sabores) e @theme do Tailwind
