@@ -30,10 +30,10 @@ function CommitDetails({
             {commit.branch}
           </span>
           {commit.date && (
-            <span className="text-ctp-overlay-1">· {commit.date}</span>
+            <span className="text-ctp-meta tabular-nums">· {commit.date}</span>
           )}
           {commit.planned && (
-            <span className="text-ctp-overlay-1">· previsto</span>
+            <span className="text-ctp-meta">· previsto</span>
           )}
         </p>
         <h3 className="text-sm font-semibold text-ctp-text sm:text-base">

@@ -19,6 +19,10 @@
 
 @utility cursor-blink {
   animation: blink 3s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 @keyframes blink {
@@ -48,6 +52,8 @@
   --color-ctp-subtext-1: var(--ctp-subtext-1);
   --color-ctp-subtext-0: var(--ctp-subtext-0);
   --color-ctp-overlay-2: var(--ctp-overlay-2);
+  /* metadados pequenos (datas, contagens, rótulos): o tom que passa 4,5:1 em cada tema */
+  --color-ctp-meta: var(--ctp-meta);
   --color-ctp-overlay-1: var(--ctp-overlay-1);
   --color-ctp-overlay-0: var(--ctp-overlay-0);
   --color-ctp-surface-2: var(--ctp-surface-2);
@@ -215,8 +221,12 @@
     --ctp-crust: #dce0e8;
   }
 
+  /* Enquanto a JetBrains Mono baixa, o texto (já pré-renderizado) usa outra mono com a mesma
+     largura de caractere (0,6em): a troca de fonte não quebra as linhas de novo nem empurra a página. */
   body {
-    font-family: 'JetBrains Mono';
+    font-family:
+      'JetBrains Mono', Menlo, 'DejaVu Sans Mono', 'Liberation Mono',
+      'Courier New', monospace;
   }
 }
 
@@ -315,6 +325,45 @@
   }
 }
 
+/* Superfícies do navegador também seguem o tema: barra de rolagem/inputs, cursor de texto e foco. */
+:root {
+  color-scheme: dark;
+  caret-color: var(--ctp-accent);
+  --ctp-meta: var(--ctp-overlay-2);
+}
+
+/* No Latte o subtext-0 e o overlay-2 originais ficam abaixo de 4,5:1 nos cards; usamos o tom mais
+   próximo que passa (entre subtext-0 e subtext-1). */
+[data-theme='latte'] {
+  color-scheme: light;
+  --ctp-subtext-0: #5f627a;
+  --ctp-meta: #5f627a;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  a,
+  button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* resposta imediata ao toque/clique */
+  button:not(:disabled):active {
+    scale: 0.97;
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ctp-accent) 80%, transparent);
+    outline-offset: 2px;
+  }
+}
+
 ::selection {
   background-color: color-mix(in srgb, var(--ctp-accent) 45%, transparent);
   color: var(--ctp-text);
@@ -352,4 +401,128 @@
 
 *::-webkit-scrollbar-thumb:hover {
   background: color-mix(in srgb, var(--ctp-accent) 75%, var(--ctp-surface-1));
+}
+
+/* Aba dos cards: com mouse ela fica atrás do card e sobe como uma gaveta no hover/foco.
+   Aparece dezenas de vezes por visita, então é rápida, sem quique, e some mais rápido do que surge. */
+@media (hover: hover) and (pointer: fine) {
+  .card-tab {
+    translate: 0 100%;
+    opacity: 0;
+    transition:
+      translate 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      opacity 120ms ease-out;
+  }
+
+  .card-tab__icon {
+    rotate: -60deg;
+    scale: 0.7;
+    transition:
+      rotate 140ms ease-out,
+      scale 140ms ease-out;
+  }
+
+  .card-tab__name {
+    opacity: 0;
+    filter: blur(2px);
+    transition:
+      opacity 120ms ease-out,
+      filter 120ms ease-out;
+  }
+
+  /* o canto só fica reto enquanto a aba encosta nele */
+  .card-body {
+    transition:
+      border-top-left-radius 120ms ease-out 100ms,
+      border-color 200ms ease;
+  }
+
+  .card-shell:is(:hover, :focus-within) .card-tab {
+    translate: 0 0;
+    opacity: 1;
+    transition:
+      translate 240ms cubic-bezier(0.23, 1, 0.32, 1),
+      opacity 160ms ease-out;
+  }
+
+  .card-shell:is(:hover, :focus-within) .card-tab__icon {
+    rotate: 0deg;
+    scale: 1;
+    transition:
+      rotate 320ms cubic-bezier(0.23, 1, 0.32, 1) 40ms,
+      scale 240ms cubic-bezier(0.23, 1, 0.32, 1) 40ms;
+  }
+
+  .card-shell:is(:hover, :focus-within) .card-tab__name {
+    opacity: 1;
+    filter: blur(0);
+    transition:
+      opacity 200ms ease-out 60ms,
+      filter 200ms ease-out 60ms;
+  }
+
+  .card-shell:is(:hover, :focus-within) .card-body {
+    border-top-left-radius: 0;
+    border-color: color-mix(in srgb, var(--ctp-crust) 45%, transparent);
+    transition:
+      border-top-left-radius 80ms ease-out,
+      border-color 200ms ease;
+  }
+}
+
+/* sem mouse (celular, tablet) a aba fica sempre à mostra */
+@media not ((hover: hover) and (pointer: fine)) {
+  .card-body {
+    border-top-left-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-tab,
+  .card-tab__icon,
+  .card-tab__name {
+    translate: none;
+    rotate: none;
+    scale: none;
+    filter: none;
+  }
+}
+
+/* Camada do Kess: cobre a página inteira (não só a tela), então ele rola junto com o conteúdo.
+   O overflow: clip impede que ele crie rolagem horizontal ou estique a página. */
+body {
+  position: relative;
+}
+
+.kess-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow: clip;
+  pointer-events: none;
+}
+
+.kess-body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  will-change: transform;
+}
+
+.kess-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.45), transparent);
+  opacity: 0;
+}
+
+.kess-dust {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--ctp-overlay-1);
+  pointer-events: none;
 }

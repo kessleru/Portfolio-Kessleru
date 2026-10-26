@@ -201,7 +201,7 @@ function CommitHeatmapCard({
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs sm:text-sm font-semibold">
             {loading
-              ? 'Carregando contribuições...'
+              ? 'Carregando contribuições…'
               : `${total} contribuições no último ano`}
           </p>
           <a
@@ -250,7 +250,7 @@ function CommitHeatmapCard({
         )}
 
         <div className="flex items-center justify-end gap-2 text-xs text-ctp-subtext-0">
-          <span>Less</span>
+          <span>Menos</span>
           <div className="flex items-center gap-1">
             {[0, 1, 2, 3, 4].map((intensity) => (
               <span
@@ -267,7 +267,7 @@ function CommitHeatmapCard({
               />
             ))}
           </div>
-          <span>More</span>
+          <span>Mais</span>
         </div>
       </div>
     </Card>

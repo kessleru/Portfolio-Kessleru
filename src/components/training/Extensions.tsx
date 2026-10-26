@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Check, ChevronDown, Copy, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { certificates, issuers, type Certificate } from './certificates';
@@ -54,6 +54,7 @@ function ExtensionCard({
   onSkill,
 }: ExtensionCardProps) {
   const { icon: Icon, color } = certificate;
+  const reduce = useReducedMotion();
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<number>(undefined);
 
@@ -92,7 +93,7 @@ function ExtensionCard({
         data-kess-mood={certificate.inProgress ? 'concentrado' : 'inspiracao'}
         whileTap={{ scale: 0.99 }}
         className={cn(
-          'group relative flex w-full cursor-pointer items-start gap-3 overflow-hidden rounded-lg border bg-ctp-crust/30 p-3 text-left transition-colors hover:bg-ctp-crust/60',
+          'group relative flex min-h-[6.75rem] w-full cursor-pointer items-start gap-3 overflow-hidden rounded-lg border bg-ctp-crust/30 p-3 text-left transition-colors hover:bg-ctp-crust/60',
           open
             ? 'border-ctp-accent/50'
             : 'border-ctp-crust/40 hover:border-ctp-overlay-0/40'
@@ -105,18 +106,19 @@ function ExtensionCard({
           <Icon size={26} aria-hidden="true" />
         </span>
 
-        <span className="relative min-w-0 flex-1">
-          <span className="line-clamp-2 min-h-10 text-sm leading-5 font-semibold text-ctp-text">
+        {/* mesma altura para todos: o nome ocupa o que precisa e a linha do emissor fica no pé */}
+        <span className="flex min-w-0 flex-1 flex-col self-stretch">
+          <span className="line-clamp-2 text-sm leading-5 font-semibold text-ctp-text">
             {certificate.name}
           </span>
           <span className="mt-0.5 block truncate text-xs text-ctp-subtext-0">
             {certificate.skills.join(' · ')}
           </span>
-          <span className="mt-2 flex items-center justify-between gap-2 text-xs">
+          <span className="mt-auto flex items-center justify-between gap-2 pt-2 text-xs">
             <span className="min-w-0 truncate text-ctp-subtext-1">
               {certificate.issuer}
               {!certificate.inProgress && (
-                <span className="text-ctp-overlay-0">
+                <span className="text-ctp-meta tabular-nums">
                   {' '}
                   · {certificate.date}
                 </span>
@@ -138,9 +140,10 @@ function ExtensionCard({
 
         {certificate.inProgress && (
           <span className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-ctp-crust">
+            {/* barra de "instalando…" que corre sem parar; parada com movimento reduzido */}
             <motion.span
               className="block h-full w-1/3 bg-ctp-yellow"
-              animate={{ x: ['-100%', '300%'] }}
+              animate={reduce ? undefined : { x: ['-100%', '300%'] }}
               transition={{
                 duration: 1.6,
                 repeat: Infinity,
@@ -169,7 +172,7 @@ function ExtensionCard({
                     : `Emitido por ${certificate.issuer} em ${certificate.date}.`}
                 </p>
                 <div>
-                  <p className="mb-2 text-ctp-overlay-1">Competências</p>
+                  <p className="mb-2 text-ctp-meta">Competências</p>
                   <ul className="flex flex-wrap gap-2">
                     {certificate.skills.map((skill) => (
                       <li key={skill}>
@@ -188,9 +191,7 @@ function ExtensionCard({
 
               {certificate.credential && (
                 <div className="text-xs sm:text-right">
-                  <p className="mb-1 text-ctp-overlay-1">
-                    código da credencial
-                  </p>
+                  <p className="mb-1 text-ctp-meta">código da credencial</p>
                   <button
                     type="button"
                     onClick={copyCredential}
@@ -252,15 +253,6 @@ function Extensions() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold tracking-wider text-ctp-subtext-0 uppercase">
-          Extensões
-        </p>
-        <p className="text-xs text-ctp-overlay-1">
-          {total} de {certificates.length}
-        </p>
-      </div>
-
       <motion.ul layout className="flex flex-wrap gap-2">
         <li>
           <button
@@ -281,7 +273,9 @@ function Extensions() {
               className={chipClass(skill === name)}
             >
               {name}
-              <span className="text-[10px] text-ctp-overlay-1">{count}</span>
+              <span className="text-[10px] text-ctp-meta tabular-nums">
+                {count}
+              </span>
             </button>
           </motion.li>
         ))}
@@ -299,6 +293,11 @@ function Extensions() {
           </motion.li>
         )}
       </motion.ul>
+
+      {/* a contagem só aparece quando ajuda: com um filtro ligado */}
+      <p aria-live="polite" className="-mt-1 min-h-4 text-xs text-ctp-meta">
+        {skill && `${total} de ${certificates.length} com ${skill}`}
+      </p>
 
       {visible.map(
         (section) =>

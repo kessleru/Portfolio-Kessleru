@@ -97,7 +97,7 @@ function Training() {
           selected={selected}
           onSelect={setSelected}
         />
-        <p className="mb-3 text-[11px] text-ctp-overlay-1 sm:hidden">
+        <p className="mb-3 text-[11px] text-ctp-meta sm:hidden">
           ← arraste para ver o começo
         </p>
 

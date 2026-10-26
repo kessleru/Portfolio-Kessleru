@@ -36,7 +36,7 @@ function BranchList({ branches, focus, onFocus }: BranchListProps) {
                 <span className="text-ctp-text">{branch.role}</span>
                 <span className="text-ctp-subtext-0"> · {branch.place}</span>
               </span>
-              <span className="col-start-2 text-ctp-overlay-1 sm:col-start-auto sm:text-right">
+              <span className="col-start-2 text-ctp-meta tabular-nums sm:col-start-auto sm:text-right">
                 {branch.period}
               </span>
             </button>

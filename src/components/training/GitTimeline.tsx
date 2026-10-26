@@ -149,7 +149,7 @@ function GitTimeline({
               x={x + 6}
               y={AXIS_Y}
               fontSize={11}
-              fill="var(--ctp-overlay-1)"
+              fill="var(--ctp-meta)"
             >
               {year}
             </text>
@@ -176,7 +176,7 @@ function GitTimeline({
             y={14}
             textAnchor="middle"
             fontSize={11}
-            fill="var(--ctp-overlay-1)"
+            fill="var(--ctp-meta)"
           >
             hoje
           </text>
@@ -370,7 +370,7 @@ function GitTimeline({
                     'transition-colors duration-200',
                     isSelected
                       ? 'fill-ctp-text'
-                      : 'fill-ctp-overlay-2 group-hover:fill-ctp-text'
+                      : 'fill-ctp-meta group-hover:fill-ctp-text'
                   )}
                 >
                   {commit.label}

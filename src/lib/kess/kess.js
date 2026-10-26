@@ -17,12 +17,17 @@
  *   color      cor da bolinha (qualquer cor CSS ou var(--minha-cor)); sem ele, usa a cor da emoção
  *   no-hop     desliga o pulinho ao clicar
  *   no-follow  desliga o olhar seguindo o cursor
+ *   grounded   o Kess está apoiado em algo da página: sem sombra própria e sem flutuar
+ *   pixels     limite de pixels do canvas (ex.: quando ele aparece reduzido por CSS)
  *
  * JavaScript:
  *   const k = document.querySelector('kess-mascot');
  *   k.mood = 'animado';          // troca a expressão (com animação)
  *   k.size = 'lg';               // muda o tamanho
  *   k.hop();                     // faz o Kess pular
+ *   k.gaze = { x: 1, y: 0 };     // olha para uma direção (-1..1); null volta a seguir o cursor
+ *   k.crouch = -.2;              // postura: negativo agacha, positivo estica (-.3..3)
+ *   k.squash(-4);                // impulso na mola do corpo (ex.: impacto ao pousar)
  *   KessMascot.MOODS             // lista de emoções e cores
  *   k.addEventListener('kess-poke', () => { ... })   // disparado quando clicam no Kess
  */
@@ -97,7 +102,7 @@
   var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   class KessMascot extends HTMLElement {
-    static get observedAttributes() { return ['mood', 'size', 'color']; }
+    static get observedAttributes() { return ['mood', 'size', 'color', 'grounded', 'pixels']; }
 
     constructor() {
       super();
@@ -105,6 +110,8 @@
       this._root.innerHTML = '<style>' + STYLE + '</style>';
       this._mood = moodKey(this.getAttribute('mood'));
       this._ready = false;
+      this._gaze = null;
+      this._crouch = 0;
     }
 
     get mood() { return this._mood; }
@@ -127,6 +134,8 @@
 
     attributeChangedCallback(name, oldV, newV) {
       if (name === 'size') { this._applySize(); return; }
+      if (name === 'grounded') return;
+      if (name === 'pixels') { if (this._resize) this._resize(); return; }
       if (name === 'color') { if (this._ready) this._recolor(); else if (this._fb) this._fallback(); return; }
       var m = moodKey(newV);
       if (m === this._mood && this._ready) return;
@@ -136,6 +145,13 @@
     }
 
     hop(power) { if (this._hop) this._hop(power || 3.6); }
+
+    // Controle de fora (ex.: um mascote que anda pela página)
+    get gaze() { return this._gaze; }
+    set gaze(v) { this._gaze = v && isFinite(v.x) && isFinite(v.y) ? { x: Math.max(-1, Math.min(1, v.x)), y: Math.max(-1, Math.min(1, v.y)) } : null; }
+    get crouch() { return this._crouch; }
+    set crouch(v) { this._crouch = Math.max(-.3, Math.min(.3, Number(v) || 0)); }
+    squash(v) { if (this._kick) this._kick(Number(v) || 0); }
 
     // size="120" | "120px" | "5rem" | "20vw" | "clamp(64px, 10vw, 140px)" | xs | sm | md | lg | xl
     _applySize() {
@@ -195,13 +211,13 @@
       squash.position.y = -.78; tiltG.position.y = .78;
       var bodyG = new T.Group(); bodyG.scale.setScalar(.84); tiltG.add(bodyG);
 
-      bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 160, 120)), mat));
+      bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 96, 72)), mat));
 
       // rosto: casca frontal do corpo com projeção plana (o desenho dos olhos não deforma na curva)
-      var FW = 1024, FR = 1.25, faceCv = document.createElement('canvas'); faceCv.width = faceCv.height = FW;
+      var FW = 512, FK = FW / 1024, FR = 1.25, faceCv = document.createElement('canvas'); faceCv.width = faceCv.height = FW;
       var fctx = faceCv.getContext('2d');
       var faceTex = new T.CanvasTexture(faceCv); faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      var faceGeo = deform(new T.SphereGeometry(1, 128, 96, Math.PI / 2 - 1.15, 2.3, .4, 2.3), 1.006);
+      var faceGeo = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), 1.006);
       var fp = faceGeo.attributes.position, fuv = faceGeo.attributes.uv;
       for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR), .5 + fp.getY(i) / (2 * FR));
       fuv.needsUpdate = true;
@@ -234,12 +250,12 @@
       shadow.rotation.x = -Math.PI / 2; shadow.position.y = -.8; scene.add(shadow);
 
       // olhos grandes, baixos e próximos (proporção "bebê")
-      var eyeOpen = 1, look = { x: 0, y: 0 };
+      var eyeOpen = 1, look = { x: 0, y: 0 }, lastFace = '', frameNo = 0;
       function drawFace(d, colCss) {
         fctx.clearRect(0, 0, FW, FW);
         fctx.save();
-        fctx.translate(FW / 2 + look.x * 16, 560 + look.y * 12);   // centro dos olhos, um pouco abaixo do meio do corpo
-        fctx.scale(14, 14);
+        fctx.translate(FW / 2 + look.x * 16 * FK, (560 + look.y * 12) * FK);   // centro dos olhos, um pouco abaixo do meio do corpo
+        fctx.scale(14 * FK, 14 * FK);
         fctx.translate(-63, -50);
         if (d.blush) {
           fctx.save(); fctx.globalAlpha = .85; fctx.fillStyle = colCss;
@@ -269,6 +285,7 @@
         sqV -= 3.2; pending = power;                     // antecipação: amassa antes de pular
       };
       this._recolor = function () { moodTarget.set(self._colorOf(self._mood)); };
+      this._kick = function (v) { if (REDUCE) return; sqV += v; wobV += Math.abs(v) * 2.5; };
       this._onMood = function (m) {
         var d = MOODS[m];
         moodTarget.set(self._colorOf(m));
@@ -304,7 +321,7 @@
           if (pending && sq < -.06) { vy = pending; pending = 0; sqV += 4; }
           if (y > 0 || vy > 0) { vy -= 13 * dt; y += vy * dt; if (y <= 0) { y = 0; sqV -= Math.min(5, Math.abs(vy) * 1.2); vy = 0; wobV += 6; } }
           if (d.hops) { hopTimer -= dt; if (hopTimer <= 0 && y === 0) { self._hop(2.1); hopTimer = .75; } }
-          sqV += (-120 * sq - 9 * sqV) * dt; sq += sqV * dt;
+          sqV += (-120 * (sq - self._crouch) - 9 * sqV) * dt; sq += sqV * dt;
           wobV += (-160 * wob - 7 * wobV) * dt; wob += wobV * dt;
         }
 
@@ -312,9 +329,11 @@
         var air = y > 0 ? Math.min(.12, vy * .03) : 0;
         var s = Math.max(-.3, Math.min(.3, sq + breath - air));
         squash.scale.set(1 - s * .9, 1 + s, 1 - s * .9);
-        kess.position.y = y + (REDUCE ? 0 : Math.sin(tm * 2.4 + 1) * .03);
+        var grounded = self.hasAttribute('grounded');
+        kess.position.y = y + (REDUCE || grounded ? 0 : Math.sin(tm * 2.4 + 1) * .03);
 
-        var tx = ptr.has ? ptr.x : (REDUCE ? 0 : Math.sin(tm * .5) * .25), ty = ptr.has ? ptr.y : 0;
+        var gz = self._gaze;
+        var tx = gz ? gz.x : ptr.has ? ptr.x : (REDUCE ? 0 : Math.sin(tm * .5) * .25), ty = gz ? gz.y : ptr.has ? ptr.y : 0;
         if (d.sleepy) { tx *= .2; ty = .35; }
         if (d.lookUp) { tx = .55; ty = -.6; }
         var k = 1 - Math.pow(.004, dt);
@@ -334,16 +353,24 @@
 
 
         var sh = Math.max(.45, 1 - y * .5);
+        shadow.visible = !grounded;
         shadow.scale.set(sh * (1 - s * .6), sh, 1); shadow.material.opacity = sh;
 
-        drawFace(d, '#' + mood.getHexString());
+        // o rosto só é redesenhado (e reenviado para a GPU) quando muda de verdade
+        var faceKey = self._mood + '|' + mood.getHexString() + '|' + Math.round(look.x * 200) + '|' + Math.round(look.y * 200) + '|' + Math.round(eyeOpen * 40);
+        // parado (só respirando e piscando), 30 quadros por segundo bastam
+        var calm = !pending && y === 0 && Math.abs(sqV) < .2 && Math.abs(wobV) < .2 && faceKey === lastFace;
+        frameNo += 1;
+        if (calm && frameNo % 2) return;
+        if (faceKey !== lastFace) { lastFace = faceKey; drawFace(d, '#' + mood.getHexString()); }
         renderer.render(scene, camera);
       };
 
       // resolução ajustada ao tamanho: nítido quando pequeno (superamostragem) e leve quando grande
       this._resize = function () {
         var w = self.clientWidth || 96;
-        renderer.setPixelRatio(Math.max(1, Math.min((window.devicePixelRatio || 1) * 2, 4, 1600 / w)));
+        var cap = Number(self.getAttribute('pixels')) || Infinity;
+        renderer.setPixelRatio(Math.max(.5, Math.min((window.devicePixelRatio || 1) * 2, 4, 1600 / w, cap / w)));
         renderer.setSize(w, w, false);
       };
       this._ro = window.ResizeObserver ? new ResizeObserver(this._resize) : null;
