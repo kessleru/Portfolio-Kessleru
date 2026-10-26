@@ -39,8 +39,17 @@ const ACCENT_STORAGE_KEY = 'portfolio-accent';
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
+// No build (pré-renderização) não existe localStorage: vale o tema padrão.
+function readStorage(key: string) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 function getStoredTheme(): ThemeName {
-  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const storedTheme = readStorage(THEME_STORAGE_KEY);
 
   if (
     storedTheme === 'latte' ||
@@ -55,7 +64,7 @@ function getStoredTheme(): ThemeName {
 }
 
 function getStoredAccent(): AccentName {
-  const storedAccent = localStorage.getItem(ACCENT_STORAGE_KEY);
+  const storedAccent = readStorage(ACCENT_STORAGE_KEY);
 
   if (storedAccent && PALETTE_COLORS.includes(storedAccent as AccentName)) {
     return storedAccent as AccentName;

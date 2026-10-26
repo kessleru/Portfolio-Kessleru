@@ -69,10 +69,13 @@ function ProjectCard({
         >
           <div className="relative overflow-hidden rounded-md border border-ctp-crust/30">
             {(!isImageLoaded || hasImageError) && (
+              // por cima da imagem (que já reserva o espaço), para o card não encolher quando ela carrega
               <div
                 className={cn(
-                  'aspect-[16/9] w-full bg-ctp-crust/40',
-                  !hasImageError && 'animate-pulse'
+                  'bg-ctp-crust/40',
+                  hasImageError
+                    ? 'aspect-[16/9] w-full'
+                    : 'absolute inset-0 animate-pulse'
                 )}
                 aria-hidden="true"
               />
@@ -82,6 +85,9 @@ function ProjectCard({
               <img
                 src={img}
                 alt={imgAlt}
+                width={1600}
+                height={900}
+                decoding="async"
                 className={cn(
                   'aspect-[16/9] w-full object-cover transition-opacity duration-300',
                   isImageLoaded ? 'opacity-100' : 'opacity-0'

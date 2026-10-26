@@ -1,8 +1,22 @@
 {
-  "rewrites": [
+  "trailingSlash": false,
+  "redirects": [
     {
-      "source": "/((?!.*\\.).*)",
-      "destination": "/index.html"
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.kessleru.com.br" }],
+      "destination": "https://kessleru.com.br/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "portfolio-kessleru.vercel.app" }],
+      "destination": "https://kessleru.com.br/:path*",
+      "permanent": true
     }
+  ],
+  "rewrites": [
+    { "source": "/projects", "destination": "/projects/index.html" },
+    { "source": "/training", "destination": "/training/index.html" },
+    { "source": "/contact", "destination": "/contact/index.html" }
   ]
 }

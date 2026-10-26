@@ -4,11 +4,11 @@
 
 **Meu portfólio pessoal, desenhado como uma janela de editor de código: quatro temas Catppuccin, 14 cores de destaque, heatmap de commits e vitrine de projetos.**
 
-[![Demo](https://img.shields.io/badge/demo-ao%20vivo-a6e3a1?style=for-the-badge&logo=vercel&logoColor=black)](https://portfolio-kessleru.vercel.app)
+[![Demo](https://img.shields.io/badge/demo-ao%20vivo-a6e3a1?style=for-the-badge&logo=vercel&logoColor=black)](https://kessleru.com.br)
 [![React](https://img.shields.io/github/package-json/dependency-version/kessleru/Portfolio-Kessleru/react?style=for-the-badge&logo=react&logoColor=white&color=313244)](package.json)
 [![Último commit](https://img.shields.io/github/last-commit/kessleru/Portfolio-Kessleru?style=for-the-badge&color=cba6f7)](https://github.com/kessleru/Portfolio-Kessleru/commits/main)
 
-<p><b><a href="https://portfolio-kessleru.vercel.app">→ Abrir o portfólio</a></b></p>
+<p><b><a href="https://kessleru.com.br">→ Abrir o portfólio</a></b></p>
 
 <img src=".github/readme/home.png" alt="Página inicial no tema Mocha: janela de editor com caminho ~/início/, apresentação, Profile.tsx, faixa de skills, seletor de tema e heatmap de commits" width="100%">
 
@@ -80,12 +80,14 @@ No celular o menu vira um botão que abre a navegação e fecha ao escolher uma 
 | 🎨 **4 temas × 14 destaques** | Latte, Frappé, Macchiato e Mocha; escolha salva no `localStorage` |
 | 🟩 **Heatmap de commits** | Contribuições do último ano via [github-contributions-api](https://github.com/grubersjoe/github-contributions-api), com cache de 24 horas |
 | 🗂️ **Vitrine de projetos** | 10 repositórios com imagem de Open Graph do GitHub, stack e links |
-| ⌨️ **Efeito de digitação** | O `Profile.tsx` é "digitado" na tela (componente `TextType`, do [React Bits](https://reactbits.dev)) |
+| ⌨️ **Editor digitando** | O `Profile.tsx` se escreve sozinho quando entra na tela, com ritmo humano, linha atual destacada, guias de indentação e colchetes coloridos; o card não muda de tamanho enquanto digita |
 | 🔁 **Faixa de skills** | Logos das tecnologias em loop contínuo (`LogoLoop`, também do React Bits) |
 | 🌿 **Formação em grafo** | Linha do tempo desenhada como `git log --graph`, animada com [Motion](https://motion.dev); clicar numa branch destaca o caminho dela e num commit mostra os detalhes |
 | 🧩 **Certificados como extensões** | 20 certificados agrupados por emissor, filtráveis por competência, com o código da credencial para copiar |
 | 🧭 **Rotas reais** | `/`, `/projects`, `/training`, `/contact` e página 404 |
-| 🤖 **Kess, o mascote** | Mascote 3D que acompanha a rolagem pulando de card em card, fica triste na 404 e concentrado nas páginas em construção. Reage ao mouse e a bolinha segue a cor de destaque do tema |
+| 🤖 **Kess, o mascote** | Mascote 3D que mora na página: anda pela borda dos cards, pula com gravidade conforme a leitura avança, espia da borda da tela e dorme. Dá para esconder no `Theme.tsx` |
+| 🔎 **SEO** | Cada página sai do build já em HTML, com título, descrição, Open Graph e dados estruturados (`ProfilePage`/`Person`), além de `sitemap.xml`, `robots.txt` e 404 de verdade |
+| 🗂️ **Abas no hover** | A aba de arquivo de cada card sobe de trás dele no hover/foco; em telas de toque fica sempre visível |
 | 📈 **Analytics** | [Vercel Analytics](https://vercel.com/analytics) |
 
 ## Kess, o mascote
@@ -98,8 +100,9 @@ O Kess é um Web Component (`<kess-mascot>`) em `src/lib/kess/kess.js`, usado pe
 <Kess mood="normal" followAccent />               // bolinha na cor de destaque do Theme.tsx
 ```
 
-No site existe um Kess só, o `KessCompanion`, que acompanha quem lê. As páginas não desenham o Kess:
-marcam onde ele pode ficar, e ele vai pulando em arco de um lugar para outro conforme a rolagem.
+No site existe um Kess só, o `KessCompanion`, inspirado em mascotes que vivem na interface (Shimeji, VS Code
+Pets): ele mora na página, não na tela, então rola junto com o conteúdo. As páginas não desenham o Kess,
+marcam onde ele pode ficar:
 
 ```tsx
 <KessSpot mood="triste" size="clamp(88px, 11vw, 120px)" />   // o lugar dele no topo da página
@@ -107,11 +110,21 @@ marcam onde ele pode ficar, e ele vai pulando em arco de um lugar para outro con
 <footer data-kess-perch="feliz">…</footer>                   // e com qual emoção
 ```
 
-Com o spot da página na tela, ele fica lá, no tamanho e com a emoção do spot. Fora dele, senta na borda do
-card mais perto da linha de leitura e, entre um lugar e outro, pula animado; parado, assenta com uma molinha.
-Ele também reage ao visitante: qualquer elemento com `data-kess-mood="animado"` (ou outra emoção) muda a
-expressão no hover/foco, o clique deixa ele feliz e, após 30 s parado, ele dorme. Com "reduzir movimento"
-ligado no sistema, ele só troca de lugar, sem pular.
+- **Onde fica:** com o spot da página na tela, fica lá, no tamanho e com a emoção do spot. Fora dele, fica em
+  pé na borda do card mais perto da linha de leitura e só muda de lugar quando o card sai da tela. Sem
+  nenhuma borda à vista (no meio de um card longo), espia da borda de baixo da tela.
+- **Como se move:** pulos balísticos com gravidade (sobe desacelerando, cai acelerando), antecipação
+  (olha para onde vai e agacha), estica no ar, amassa ao pousar, levanta poeira e o card cede um pouco.
+  A sombra fica no chão, não grudada nele. Se ficou para trás, entra caindo pelo topo ou pulando pela base.
+- **Parado:** passeia pela borda do card, olha em volta, espia o conteúdo, dá pulinhos e, após 30 s sem
+  ninguém mexer, dorme. Acompanha a rolagem com o olhar.
+- **Visitante:** elementos com `data-kess-mood="animado"` (ou outra emoção) mudam a expressão no
+  hover/foco, e o clique deixa ele feliz. O switch em `Theme.tsx` esconde o Kess (fica salvo no navegador).
+- **Acessibilidade e peso:** com "reduzir movimento" ligado, ele só troca de lugar, sem pular. O canvas é
+  desenhado no tamanho em que ele aparece e cai para 30 quadros por segundo quando ele está só respirando.
+
+O `kess.js` ganhou para isso o atributo `grounded` (sem sombra própria e sem flutuar), `pixels` (limite de
+resolução) e, em JavaScript, `gaze` (direção do olhar), `crouch` (postura) e `squash()` (impulso no corpo).
 
 ## Stack
 
@@ -121,7 +134,7 @@ ligado no sistema, ele só troca de lugar, sem pular.
 | Build | [Vite](https://vite.dev) |
 | Estilo | [Tailwind CSS v4](https://tailwindcss.com), [shadcn/ui](https://ui.shadcn.com) e a paleta [Catppuccin](https://catppuccin.com) |
 | Rotas | [React Router](https://reactrouter.com) |
-| Animação | [GSAP](https://gsap.com) (cursor do `TextType`) e [Motion](https://motion.dev) (página de formação) |
+| Animação | CSS, Web Animations API e [Motion](https://motion.dev) (página de formação) |
 | Ícones | [Lucide](https://lucide.dev) e [React Icons](https://react-icons.github.io/react-icons/) |
 | Deploy | [Vercel](https://vercel.com) |
 
@@ -141,7 +154,7 @@ O Vite sobe em `http://localhost:5173`. O heatmap e as imagens dos projetos prec
 | Comando | O que faz |
 |---|---|
 | `pnpm dev` | Servidor de desenvolvimento |
-| `pnpm build` | `tsc -b` + build de produção em `dist/` |
+| `pnpm build` | `tsc -b` + build de produção em `dist/` + pré-renderização das páginas (`scripts/prerender.mjs`) |
 | `pnpm preview` | Serve o build em `http://localhost:4173` |
 | `pnpm lint` | ESLint — hoje acusa 1 erro (`react-refresh/only-export-components` em `ThemeProvider.tsx`) |
 
@@ -150,18 +163,36 @@ O Vite sobe em `http://localhost:5173`. O heatmap e as imagens dos projetos prec
 ```
 src/
 ├── App.tsx                  # ThemeProvider + rotas + Header/Footer
+├── main.tsx                 # navegador: BrowserRouter
+├── entry-server.tsx         # build: renderiza cada rota em HTML (StaticRouter)
+├── seo.ts                   # título, descrição, Open Graph e JSON-LD de cada página
 ├── pages/                   # Home, Projects, Training, Contact, 404
 ├── components/
 │   ├── layout/              # Header (janela do editor) e Footer
 │   ├── theme/               # ThemeProvider: sabor + destaque no localStorage
 │   ├── training/            # grafo da formação, painel de certificados e os dados de ambos
 │   ├── ui/                  # ProfileCard, SkillsLoop, CommitHeatmapCard, ThemeSwitcher, Cards…
-│   └── react-bits/          # LogoLoop e TextType
+│   ├── kess/                # Kess, KessCompanion (o que anda pelo site) e KessSpot
+│   ├── seo/                 # RouteMeta: troca os metadados do <head> ao navegar
+│   └── react-bits/          # LogoLoop
 └── styles/index.css         # tokens do Catppuccin (4 sabores) e @theme do Tailwind
 ```
 
-O [`vercel.json`](vercel.json) reescreve toda rota sem extensão para o `index.html`, para que
-recarregar `/projects` não dê 404.
+## SEO
+
+Buscadores, redes sociais e bots de IA nem sempre rodam JavaScript, então o `pnpm build` termina com
+`scripts/prerender.mjs`: ele renderiza cada rota com `src/entry-server.tsx` e grava
+`dist/<rota>/index.html` já com o conteúdo da página e os metadados de [`src/seo.ts`](src/seo.ts)
+(título, descrição, canônica, Open Graph, Twitter Card e JSON-LD de `ProfilePage`/`Person`). No
+navegador, o React troca esse HTML pela versão interativa e o `RouteMeta` atualiza o `<head>` a cada
+navegação.
+
+- `sitemap.xml` é gerado das páginas indexáveis; `robots.txt`, ícones e `og.png` ficam em `public/`.
+- Caminhos inexistentes respondem **404 de verdade** (`404.html`, com `noindex`), e não a página inicial.
+- O [`vercel.json`](vercel.json) redireciona `www.kessleru.com.br` e `portfolio-kessleru.vercel.app`
+  para `kessleru.com.br` (um endereço só para o Google) e tira a barra final das URLs.
+- A página Contato fica com `noindex` enquanto está em construção: troque em `src/seo.ts` quando ficar pronta.
+- Para refazer a imagem de compartilhamento e os ícones: `node scripts/og/gerar.cjs` (instruções no arquivo).
 
 <details>
 <summary><b>Regerando as imagens deste README</b></summary>
