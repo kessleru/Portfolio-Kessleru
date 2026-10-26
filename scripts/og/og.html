@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=block"
+      rel="stylesheet"
+    />
+    <style>
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        width: 1200px;
+        height: 630px;
+        display: grid;
+        place-items: center;
+        background: #11111b;
+        font-family: 'JetBrains Mono', monospace;
+        color: #cdd6f4;
+      }
+      .window {
+        width: 1104px;
+        height: 534px;
+        display: flex;
+        flex-direction: column;
+        border: 2px solid #232334;
+        border-radius: 22px;
+        background: #1e1e2e;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 22px;
+        background: #181825;
+        color: #9399b2;
+        font-size: 17px;
+        letter-spacing: 0.04em;
+      }
+      .dots { display: flex; gap: 10px; width: 80px; }
+      .dots span { width: 14px; height: 14px; border-radius: 50%; }
+      .content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 48px;
+        padding: 0 64px;
+      }
+      .path { color: #a6e3a1; font-size: 24px; font-weight: 500; }
+      .path b { color: #9399b2; font-weight: 400; }
+      h1 { margin-top: 18px; font-size: 62px; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+      .role { margin-top: 18px; font-size: 34px; font-weight: 700; color: #a6e3a1; }
+      .where { margin-top: 12px; font-size: 24px; color: #a6adc8; }
+      .chips { display: flex; gap: 12px; margin-top: 34px; }
+      .chips span {
+        padding: 7px 16px;
+        border: 2px solid;
+        border-radius: 10px;
+        font-size: 20px;
+        font-weight: 500;
+      }
+      .photo {
+        flex: none;
+        width: 288px;
+        height: 288px;
+        border-radius: 50%;
+        padding: 5px;
+        background: #a6e3a1;
+      }
+      .photo img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 6px solid #1e1e2e;
+        object-fit: cover;
+      }
+      .status {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 22px;
+        background: #181825;
+        color: #9399b2;
+        font-size: 17px;
+      }
+      .status .site { color: #a6e3a1; }
+    </style>
+  </head>
+  <body>
+    <div class="window">
+      <div class="bar">
+        <div class="dots">
+          <span style="background: #f38ba8"></span>
+          <span style="background: #f9e2af"></span>
+          <span style="background: #a6e3a1"></span>
+        </div>
+        <span>Portfolio — Visual Studio Code</span>
+        <span style="width: 80px"></span>
+      </div>
+      <div class="content">
+        <div>
+          <p class="path">~/kessleru <b>/</b></p>
+          <h1>Otávio Kessler Ustra</h1>
+          <p class="role">Dev Full Stack Júnior</p>
+          <p class="where">Front-end · Back-end · Ituiutaba, MG</p>
+          <div class="chips">
+            <span style="color: #89dceb; border-color: rgb(137 220 235 / 0.4)">React</span>
+            <span style="color: #89b4fa; border-color: rgb(137 180 250 / 0.4)">TypeScript</span>
+            <span style="color: #a6e3a1; border-color: rgb(166 227 161 / 0.4)">Node.js</span>
+            <span style="color: #bac2de; border-color: rgb(186 194 222 / 0.4)">Express</span>
+          </div>
+        </div>
+        <div class="photo"><img src="avatar.jpg" alt="" /></div>
+      </div>
+      <div class="status">
+        <span class="site">kessleru.com.br</span>
+        <span>TypeScript&nbsp;&nbsp;UTF-8&nbsp;&nbsp;LF</span>
+      </div>
+    </div>
+  </body>
+</html>

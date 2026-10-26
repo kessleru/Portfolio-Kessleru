@@ -22,22 +22,25 @@ function Home() {
           </div>
           <div className="w-full text-balance max-w-[60ch] text-sm sm:text-base text-ctp-subtext-0">
             <p className="mb-2">
-              Sou estudante de Ciência da Computação com foco em desenvolvimento
-              web{' '}
+              Sou Otávio Kessler Ustra, desenvolvedor{' '}
               <span
                 data-kess-mood="curioso"
                 className="border-b-2 border-ctp-accent/80 border-dashed text-ctp-accent/80"
               >
                 Full Stack
               </span>{' '}
-              utilizando o ecossistema{' '}
+              júnior em Ituiutaba, MG, e estudante de Ciência da Computação no
+              IFTM. Trabalho no{' '}
+              <span className="whitespace-nowrap">front-end</span> e no{' '}
+              <span className="whitespace-nowrap">back-end</span> com o
+              ecossistema{' '}
               <span
                 data-kess-mood="curioso"
                 className="border-b-2 border-ctp-accent/80 border-dashed text-ctp-accent/80"
               >
                 JavaScript
               </span>
-              .
+              : React e TypeScript nas interfaces, Node.js e Express nas APIs.
             </p>
             <p>
               Meu aprendizado é orientado a projetos práticos e cursos
@@ -50,7 +53,7 @@ function Home() {
               <a
                 href="https://github.com/kessleru"
                 target="_blank"
-                rel="noreferrer"
+                rel="me noreferrer"
                 data-kess-mood="animado"
                 className="transition-colors text-ctp-subtext-0 hover:text-ctp-accent"
                 aria-label="GitHub"
@@ -61,7 +64,7 @@ function Home() {
               <a
                 href="https://www.linkedin.com/in/otavio-ustra-8b50bb364/"
                 target="_blank"
-                rel="noreferrer"
+                rel="me noreferrer"
                 data-kess-mood="animado"
                 className="transition-colors text-ctp-subtext-0 hover:text-ctp-accent"
                 aria-label="LinkedIn"

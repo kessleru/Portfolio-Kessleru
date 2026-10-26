@@ -11,6 +11,8 @@ type KessProps = {
   followAccent?: boolean;
   noHop?: boolean;
   noFollow?: boolean;
+  /** Apoiado em algo da página: sem sombra própria e sem flutuar. */
+  grounded?: boolean;
   label?: string;
   className?: string;
   style?: CSSProperties;
@@ -36,6 +38,7 @@ function Kess({
   followAccent = false,
   noHop = false,
   noFollow = false,
+  grounded = false,
   label = 'Kess, mascote do Kessleru',
   className,
   style,
@@ -71,6 +74,7 @@ function Kess({
       color={followAccent && mood === 'normal' ? accentColor : undefined}
       no-hop={noHop ? '' : undefined}
       no-follow={noFollow ? '' : undefined}
+      grounded={grounded ? '' : undefined}
       aria-label={label}
       className={className}
       style={style}

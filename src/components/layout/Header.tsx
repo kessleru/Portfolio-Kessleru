@@ -18,19 +18,16 @@ const pathnameLabelMap: Record<string, string> = {
 };
 
 function Header() {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 650);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
+  // Menu e navegação trocam por CSS (o HTML pré-renderizado já sai certo em qualquer tela);
+  // aqui só fecha o menu se a janela crescer com ele aberto.
   useEffect(() => {
-    function handleSize() {
-      setIsMobile(window.innerWidth < 650);
-    }
-
-    handleSize();
-    window.addEventListener('resize', handleSize);
-
-    return () => window.removeEventListener('resize', handleSize);
+    const wide = window.matchMedia('(min-width: 650px)');
+    const close = () => wide.matches && setIsOpen(false);
+    wide.addEventListener('change', close);
+    return () => wide.removeEventListener('change', close);
   }, []);
 
   return (
@@ -42,7 +39,7 @@ function Header() {
           <span className="size-2.5 rounded-full bg-ctp-yellow" />
           <span className="size-2.5 rounded-full bg-ctp-green" />
         </div>
-        <span className="text-[10px] sm:text-xs text-ctp-overlay-1 tracking-wide">
+        <span className="text-[10px] sm:text-xs text-ctp-meta tracking-wide">
           Portfolio — Visual Studio Code
         </span>
         <div className="w-13" />
@@ -64,55 +61,55 @@ function Header() {
           </span>
           <span>/</span>
         </div>
-        {isMobile ? (
-          <>
-            <button
-              className="cursor-pointer text-ctp-accent transition-colors duration-200"
-              aria-label="Abrir menu"
-              aria-expanded={isOpen}
-              onClick={() => setIsOpen((prev) => !prev)}
-            >
-              <Menu
-                className={`transition-transform duration-300 ease-out ${isOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}
-              />
-            </button>
-            <Modal isOpen={isOpen}>
-              <div className="divide-y-2 divide-ctp-crust [&>*:not(:last-child)]:pb-2 [&>*:not(:first-child)]:pt-2">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className="block text-sm sm:text-base cursor-pointer hover:text-ctp-accent"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </Modal>
-          </>
-        ) : (
-          <nav className="flex items-center gap-2">
-            {navItems.map((item, index, items) => (
-              <span key={item.to} className="flex items-center">
+        <div className="min-[650px]:hidden">
+          <button
+            className="cursor-pointer text-ctp-accent transition-colors duration-200"
+            aria-label="Abrir menu"
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen((prev) => !prev)}
+          >
+            <Menu
+              className={`transition-transform duration-300 ease-out ${isOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}
+            />
+          </button>
+          <Modal isOpen={isOpen}>
+            <div className="divide-y-2 divide-ctp-crust [&>*:not(:last-child)]:pb-2 [&>*:not(:first-child)]:pt-2">
+              {navItems.map((item) => (
                 <Link
+                  key={item.to}
                   to={item.to}
-                  className="relative text-sm lg:text-base cursor-pointer hover:text-ctp-accent"
+                  className="block text-sm sm:text-base cursor-pointer hover:text-ctp-accent"
+                  onClick={() => setIsOpen(false)}
                 >
                   {item.label}
                 </Link>
-                {index !== items.length - 1 && (
-                  <span
-                    aria-hidden="true"
-                    className="ml-2 text-ctp-overlay-0 select-none pointer-events-none"
-                  >
-                    |
-                  </span>
-                )}
-              </span>
-            ))}
-          </nav>
-        )}
+              ))}
+            </div>
+          </Modal>
+        </div>
+        <nav
+          aria-label="Principal"
+          className="flex items-center gap-2 max-[650px]:hidden"
+        >
+          {navItems.map((item, index, items) => (
+            <span key={item.to} className="flex items-center">
+              <Link
+                to={item.to}
+                className="relative text-sm lg:text-base cursor-pointer hover:text-ctp-accent"
+              >
+                {item.label}
+              </Link>
+              {index !== items.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className="ml-2 text-ctp-overlay-0 select-none pointer-events-none"
+                >
+                  |
+                </span>
+              )}
+            </span>
+          ))}
+        </nav>
       </div>
     </header>
   );

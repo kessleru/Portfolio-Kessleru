@@ -24,6 +24,12 @@ export interface KessMascotElement extends HTMLElement {
   mood: KessMood;
   size: KessSize | null;
   hop(power?: number): void;
+  /** Direção do olhar (-1..1); null volta a seguir o cursor. */
+  gaze: { x: number; y: number } | null;
+  /** Postura alvo do corpo: negativo agacha, positivo estica (-0.3..0.3). */
+  crouch: number;
+  /** Impulso na mola do corpo, como o impacto de um pouso. */
+  squash(impulse: number): void;
 }
 
 type KessMascotAttributes = HTMLAttributes<KessMascotElement> & {
@@ -34,6 +40,10 @@ type KessMascotAttributes = HTMLAttributes<KessMascotElement> & {
   color?: string;
   'no-hop'?: '' | undefined;
   'no-follow'?: '' | undefined;
+  /** Apoiado em algo da página: sem sombra própria e sem flutuar. */
+  grounded?: '' | undefined;
+  /** Limite de pixels do canvas, para quando ele aparece reduzido por CSS. */
+  pixels?: number;
 };
 
 declare global {

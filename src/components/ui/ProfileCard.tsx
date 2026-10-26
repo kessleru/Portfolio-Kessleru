@@ -1,132 +1,228 @@
-import { type ComponentType, type ReactNode } from 'react';
-import TextType from '@/components/react-bits/text-type/TextType';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Card from '@/components/ui/Cards/Card';
+import { cn } from '@/lib/utils';
 
-type ProfileTextTypeProps = {
-  as?: string;
-  className?: string;
-  text: string;
-  typingSpeed?: number;
-  showCursor?: boolean;
-  loop?: boolean;
-  cursorBlinkDuration?: number;
-  variableSpeed?: { min: number; max: number };
-  renderText?: (text: string) => ReactNode;
-};
+const CODE = [
+  'const pessoa = {',
+  "  nome: 'Otávio Kessler Ustra',",
+  "  cargo: 'Dev Full Stack Júnior',",
+  '  idade: 20,',
+  "  local: 'Ituiutaba, MG - Brasil',",
+  "  atualmente: ['SAE', 'PET Computação'],",
+  '  formacao: {',
+  "    curso: 'Ciência da Computação',",
+  "    instituicao: 'IFTM Ituiutaba',",
+  "    status: 'Em andamento',",
+  '  },',
+  '};',
+];
 
-const TypedTextType =
-  TextType as unknown as ComponentType<ProfileTextTypeProps>;
+type Token = { text: string; className?: string };
 
-function highlightCode(text: string): ReactNode {
-  const tokenizeCode = (code: string) => {
-    const tokens: { text: string; className?: string }[] = [];
-    let remaining = code;
+// Cores de colchete por profundidade, como o "bracket pair colorization" do VS Code.
+const BRACKETS = ['text-ctp-yellow', 'text-ctp-pink', 'text-ctp-sapphire'];
 
-    while (remaining.length > 0) {
+function tokenize(lines: string[]) {
+  let depth = 0;
+
+  return lines.map((line) => {
+    const tokens: Token[] = [];
+    let rest = line;
+    const push = (text: string, className?: string) => {
+      const last = tokens[tokens.length - 1];
+      if (last && last.className === className) last.text += text;
+      else tokens.push({ text, className });
+    };
+
+    while (rest.length > 0) {
       let match: RegExpMatchArray | null;
-
-      if ((match = remaining.match(/^(?:const|let|var|function|return)\b/))) {
-        tokens.push({ text: match[0], className: 'text-ctp-mauve' });
-        remaining = remaining.slice(match[0].length);
-      } else if ((match = remaining.match(/^'[^']*'?/))) {
-        tokens.push({ text: match[0], className: 'text-ctp-green' });
-        remaining = remaining.slice(match[0].length);
-      } else if ((match = remaining.match(/^\d+/))) {
-        tokens.push({ text: match[0], className: 'text-ctp-yellow' });
-        remaining = remaining.slice(match[0].length);
-      } else if ((match = remaining.match(/^[{}]/))) {
-        tokens.push({ text: match[0], className: 'text-ctp-maroon' });
-        remaining = remaining.slice(match[0].length);
-      } else if ((match = remaining.match(/^:/))) {
-        tokens.push({ text: match[0], className: 'text-ctp-green' });
-        remaining = remaining.slice(match[0].length);
-      } else if ((match = remaining.match(/^[,;]/))) {
-        tokens.push({ text: match[0], className: 'text-ctp-subtext-0/75' });
-        remaining = remaining.slice(match[0].length);
-      } else {
-        const last = tokens[tokens.length - 1];
-        if (last && !last.className) {
-          last.text += remaining[0];
-        } else {
-          tokens.push({ text: remaining[0] });
-        }
-        remaining = remaining.slice(1);
+      if ((match = rest.match(/^\s+/))) push(match[0]);
+      else if ((match = rest.match(/^const\b/)))
+        push(match[0], 'text-ctp-mauve');
+      else if ((match = rest.match(/^'[^']*'/)))
+        push(match[0], 'text-ctp-green');
+      else if ((match = rest.match(/^\d+/))) push(match[0], 'text-ctp-peach');
+      else if ((match = rest.match(/^[A-Za-zÀ-ú_]\w*(?=:)/)))
+        push(match[0], 'text-ctp-lavender');
+      else if ((match = rest.match(/^[A-Za-zÀ-ú_]\w*/)))
+        push(match[0], 'text-ctp-text');
+      else if ((match = rest.match(/^[{[]/))) {
+        push(match[0], BRACKETS[depth % BRACKETS.length]);
+        depth += 1;
+      } else if ((match = rest.match(/^[}\]]/))) {
+        depth -= 1;
+        push(match[0], BRACKETS[depth % BRACKETS.length]);
+      } else if ((match = rest.match(/^=/))) push(match[0], 'text-ctp-sky');
+      else {
+        match = [rest[0]];
+        push(rest[0], 'text-ctp-overlay-2');
       }
+      rest = rest.slice(match[0].length);
     }
 
     return tokens;
-  };
-
-  const lines = text.split('\n');
-  const output: ReactNode[] = [];
-
-  lines.forEach((line, lineIndex) => {
-    const lineMatch = line.match(/^(\s*\d+)(\s*)(.*)$/);
-
-    if (lineMatch) {
-      output.push(
-        <span key={`ln-${lineIndex}`} className="mr-2 text-ctp-subtext-0/50">
-          {lineMatch[1]}
-        </span>
-      );
-      output.push(lineMatch[2]);
-
-      const codeTokens = tokenizeCode(lineMatch[3]);
-      codeTokens.forEach((token, tokenIndex) => {
-        output.push(
-          token.className ? (
-            <span
-              key={`tk-${lineIndex}-${tokenIndex}`}
-              className={token.className}
-            >
-              {token.text}
-            </span>
-          ) : (
-            <span key={`tx-${lineIndex}-${tokenIndex}`}>{token.text}</span>
-          )
-        );
-      });
-    } else {
-      const codeTokens = tokenizeCode(line);
-      codeTokens.forEach((token, tokenIndex) => {
-        output.push(
-          token.className ? (
-            <span
-              key={`tk-${lineIndex}-${tokenIndex}`}
-              className={token.className}
-            >
-              {token.text}
-            </span>
-          ) : (
-            <span key={`tx-${lineIndex}-${tokenIndex}`}>{token.text}</span>
-          )
-        );
-      });
-    }
-
-    if (lineIndex < lines.length - 1) {
-      output.push('\n');
-    }
   });
+}
 
-  return output;
+const indentOf = (line: string) => line.match(/^ */)![0].length;
+
+// Quanto esperar antes de digitar o caractere seguinte: um ritmo humano, com pausa no fim da linha.
+function delayAfter(char: string | undefined) {
+  if (char === undefined) return 130;
+  if (char === '{' || char === '[') return 110;
+  if (char === ',' || char === ';') return 55;
+  return 7 + Math.random() * 16;
 }
 
 function ProfileCard() {
+  const lines = useMemo(() => tokenize(CODE), []);
+  const rootRef = useRef<HTMLPreElement>(null);
+  // Com "reduzir movimento" o código já começa digitado.
+  const [reduce] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+  const [line, setLine] = useState(reduce ? CODE.length - 1 : 0);
+  const [column, setColumn] = useState(
+    reduce ? CODE[CODE.length - 1].length : 0
+  );
+  const [done, setDone] = useState(reduce);
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || reduce) return;
+
+    let timer = 0;
+    let row = 0;
+    let col = 0;
+
+    function step() {
+      const text = CODE[row];
+      if (col < text.length) {
+        // o editor indenta sozinho: os espaços do começo aparecem de uma vez
+        if (col === 0) col = indentOf(text);
+        col += 1;
+        setColumn(col);
+        timer = window.setTimeout(step, delayAfter(text[col - 1]));
+      } else if (row < CODE.length - 1) {
+        row += 1;
+        col = 0;
+        setLine(row);
+        setColumn(0);
+        timer = window.setTimeout(step, delayAfter(undefined));
+      } else {
+        setDone(true);
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        timer = window.setTimeout(step, 450);
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [reduce]);
+
+  const active = done && hovered !== null ? hovered : line;
+
   return (
     <Card fileName="Profile.tsx" className="w-full justify-self-start">
-      <TypedTextType
-        as="pre"
-        className="overflow-x-auto text-xs sm:text-[14px] leading-relaxed text-ctp-code"
-        text={` 1 const pessoa = {\n 2   nome: 'Otávio Kessler Ustra',\n 3   idade: 20,\n 4   local: 'Ituiutaba, MG - Brasil',\n 5   formacao: {\n 6     curso: 'Ciência da Computação',\n 7     instituicao: 'IFTM Ituiutaba',\n 8     status: 'Em andamento',\n 9   },\n10 };`}
-        typingSpeed={20}
-        showCursor={false}
-        loop={false}
-        cursorBlinkDuration={0}
-        variableSpeed={{ min: 15, max: 40 }}
-        renderText={highlightCode}
-      />
+      <pre
+        ref={rootRef}
+        aria-label={CODE.join('\n')}
+        onMouseLeave={() => setHovered(null)}
+        className="-mx-4 overflow-x-auto py-1 text-xs leading-relaxed sm:text-[14px]"
+      >
+        {lines.map((tokens, row) => {
+          const typed = row < line ? Infinity : row === line ? column : 0;
+          const isActive = row === active;
+          // guias de indentação só nas linhas que já foram escritas
+          const levels = row <= line ? Math.floor(indentOf(CODE[row]) / 2) : 0;
+          let offset = 0;
+
+          return (
+            <div
+              key={row}
+              onMouseEnter={() => setHovered(row)}
+              className={cn(
+                'relative flex pr-4 transition-colors duration-200',
+                isActive ? 'bg-ctp-surface-0/40' : 'bg-transparent'
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'w-[5ch] shrink-0 pr-[2ch] text-right tabular-nums transition-colors duration-200 select-none',
+                  isActive ? 'text-ctp-text' : 'text-ctp-overlay-0'
+                )}
+              >
+                {row + 1}
+              </span>
+
+              <code className="relative">
+                {/* guias de indentação */}
+                {Array.from({ length: levels }, (_, level) => (
+                  <span
+                    key={level}
+                    aria-hidden="true"
+                    className="absolute inset-y-0 w-px bg-ctp-surface-1/70"
+                    style={{ left: `${level * 2}ch` }}
+                  />
+                ))}
+
+                {tokens.map((token, index) => {
+                  const start = offset;
+                  offset += token.text.length;
+                  const shown = Math.max(
+                    0,
+                    Math.min(token.text.length, typed - start)
+                  );
+
+                  return (
+                    <span key={index} className={token.className}>
+                      {token.text.slice(0, shown)}
+                      {row === line &&
+                        !done &&
+                        start + shown === column &&
+                        shown < token.text.length && <Caret />}
+                      <span className="opacity-0">
+                        {token.text.slice(shown)}
+                      </span>
+                    </span>
+                  );
+                })}
+                {row === line && (column >= CODE[row].length || done) && (
+                  <Caret blink={done} />
+                )}
+              </code>
+            </div>
+          );
+        })}
+      </pre>
     </Card>
+  );
+}
+
+function Caret({ blink = false }: { blink?: boolean }) {
+  return (
+    <span aria-hidden="true" className="relative">
+      <span
+        className={cn(
+          'absolute top-[0.2em] -left-px h-[1.15em] w-[2px] rounded-full bg-ctp-accent',
+          blink && 'cursor-blink'
+        )}
+      />
+    </span>
   );
 }
 

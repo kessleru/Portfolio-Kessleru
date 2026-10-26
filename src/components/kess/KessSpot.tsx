@@ -1,5 +1,7 @@
+import { useSyncExternalStore } from 'react';
 import { cn } from '@/lib/utils';
 import type { KessMood } from './Kess';
+import { getKessEnabled, subscribeKess } from './kessPreference';
 
 type KessSpotProps = {
   mood?: KessMood;
@@ -10,12 +12,20 @@ type KessSpotProps = {
 /**
  * Lugar reservado para o Kess numa página. Não desenha nada: o KessCompanion
  * pula até aqui enquanto o espaço está na tela, no tamanho e com a emoção do spot.
+ * Com o Kess desligado no Theme.tsx, o espaço some junto.
  */
 function KessSpot({
   mood = 'normal',
   size = 'clamp(56px, 7vw, 76px)',
   className,
 }: KessSpotProps) {
+  const enabled = useSyncExternalStore(
+    subscribeKess,
+    getKessEnabled,
+    () => true
+  );
+  if (!enabled) return null;
+
   return (
     <div
       aria-hidden="true"
