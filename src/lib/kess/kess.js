@@ -8,7 +8,8 @@
  *
  * Atributos:
  *   mood       normal | feliz | animado | curioso | pensativo | surpreso | triste | confuso |
- *              bravo | sono | apaixonado | concentrado | inspiracao   (padrão: normal)
+ *              bravo | sono | apaixonado | concentrado | inspiracao | tonto | timido | bocejo
+ *              (padrão: normal)
  *   size       tamanho: número em px (120), qualquer medida CSS (5rem, 20vw, clamp(...))
  *              ou atalho: xs (48) | sm (64) | md (96, padrão) | lg (140) | xl (200)
  *
@@ -19,6 +20,7 @@
  *   no-follow  desliga o olhar seguindo o cursor
  *   grounded   o Kess está apoiado em algo da página: sem sombra própria e sem flutuar
  *   pixels     limite de pixels do canvas (ex.: quando ele aparece reduzido por CSS)
+ *   outline    cor do contorno fino (qualquer cor CSS ou var(--x)); sem ele, sem contorno
  *
  * JavaScript:
  *   const k = document.querySelector('kess-mascot');
@@ -28,6 +30,8 @@
  *   k.gaze = { x: 1, y: 0 };     // olha para uma direção (-1..1); null volta a seguir o cursor
  *   k.crouch = -.2;              // postura: negativo agacha, positivo estica (-.3..3)
  *   k.squash(-4);                // impulso na mola do corpo (ex.: impacto ao pousar)
+ *   k.wave();                    // balança o corpo, como um aceno
+ *   k.walking = true;            // o corpo ginga e quica a cada passo (quem move o Kess é quem chama)
  *   KessMascot.MOODS             // lista de emoções e cores
  *   k.addEventListener('kess-poke', () => { ... })   // disparado quando clicam no Kess
  */
@@ -52,34 +56,75 @@
     return threeP;
   }
 
-  /* ---------- emoções: cor da bolinha/borda, olhos (em unidades de desenho), acessório e comportamento ---------- */
+  /* ---------- emoções: cor da bolinha, olhos, boca e bochechas (em unidades de desenho) e comportamento ---------- */
   // E = olho oval cheio · L = traço (sorriso/fechado) · C = recorte de pálpebra · S = brilho no olho
+  // H = olho de coração · K = olho de estrela · SP = olho de espiral (tonto) · F = forma cheia (boca aberta, língua)
   function E(x, y, rx, ry, r) { return { t: 'e', x: x, y: y, rx: rx, ry: ry, r: r || 0 }; }
   function L(d, w) { return { t: 'l', d: d, w: w || 8 }; }
   function C(pts) { return { t: 'c', pts: pts }; }
   function S(x, y, r) { return { t: 's', x: x, y: y, r: r }; }
-  var OPEN = [E(52, 50, 6.8, 8.8), E(74, 50, 6.8, 8.8)];
+  function H(x, y, r) { return { t: 'h', x: x, y: y, r: r }; }
+  function K(x, y, r) { return { t: 'k', x: x, y: y, r: r }; }
+  function SP(x, y, r) { return { t: 'sp', x: x, y: y, r: r }; }
+  function F(d, c) { return { t: 'f', d: d, c: c }; }
+  var PINK = '#f5c2e7', MOUTH = '#f38ba8';
+  var OPEN = [E(52, 50, 6.8, 8.8), E(74, 50, 6.8, 8.8), S(54.6, 46, 1.9), S(76.6, 46, 1.9)];
   var HAPPY = [L('M46.5 53 Q52 45 57.5 53', 7), L('M68.5 53 Q74 45 79.5 53', 7)];
+  // bocas: pequenas, entre os olhos e um pouco abaixo
+  var M = {
+    smile: [L('M60.4 60.6 Q63 63.2 65.6 60.6', 2.6)],
+    cat:   [L('M58.6 60.4 Q60.8 63.6 63 60.8 Q65.2 63.6 67.4 60.4', 2.5)],
+    open:  [F('M58.4 59.6 L67.6 59.6 Q67.4 66.6 63 66.6 Q58.6 66.6 58.4 59.6 Z', MOUTH)],
+    o:     [F('M63 59.6 a2.3 2.7 0 1 0 0.01 0 Z', MOUTH)],
+    big:   [F('M63 58.6 a3.4 4.2 0 1 0 0.01 0 Z', MOUTH)],
+    yawn:  [F('M63 57.8 a4.6 5.8 0 1 0 0.01 0 Z', MOUTH)],
+    frown: [L('M60 62.8 Q63 59.8 66 62.8', 2.6)],
+    flat:  [L('M60.2 61.4 L65.8 61.4', 2.6)],
+    blep:  [F('M63.4 61 Q63.6 65.2 65.6 65.2 Q67.6 65.2 67.4 61 Z', MOUTH), L('M59.4 61 L67.6 61', 2.6)],
+    wavy:  [L('M58.6 61.6 Q60.8 59.6 63 61.6 Q65.2 63.6 67.4 61.6', 2.4)],
+    side:  [L('M63.6 61.6 Q66 61.4 68.2 60', 2.4)]
+  };
   var MOODS = {
-    normal:      { color: '#b4befe', eyes: OPEN },
-    feliz:       { color: '#f5c2e7', eyes: HAPPY, blush: 1 },
-    animado:     { color: '#f9e2af', eyes: [E(52, 49, 7.6, 10), E(74, 49, 7.6, 10), S(55, 44.6, 1.7), S(77, 44.6, 1.7)], blush: 1, hops: 1 },
-    curioso:     { color: '#a6e3a1', eyes: [E(52, 52, 5.6, 7), E(74, 49, 7.6, 10)], tilt: .14 },
-    pensativo:   { color: '#cba6f7', eyes: [E(56, 46, 6.2, 8.2, -.15), E(78, 46, 6.2, 8.2, -.15)], tilt: -.08, lookUp: 1 },
-    surpreso:    { color: '#f9e2af', eyes: [E(52, 50, 8.2, 8.2), E(74, 50, 8.2, 8.2)] },
-    triste:      { color: '#89b4fa', eyes: [E(52, 52, 7, 8), E(74, 52, 7, 8), C([[41, 36], [63, 36], [63, 45], [41, 51]]), C([[63, 36], [85, 36], [85, 51], [63, 45]])], droop: 1 },
-    confuso:     { color: '#f5c2e7', eyes: [E(53, 52, 4.8, 4.8), E(74, 49, 7, 9.5)], tilt: -.12 },
-    bravo:       { color: '#f38ba8', eyes: [E(52, 52, 7, 8), E(74, 52, 7, 8), C([[41, 36], [63, 36], [63, 51], [41, 45]]), C([[63, 36], [85, 36], [85, 45], [63, 51]])], shake: 1 },
-    sono:        { color: '#94e2d5', eyes: [L('M46.5 51 Q52 56 57.5 51', 6.5), L('M68.5 51 Q74 56 79.5 51', 6.5)], sleepy: 1 },
-    apaixonado:  { color: '#f5c2e7', eyes: HAPPY, blush: 1 },
-    concentrado: { color: '#cba6f7', eyes: [E(52, 51, 6.8, 8.4), E(74, 51, 6.8, 8.4), C([[41, 36], [85, 36], [85, 48], [41, 48]])] },
-    inspiracao:  { color: '#94e2d5', eyes: [E(52, 49, 7.4, 9.6), E(74, 49, 7.4, 9.6), S(54.8, 44.6, 1.7), S(76.8, 44.6, 1.7)], blush: 1 }
+    normal:      { color: '#b4befe', eyes: OPEN, mouth: M.smile },
+    feliz:       { color: '#f5c2e7', eyes: HAPPY, mouth: M.cat, blush: .8 },
+    animado:     { color: '#f9e2af', eyes: [E(52, 49, 7.6, 10), E(74, 49, 7.6, 10), S(55, 44.6, 1.9), S(77, 44.6, 1.9), S(50.2, 53.4, 1)], mouth: M.open, blush: .7, hops: 1 },
+    curioso:     { color: '#a6e3a1', eyes: [E(52, 52, 5.6, 7), E(74, 49, 7.6, 10), S(54, 49, 1.5), S(76.6, 45, 1.9)], mouth: M.o, tilt: .14 },
+    pensativo:   { color: '#cba6f7', eyes: [E(56, 46, 6.2, 8.2, -.15), E(78, 46, 6.2, 8.2, -.15)], mouth: M.side, tilt: -.08, lookUp: 1 },
+    surpreso:    { color: '#f9e2af', eyes: [E(52, 50, 8.2, 8.2), E(74, 50, 8.2, 8.2), S(54.8, 46.6, 1.9), S(76.8, 46.6, 1.9)], mouth: M.big },
+    triste:      { color: '#89b4fa', eyes: [E(52, 52, 7, 8), E(74, 52, 7, 8), C([[41, 36], [63, 36], [63, 45], [41, 51]]), C([[63, 36], [85, 36], [85, 51], [63, 45]]), S(54, 52.6, 1.6), S(76, 52.6, 1.6)], mouth: M.frown, droop: 1 },
+    confuso:     { color: '#f5c2e7', eyes: [E(53, 52, 4.8, 4.8), E(74, 49, 7, 9.5), S(76.4, 45.6, 1.8)], mouth: M.wavy, tilt: -.12 },
+    bravo:       { color: '#f38ba8', eyes: [E(52, 52, 7, 8), E(74, 52, 7, 8), C([[41, 36], [63, 36], [63, 51], [41, 45]]), C([[63, 36], [85, 36], [85, 45], [63, 51]])], mouth: M.frown, shake: 1 },
+    sono:        { color: '#94e2d5', eyes: [L('M46.5 51 Q52 56 57.5 51', 6.5), L('M68.5 51 Q74 56 79.5 51', 6.5)], mouth: M.o, sleepy: 1 },
+    apaixonado:  { color: '#f5c2e7', eyes: [H(52, 50, 9), H(74, 50, 9)], mouth: M.cat, blush: 1 },
+    concentrado: { color: '#cba6f7', eyes: [E(52, 51, 6.8, 8.4), E(74, 51, 6.8, 8.4), C([[41, 36], [85, 36], [85, 48], [41, 48]])], mouth: M.blep },
+    inspiracao:  { color: '#94e2d5', eyes: [K(52, 49, 10), K(74, 49, 10)], mouth: M.open, blush: .6 },
+    tonto:       { color: '#fab387', eyes: [SP(52, 50, 8), SP(74, 50, 8)], mouth: M.wavy, wobble: 1 },
+    timido:      { color: '#f5c2e7', eyes: [L('M47 54 Q52 48.5 57 54', 6), L('M69 54 Q74 48.5 79 54', 6)], mouth: M.smile, blush: 1.25, shy: 1 },
+    bocejo:      { color: '#94e2d5', eyes: [L('M46.5 50 Q52 53 57.5 50', 6), L('M68.5 50 Q74 53 79.5 50', 6)], mouth: M.yawn, sleepy: 1 }
   };
   function moodKey(m) {
     m = String(m || 'normal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     return MOODS[m] ? m : 'normal';
   }
   function pathOf(e) { return e.p || (e.p = new Path2D(e.d)); }
+  // coração com a ponta para baixo, centrado em (x, y)
+  function heartPath(x, y, r) {
+    var p = new Path2D();
+    p.moveTo(x, y + r * .9);
+    p.bezierCurveTo(x - r * 1.25, y + r * .05, x - r * 1.05, y - r * 1.05, x, y - r * .45);
+    p.bezierCurveTo(x + r * 1.05, y - r * 1.05, x + r * 1.25, y + r * .05, x, y + r * .9);
+    return p;
+  }
+  // brilho de 4 pontas (olho de estrela)
+  function starPath(x, y, r) {
+    var p = new Path2D(), k = r * .26;
+    p.moveTo(x, y - r);
+    p.quadraticCurveTo(x + k, y - k, x + r * .8, y);
+    p.quadraticCurveTo(x + k, y + k, x, y + r);
+    p.quadraticCurveTo(x - k, y + k, x - r * .8, y);
+    p.quadraticCurveTo(x - k, y - k, x, y - r);
+    return p;
+  }
 
   var SIZES = { xs: '48px', sm: '64px', md: '96px', lg: '140px', xl: '200px' };
 
@@ -102,7 +147,7 @@
   var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   class KessMascot extends HTMLElement {
-    static get observedAttributes() { return ['mood', 'size', 'color', 'grounded', 'pixels']; }
+    static get observedAttributes() { return ['mood', 'size', 'color', 'grounded', 'pixels', 'outline']; }
 
     constructor() {
       super();
@@ -136,6 +181,7 @@
       if (name === 'size') { this._applySize(); return; }
       if (name === 'grounded') return;
       if (name === 'pixels') { if (this._resize) this._resize(); return; }
+      if (name === 'outline') { if (this._recolorOutline) this._recolorOutline(); return; }
       if (name === 'color') { if (this._ready) this._recolor(); else if (this._fb) this._fallback(); return; }
       var m = moodKey(newV);
       if (m === this._mood && this._ready) return;
@@ -152,6 +198,9 @@
     get crouch() { return this._crouch; }
     set crouch(v) { this._crouch = Math.max(-.3, Math.min(.3, Number(v) || 0)); }
     squash(v) { if (this._kick) this._kick(Number(v) || 0); }
+    wave() { if (this._wave) this._wave(); }          // balança o corpo, como um aceno
+    get walking() { return !!this._walking; }
+    set walking(v) { this._walking = !!v; }            // o corpo ginga e quica a cada passo
 
     // size="120" | "120px" | "5rem" | "20vw" | "clamp(64px, 10vw, 140px)" | xs | sm | md | lg | xl
     _applySize() {
@@ -240,6 +289,19 @@
       var ball = new T.Mesh(new T.SphereGeometry(1, 64, 40), ballMat); ball.scale.set(.38, .1, .22); ball.rotation.y = .5;
       ballSpin.add(ball); bodyG.add(ballPivot);
 
+      // contorno fino (casco invertido): separa o corpo preto de fundos escuros
+      var outlineMat = new T.MeshBasicMaterial({ color: 0x313244, side: T.BackSide, toneMapped: false });
+      var hull = new T.Mesh(bodyG.children[0].geometry, outlineMat); hull.scale.setScalar(1.045); bodyG.add(hull);
+      function outlineColor() {
+        var c = (self.getAttribute('outline') || '').trim();
+        var v = /^var\(\s*(--[\w-]+)/.exec(c);
+        if (v) c = getComputedStyle(self).getPropertyValue(v[1]).trim();
+        hull.visible = !!c;
+        if (c) outlineMat.color.set(c);
+      }
+      outlineColor();
+      this._recolorOutline = outlineColor;
+
       // sombra no chão e brilho atrás
       function radialTex(inner, outer) {
         var c = document.createElement('canvas'); c.width = c.height = 128; var x = c.getContext('2d');
@@ -250,23 +312,39 @@
       shadow.rotation.x = -Math.PI / 2; shadow.position.y = -.8; scene.add(shadow);
 
       // olhos grandes, baixos e próximos (proporção "bebê")
-      var eyeOpen = 1, look = { x: 0, y: 0 }, lastFace = '', frameNo = 0;
+      var eyeOpen = 1, look = { x: 0, y: 0 }, lastFace = '', frameNo = 0, spin = 0;
       function drawFace(d, colCss) {
         fctx.clearRect(0, 0, FW, FW);
         fctx.save();
         fctx.translate(FW / 2 + look.x * 16 * FK, (560 + look.y * 12) * FK);   // centro dos olhos, um pouco abaixo do meio do corpo
         fctx.scale(14 * FK, 14 * FK);
         fctx.translate(-63, -50);
+        // bochechas sempre rosadas (não na cor da emoção): é o que deixa o rosto fofo
         if (d.blush) {
-          fctx.save(); fctx.globalAlpha = .85; fctx.fillStyle = colCss;
-          [[40, 60], [86, 60]].forEach(function (c) { fctx.beginPath(); fctx.ellipse(c[0], c[1], 4.6, 2.6, 0, 0, Math.PI * 2); fctx.fill(); });
+          fctx.save(); fctx.globalAlpha = .9; fctx.fillStyle = PINK;
+          var bw = 3.4 + 1.6 * d.blush, bh = 1.9 + .9 * d.blush;
+          [[40, 60], [86, 60]].forEach(function (c) { fctx.beginPath(); fctx.ellipse(c[0], c[1], bw, bh, 0, 0, Math.PI * 2); fctx.fill(); });
           fctx.restore();
         }
+        // boca (não pisca)
+        fctx.lineCap = 'round'; fctx.lineJoin = 'round';
+        (d.mouth || []).forEach(function (e) {
+          if (e.t === 'f') { fctx.fillStyle = e.c; fctx.fill(pathOf(e)); }
+          else { fctx.strokeStyle = '#ffffff'; fctx.lineWidth = e.w; fctx.stroke(pathOf(e)); }
+        });
         fctx.translate(63, 50); fctx.scale(1, Math.max(.08, eyeOpen)); fctx.translate(-63, -50);   // piscar
-        fctx.fillStyle = fctx.strokeStyle = '#ffffff'; fctx.lineCap = 'round'; fctx.lineJoin = 'round';
+        fctx.fillStyle = fctx.strokeStyle = '#ffffff';
         d.eyes.forEach(function (e) {
           if (e.t === 'e') { fctx.beginPath(); fctx.ellipse(e.x, e.y, e.rx, e.ry, e.r, 0, Math.PI * 2); fctx.fill(); }
           else if (e.t === 'l') { fctx.lineWidth = e.w; fctx.stroke(pathOf(e)); }
+          else if (e.t === 'h') { fctx.save(); fctx.fillStyle = MOUTH; fctx.fill(e.p || (e.p = heartPath(e.x, e.y, e.r))); fctx.restore(); }
+          else if (e.t === 'k') { fctx.fill(e.p || (e.p = starPath(e.x, e.y, e.r))); }
+          else if (e.t === 'sp') {
+            fctx.save(); fctx.lineWidth = 2.4; fctx.translate(e.x, e.y); fctx.rotate(spin * (e.x < 63 ? 1 : -1));
+            fctx.beginPath();
+            for (var a = 0; a < Math.PI * 5; a += .2) { var rr = e.r * a / (Math.PI * 5); a ? fctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : fctx.moveTo(0, 0); }
+            fctx.stroke(); fctx.restore();
+          }
         });
         fctx.globalCompositeOperation = 'destination-out';            // pálpebras e brilho recortam o olho
         d.eyes.forEach(function (e) {
@@ -280,12 +358,14 @@
       /* ---------- animação ---------- */
       var y = 0, vy = 0, sq = 0, sqV = 0, wob = 0, wobV = 0, pending = 0, nextBlink = 2, blinkT = -1;
       var rotY = 0, rotX = 0, rotZ = 0, ptr = { x: 0, y: 0, has: false }, hopTimer = 0, shakeT = 0, tm = 0;
+      var walkPh = 0, waddle = 0;
       this._hop = function (power) {
         if (REDUCE || y > .01 || pending) return;
         sqV -= 3.2; pending = power;                     // antecipação: amassa antes de pular
       };
       this._recolor = function () { moodTarget.set(self._colorOf(self._mood)); };
       this._kick = function (v) { if (REDUCE) return; sqV += v; wobV += Math.abs(v) * 2.5; };
+      this._wave = function () { if (!REDUCE) { wobV += 16; sqV += 2; } };
       this._onMood = function (m) {
         var d = MOODS[m];
         moodTarget.set(self._colorOf(m));
@@ -325,25 +405,33 @@
           wobV += (-160 * wob - 7 * wobV) * dt; wob += wobV * dt;
         }
 
+        // andando: o corpo ginga de um lado para o outro e quica a cada passo
+        var walking = self._walking && !REDUCE;
+        if (walking) walkPh += dt * 11;
+        var step = walking ? Math.abs(Math.sin(walkPh)) : 0;
+
         var breath = REDUCE ? 0 : Math.sin(tm * (d.sleepy ? 1.4 : 2.4)) * (d.sleepy ? .035 : .022);
         var air = y > 0 ? Math.min(.12, vy * .03) : 0;
-        var s = Math.max(-.3, Math.min(.3, sq + breath - air));
+        var s = Math.max(-.3, Math.min(.3, sq + breath - air + (walking ? .04 - step * .08 : 0)));
         squash.scale.set(1 - s * .9, 1 + s, 1 - s * .9);
         var grounded = self.hasAttribute('grounded');
-        kess.position.y = y + (REDUCE || grounded ? 0 : Math.sin(tm * 2.4 + 1) * .03);
+        kess.position.y = y + step * .07 + (REDUCE || grounded ? 0 : Math.sin(tm * 2.4 + 1) * .03);
 
         var gz = self._gaze;
         var tx = gz ? gz.x : ptr.has ? ptr.x : (REDUCE ? 0 : Math.sin(tm * .5) * .25), ty = gz ? gz.y : ptr.has ? ptr.y : 0;
         if (d.sleepy) { tx *= .2; ty = .35; }
         if (d.lookUp) { tx = .55; ty = -.6; }
+        if (d.shy) { tx *= .4; ty = .55; }                  // tímido olha para baixo
         var k = 1 - Math.pow(.004, dt);
         rotY += (tx * .42 - rotY) * k; rotX += (ty * .22 - rotX) * k;
         var tz = (d.tilt || 0) + (d.sleepy ? .1 : 0) + (d.droop ? .05 : 0);
         if (shakeT > 0) { shakeT -= dt; tz += Math.sin(tm * 60) * .05 * (shakeT / .5); }
+        if (d.wobble && !REDUCE) tz += Math.sin(tm * 6) * .1;   // tonto: cambaleia
         rotZ += (tz - rotZ) * k;
-        tiltG.rotation.set(rotX, rotY, -rotZ - wob * .015);
+        waddle += ((walking ? Math.sin(walkPh) * .07 : 0) - waddle) * Math.min(1, dt * 12);
+        tiltG.rotation.set(rotX, rotY, -rotZ - wob * .015 + waddle);
         look.x += (tx - look.x) * k; look.y += (ty - look.y) * k;
-        ballSpin.rotation.set(wob * .06, 0, wob * .09);
+        ballSpin.rotation.set(wob * .06, 0, wob * .09);   // a bolinha fica sempre rente ao corpo
 
         if (!d.sleepy && !REDUCE) {
           nextBlink -= dt;
@@ -357,9 +445,10 @@
         shadow.scale.set(sh * (1 - s * .6), sh, 1); shadow.material.opacity = sh;
 
         // o rosto só é redesenhado (e reenviado para a GPU) quando muda de verdade
-        var faceKey = self._mood + '|' + mood.getHexString() + '|' + Math.round(look.x * 200) + '|' + Math.round(look.y * 200) + '|' + Math.round(eyeOpen * 40);
+        if (d.wobble) spin += dt * 7;
+        var faceKey = self._mood + '|' + mood.getHexString() + '|' + Math.round(look.x * 200) + '|' + Math.round(look.y * 200) + '|' + Math.round(eyeOpen * 40) + (d.wobble ? '|' + Math.round(spin * 8) : '');
         // parado (só respirando e piscando), 30 quadros por segundo bastam
-        var calm = !pending && y === 0 && Math.abs(sqV) < .2 && Math.abs(wobV) < .2 && faceKey === lastFace;
+        var calm = !pending && y === 0 && Math.abs(sqV) < .2 && Math.abs(wobV) < .2 && !walking && faceKey === lastFace;
         frameNo += 1;
         if (calm && frameNo % 2) return;
         if (faceKey !== lastFace) { lastFace = faceKey; drawFace(d, '#' + mood.getHexString()); }

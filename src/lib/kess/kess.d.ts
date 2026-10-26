@@ -15,7 +15,10 @@ export type KessMood =
   | 'sono'
   | 'apaixonado'
   | 'concentrado'
-  | 'inspiracao';
+  | 'inspiracao'
+  | 'tonto'
+  | 'timido'
+  | 'bocejo';
 
 /** Número (px), medida CSS ('5rem', 'clamp(...)') ou atalho. */
 export type KessSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number | (string & {});
@@ -30,6 +33,10 @@ export interface KessMascotElement extends HTMLElement {
   crouch: number;
   /** Impulso na mola do corpo, como o impacto de um pouso. */
   squash(impulse: number): void;
+  /** Balança o corpo, como um aceno. */
+  wave(): void;
+  /** Enquanto true, o corpo ginga e quica a cada passo (quem move o Kess liga e desliga). */
+  walking: boolean;
 }
 
 type KessMascotAttributes = HTMLAttributes<KessMascotElement> & {
@@ -44,6 +51,8 @@ type KessMascotAttributes = HTMLAttributes<KessMascotElement> & {
   grounded?: '' | undefined;
   /** Limite de pixels do canvas, para quando ele aparece reduzido por CSS. */
   pixels?: number;
+  /** Cor do contorno fino (qualquer cor CSS ou var(--x)). Sem ela, sem contorno. */
+  outline?: string;
 };
 
 declare global {

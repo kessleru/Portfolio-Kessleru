@@ -82,7 +82,7 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4">
+        <div className="kess-only flex items-center justify-between gap-4">
           <p id="kess-toggle-label" className="text-sm font-semibold">
             Kess
           </p>
