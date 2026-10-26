@@ -53,6 +53,8 @@ React 19 + TypeScript + Vite 7 + Tailwind v4 + Catppuccin. Gerenciador: **pnpm**
 
 ## SEO e acessibilidade
 
+- O `vercel.json` fixa `"buildCommand": "pnpm build"`: sem a pré-renderização, `/projects`,
+  `/training` e `/contact` dão 404 em produção (não há mais fallback para o `index.html`).
 - Metadados de cada página em `src/seo.ts` (título ≤ 60 caracteres, descrição ≤ 160). Página nova:
   adicionar em `pages` ali, a rota em `App.tsx` e o rewrite em `vercel.json`.
 - Componentes precisam renderizar no build (Node, sem `window`/`document`/`localStorage`):

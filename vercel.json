@@ -1,22 +1,42 @@
 {
+  "buildCommand": "pnpm build",
   "trailingSlash": false,
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.kessleru.com.br" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.kessleru.com.br"
+        }
+      ],
       "destination": "https://kessleru.com.br/:path*",
       "permanent": true
     },
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "portfolio-kessleru.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "portfolio-kessleru.vercel.app"
+        }
+      ],
       "destination": "https://kessleru.com.br/:path*",
       "permanent": true
     }
   ],
   "rewrites": [
-    { "source": "/projects", "destination": "/projects/index.html" },
-    { "source": "/training", "destination": "/training/index.html" },
-    { "source": "/contact", "destination": "/contact/index.html" }
+    {
+      "source": "/projects",
+      "destination": "/projects/index.html"
+    },
+    {
+      "source": "/training",
+      "destination": "/training/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    }
   ]
 }
