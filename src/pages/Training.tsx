@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import Card from '@/components/ui/Cards/Card';
-import KessGreeter from '@/components/kess/KessGreeter';
+import KessSpot from '@/components/kess/KessSpot';
 import BranchList from '@/components/training/BranchList';
 import CommitDetails from '@/components/training/CommitDetails';
 import Extensions from '@/components/training/Extensions';
@@ -39,7 +39,7 @@ function Training() {
     <section className="space-y-8">
       <div className="space-y-6">
         <div className="flex items-center gap-3 sm:gap-4">
-          <KessGreeter className="-my-2 shrink-0" />
+          <KessSpot className="-my-2" />
           <div className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-2xl">
             <span className="text-ctp-accent max-sm:hidden">&gt;</span>
             <h1>Formação</h1>

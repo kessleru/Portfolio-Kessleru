@@ -1,11 +1,11 @@
 import { TriangleAlert } from 'lucide-react';
-import Kess from '@/components/kess/Kess';
+import KessSpot from '@/components/kess/KessSpot';
 
 function Contact() {
   return (
     <section>
       <div className="flex min-h-[55vh] flex-col items-start justify-center gap-3">
-        <Kess mood="concentrado" size="clamp(72px, 9vw, 96px)" label="Kess concentrado: página em construção" />
+        <KessSpot mood="concentrado" size="clamp(72px, 9vw, 96px)" />
 
         <p className="flex items-center gap-2 text-sm font-medium text-ctp-accent">
           <TriangleAlert size={16} />

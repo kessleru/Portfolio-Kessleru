@@ -85,7 +85,7 @@ No celular o menu vira um botão que abre a navegação e fecha ao escolher uma 
 | 🌿 **Formação em grafo** | Linha do tempo desenhada como `git log --graph`, animada com [Motion](https://motion.dev); clicar numa branch destaca o caminho dela e num commit mostra os detalhes |
 | 🧩 **Certificados como extensões** | 20 certificados agrupados por emissor, filtráveis por competência, com o código da credencial para copiar |
 | 🧭 **Rotas reais** | `/`, `/projects`, `/training`, `/contact` e página 404 |
-| 🤖 **Kess, o mascote** | Mascote 3D que cumprimenta no início, fica triste na 404 e concentrado nas páginas em construção. Reage ao mouse e a bolinha segue a cor de destaque do tema |
+| 🤖 **Kess, o mascote** | Mascote 3D que acompanha a rolagem pulando de card em card, fica triste na 404 e concentrado nas páginas em construção. Reage ao mouse e a bolinha segue a cor de destaque do tema |
 | 📈 **Analytics** | [Vercel Analytics](https://vercel.com/analytics) |
 
 ## Kess, o mascote
@@ -98,8 +98,20 @@ O Kess é um Web Component (`<kess-mascot>`) em `src/lib/kess/kess.js`, usado pe
 <Kess mood="normal" followAccent />               // bolinha na cor de destaque do Theme.tsx
 ```
 
-No início, o `KessGreeter` reage ao visitante: qualquer elemento com `data-kess-mood="animado"`
-(ou outra emoção) muda a expressão no hover/foco, o clique deixa ele feliz e, após 30 s parado, ele dorme.
+No site existe um Kess só, o `KessCompanion`, que acompanha quem lê. As páginas não desenham o Kess:
+marcam onde ele pode ficar, e ele vai pulando em arco de um lugar para outro conforme a rolagem.
+
+```tsx
+<KessSpot mood="triste" size="clamp(88px, 11vw, 120px)" />   // o lugar dele no topo da página
+<div data-kess-perch="">…</div>                              // borda onde ele pode sentar (todo Card já tem)
+<footer data-kess-perch="feliz">…</footer>                   // e com qual emoção
+```
+
+Com o spot da página na tela, ele fica lá, no tamanho e com a emoção do spot. Fora dele, senta na borda do
+card mais perto da linha de leitura e, entre um lugar e outro, pula animado; parado, assenta com uma molinha.
+Ele também reage ao visitante: qualquer elemento com `data-kess-mood="animado"` (ou outra emoção) muda a
+expressão no hover/foco, o clique deixa ele feliz e, após 30 s parado, ele dorme. Com "reduzir movimento"
+ligado no sistema, ele só troca de lugar, sem pular.
 
 ## Stack
 

@@ -7,6 +7,7 @@ import Contact from './pages/Contact';
 import NotFound from './pages/404';
 import Footer from './components/layout/Footer';
 import Header from './components/layout/Header';
+import KessCompanion from './components/kess/KessCompanion';
 import { Analytics } from "@vercel/analytics/react"
 
 // A formação traz o Motion para as animações; só é baixada quando alguém abre a página.
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
+          <KessCompanion />
         </BrowserRouter>
       </div>
     </ThemeProvider>

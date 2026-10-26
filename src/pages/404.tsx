@@ -1,12 +1,12 @@
 import { TriangleAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Kess from '@/components/kess/Kess';
+import KessSpot from '@/components/kess/KessSpot';
 
 function NotFound() {
   return (
     <section>
       <div className="flex min-h-[55vh] flex-col items-start justify-center gap-4">
-        <Kess mood="triste" size="clamp(88px, 11vw, 120px)" label="Kess triste: a página não existe" />
+        <KessSpot mood="triste" size="clamp(88px, 11vw, 120px)" />
 
         <p className="flex items-center gap-2 text-sm font-medium text-ctp-accent">
           <TriangleAlert size={16} />
