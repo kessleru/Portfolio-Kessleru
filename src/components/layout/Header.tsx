@@ -88,7 +88,7 @@ function Header() {
               <button
                 type="button"
                 onClick={() => setSimple(true)}
-                className="flex cursor-pointer items-center gap-2 text-sm text-ctp-subtext-0 hover:text-ctp-accent"
+                className="flex w-full cursor-pointer items-center gap-2 text-left text-sm whitespace-nowrap text-ctp-subtext-0 hover:text-ctp-accent"
               >
                 <BookOpen size={15} aria-hidden="true" />
                 Versão simples

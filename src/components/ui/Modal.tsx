@@ -10,7 +10,7 @@ const Modal: React.FC<{
 
   return createPortal(
     <div className="absolute right-4 top-27 z-50 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-300 ease-out sm:right-8">
-      <Card fileName="Modal.tsx" className="w-[min(10rem,calc(100vw-2rem))]">
+      <Card fileName="Modal.tsx" className="w-[min(12rem,calc(100vw-2rem))]">
         {children}
       </Card>
     </div>,

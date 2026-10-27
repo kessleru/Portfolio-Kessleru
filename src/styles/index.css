@@ -513,10 +513,10 @@ body {
   }
 }
 
-/* sem mouse (celular, tablet) a aba fica sempre à mostra */
+/* sem mouse (celular, tablet) não tem hover: a aba some de vez, para não poluir a tela pequena */
 @media not ((hover: hover) and (pointer: fine)) {
-  .card-body {
-    border-top-left-radius: 0;
+  .card-tab {
+    display: none;
   }
 }
 
