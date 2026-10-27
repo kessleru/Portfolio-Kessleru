@@ -367,14 +367,15 @@
   color-scheme: light;
   --ctp-subtext-0: #5f627a;
   --ctp-meta: #5f627a;
-  /* Latte em tom creme: o fundo é papel, os cards ficam mais claros que ele (e não iguais),
-     e as superfícies e bordas puxam para o quente. Os textos e as cores de destaque seguem do Catppuccin. */
-  --ctp-base: #f3eee3;
-  --ctp-mantle: #fffcf6;
-  --ctp-crust: #e6decd;
-  --ctp-surface-0: #e4dccb;
-  --ctp-surface-1: #d3c9b5;
-  --ctp-surface-2: #bfb49e;
+  /* Latte num creme suave (na linha do Rosé Pine Dawn e do Flexoki, só que mais neutro): o branco
+     esquenta um pouco, sem virar bege; os cards ficam mais claros que o fundo, e superfícies e bordas
+     puxam levemente para o quente. Textos e cores de destaque seguem do Catppuccin. */
+  --ctp-base: #f5f3ee;
+  --ctp-mantle: #fdfcf9;
+  --ctp-crust: #e9e6de;
+  --ctp-surface-0: #e7e4dc;
+  --ctp-surface-1: #d8d4ca;
+  --ctp-surface-2: #c6c1b5;
 }
 
 @layer base {
