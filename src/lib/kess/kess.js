@@ -268,39 +268,16 @@
 
       bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 96, 72)), mat));
 
-      // rosto: olhos, boca e bochechas são uma folha fina, de cor chapada (sem luz), um pouco acima do corpo
-      // (projeção plana, o desenho não deforma). Uma sombra leve embaixo mostra que a folha é uma peça à parte.
+      // rosto: as expressões são um desenho no corpo, como tinta em papel colado nele. A casca segue a curva
+      // (projeção plana, o desenho não deforma) e recebe a mesma luz do corpo: parece desenhado, não flutuando.
       var FW = 512, FK = FW / 1024, FR = 1.25, faceCv = document.createElement('canvas'); faceCv.width = faceCv.height = FW;
       var fctx = faceCv.getContext('2d');
       var faceTex = new T.CanvasTexture(faceCv); faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      // sombra da folha: silhueta do rosto, um pouco borrada (reduz e amplia, funciona em qualquer navegador)
-      var HW = 256, silCv = document.createElement('canvas'), smallCv = document.createElement('canvas'), hCv = document.createElement('canvas');
-      silCv.width = silCv.height = FW; smallCv.width = smallCv.height = 96; hCv.width = hCv.height = HW;
-      var sctx = silCv.getContext('2d'), smctx = smallCv.getContext('2d'), hctx = hCv.getContext('2d');
-      var shadowTex = new T.CanvasTexture(hCv);
-      shadowTex.offset.set(-.004, .009);                   // sombra um pouco para baixo e para a direita (luz do alto à esquerda)
-      function drawHeight() {
-        sctx.globalCompositeOperation = 'source-over'; sctx.clearRect(0, 0, FW, FW); sctx.drawImage(faceCv, 0, 0);
-        sctx.globalCompositeOperation = 'source-in'; sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, FW, FW);
-        smctx.clearRect(0, 0, 96, 96); smctx.drawImage(silCv, 0, 0, 96, 96);
-        hctx.fillStyle = '#000'; hctx.fillRect(0, 0, HW, HW);
-        hctx.imageSmoothingQuality = 'high';
-        hctx.globalAlpha = .5; hctx.drawImage(smallCv, 0, 0, HW, HW);    // borda suave
-        hctx.globalAlpha = .5; hctx.drawImage(silCv, 0, 0, HW, HW);      // forma
-        hctx.globalAlpha = 1;
-        shadowTex.needsUpdate = true;
-      }
-      function faceShell(k) {
-        var g = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), k);
-        var fp = g.attributes.position, fuv = g.attributes.uv;
-        for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR), .5 + fp.getY(i) / (2 * FR));
-        fuv.needsUpdate = true; return g;
-      }
-      // sombra da folha, colada no corpo
-      var contact = new T.Mesh(faceShell(1.003), new T.MeshBasicMaterial({ color: 0x0b0b12, alphaMap: shadowTex, transparent: true, opacity: .3, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
-      contact.renderOrder = 1; bodyG.add(contact);
-      // a folha fica um pouco acima do corpo: ao virar, ela desliza de leve sobre ele, como uma peça à parte
-      var face = new T.Mesh(faceShell(1.018), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
+      var faceGeo = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), 1.004);
+      var fp = faceGeo.attributes.position, fuv = faceGeo.attributes.uv;
+      for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR), .5 + fp.getY(i) / (2 * FR));
+      fuv.needsUpdate = true;
+      var face = new T.Mesh(faceGeo, new T.MeshStandardMaterial({ map: faceTex, transparent: true, depthWrite: false, roughness: .75, metalness: 0, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
       face.renderOrder = 2;
       bodyG.add(face);
 
@@ -391,7 +368,6 @@
         });
         fctx.restore();
         faceTex.needsUpdate = true;
-        drawHeight();
       }
 
       /* ---------- animação ---------- */
