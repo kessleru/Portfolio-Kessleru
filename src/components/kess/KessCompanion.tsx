@@ -268,6 +268,8 @@ function KessCompanion() {
       // pulos à toa (passear, trocar de card) têm intervalo mínimo: pular toda hora fica estranho
       lastIdleJump: 0,
       lastCardJump: 0,
+      // altura do pulo dentro do canvas (0 no chão, 1 no alto), para a sombra encolher junto
+      lift: 0,
       hopTo: null as number | null,
       nextIdle: performance.now() + 6000,
       dirty: true,
@@ -326,8 +328,12 @@ function KessCompanion() {
         el.style.transform = `translate3d(${x}px, ${s.y - s.size * 0.72}px, 0) translate(${right ? '0' : '-100%'}, -100%)`;
       }
 
-      // A sombra fica no chão, não grudada no Kess: some logo que ele sobe e reaparece no pouso.
-      // Sem Kess à vista (escondido, chegando na página, espiando) não tem sombra.
+      placeShadow();
+    }
+
+    // A sombra fica no chão, não grudada no Kess: some logo que ele sobe e reaparece no pouso.
+    // Sem Kess à vista (escondido, chegando na página, espiando) não tem sombra.
+    function placeShadow() {
       const f = s.flight;
       const g = f
         ? f.vy0 + GRAVITY * ((performance.now() - f.start) / 1000) < 0 && f.from
@@ -352,8 +358,10 @@ function KessCompanion() {
         shadow!.style.opacity = '0';
         return;
       }
-      shadow!.style.opacity = String(0.3 * fade);
-      shadow!.style.transform = `translate3d(${s.x - half}px, ${groundY - s.size * 0.012}px, 0)`;
+      // no pulo dentro do canvas ela encolhe em volta do próprio centro (no transform, depois da posição:
+      // a propriedade scale à parte também encolheria a posição e jogaria a sombra para cima)
+      shadow!.style.opacity = String(0.3 * fade * (1 - s.lift * 0.8));
+      shadow!.style.transform = `translate3d(${s.x - half}px, ${groundY - s.size * 0.012}px, 0) scale(${1 - s.lift * 0.4})`;
       shadow!.style.width = `${half * 2}px`;
       shadow!.style.height = `${s.size * 0.08}px`;
     }
@@ -882,9 +890,8 @@ function KessCompanion() {
     });
     // pulo dentro do próprio canvas (clique, susto): a sombra no chão encolhe e clareia junto
     const onLift = (e: Event) => {
-      const lift = (e as CustomEvent<number>).detail;
-      shadow.style.scale = lift ? String(1 - lift * 0.4) : '';
-      shadow.style.filter = lift ? `opacity(${1 - lift * 0.8})` : '';
+      s.lift = (e as CustomEvent<number>).detail;
+      placeShadow();
     };
     wrap.addEventListener('kess-lift', onLift);
 
