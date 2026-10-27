@@ -104,12 +104,10 @@
     --ctp-pink: #f5c2e7;
     --ctp-mauve: #cba6f7;
     --ctp-red: #f38ba8;
-    background: var(--background);
     --ctp-peach: #fab387;
     --ctp-yellow: #f9e2af;
     --ctp-green: #a6e3a1;
     --ctp-teal: #94e2d5;
-    border: 2px solid var(--background);
     --ctp-sapphire: #74c7ec;
     --ctp-blue: #89b4fa;
     --ctp-lavender: #b4befe;
@@ -359,6 +357,12 @@
   color-scheme: dark;
   caret-color: var(--ctp-accent);
   --ctp-meta: var(--ctp-overlay-2);
+}
+
+/* Sem o "elástico" ao chegar no topo ou no fim: ele arrastava o header fixo junto. */
+html,
+body {
+  overscroll-behavior-y: none;
 }
 
 /* No Latte o subtext-0 e o overlay-2 originais ficam abaixo de 4,5:1 nos cards; usamos o tom mais
