@@ -17,7 +17,7 @@ function NotFound() {
           Página não encontrada.
         </h1>
 
-        <p className="max-w-[60ch] text-sm text-ctp-subtext-0 sm:text-base">
+        <p className="prose-text">
           O caminho que você tentou acessar não existe ou foi movido.
         </p>
 

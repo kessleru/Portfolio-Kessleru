@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Tag } from 'lucide-react';
 import Card from '@/components/ui/Cards/Card';
 import { cn } from '@/lib/utils';
+import { useSimple } from '@/components/simple/simpleMode';
 
 type ProjectCardProps = {
   title: string;
@@ -53,6 +54,56 @@ function ProjectCard({
     isLoaded: false,
     hasError: false,
   });
+
+  const simple = useSimple();
+
+  // Versão simples: uma linha de lista, com a imagem pequena ao lado.
+  if (simple) {
+    return (
+      <article className="flex gap-5 border-b border-ctp-surface-0 py-7 first:pt-0">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold text-ctp-text">{title}</h2>
+          <p className="mt-1.5 text-[15px] leading-relaxed text-pretty text-ctp-subtext-1">
+            {description}
+          </p>
+          <p className="mt-2 font-mono text-xs text-ctp-meta">
+            {stacks.join(' · ')}
+          </p>
+          <div className="mt-3 flex gap-5 text-sm">
+            {repoUrl && (
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-ctp-text underline decoration-ctp-surface-2 underline-offset-4 transition-colors hover:decoration-ctp-accent"
+              >
+                Repositório
+              </a>
+            )}
+            {liveUrl && (
+              <a
+                href={liveUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-ctp-text underline decoration-ctp-surface-2 underline-offset-4 transition-colors hover:decoration-ctp-accent"
+              >
+                Demo
+              </a>
+            )}
+          </div>
+        </div>
+        <img
+          src={img}
+          alt=""
+          width={1600}
+          height={900}
+          loading="lazy"
+          decoding="async"
+          className="hidden aspect-[16/9] w-36 shrink-0 self-start rounded-md object-cover sm:block"
+        />
+      </article>
+    );
+  }
 
   const isCurrentImage = imageState.src === img;
   const isImageLoaded = isCurrentImage && imageState.isLoaded;
@@ -107,7 +158,9 @@ function ProjectCard({
 
         <div className="mt-4">
           <h3 className="text-lg font-bold text-ctp-text">{title}</h3>
-          <p className="mt-2 text-sm text-ctp-subtext-0">{description}</p>
+          <p className="mt-2 font-sans text-[15px] leading-relaxed text-pretty text-ctp-subtext-1">
+            {description}
+          </p>
         </div>
 
         <div className="space-y-2">

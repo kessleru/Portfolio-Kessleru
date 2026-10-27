@@ -19,8 +19,8 @@ function BranchName({ name }: { name: string }) {
   return (
     <span
       data-kess-mood="curioso"
-      className="border-b-2 border-dashed"
-      style={{ color, borderColor: color }}
+      className="font-mono text-[0.92em] font-semibold"
+      style={{ color }}
     >
       {name}
     </span>
@@ -45,7 +45,7 @@ function Training() {
             <h1>Formação</h1>
           </div>
         </div>
-        <div className="max-w-[70ch] space-y-2 text-sm text-balance text-ctp-subtext-0 sm:text-base">
+        <div className="prose-text">
           <p>
             Minha formação contada como um repositório: a{' '}
             <BranchName name="main" /> é a base, e cada fase abriu uma branch.
@@ -122,7 +122,7 @@ function Training() {
           <span className="text-ctp-accent max-sm:hidden">&gt;</span>
           <h2>Certificados</h2>
         </div>
-        <p className="max-w-[70ch] text-sm text-balance text-ctp-subtext-0 sm:text-base">
+        <p className="prose-text">
           Cada curso concluído é uma extensão instalada. Filtre por competência
           e clique num card para ver a credencial.
         </p>

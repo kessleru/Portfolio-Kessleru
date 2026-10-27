@@ -1,5 +1,4 @@
-import { LogoLoop } from '@/components/react-bits/logo-loop/LogoLoop';
-import { type ComponentType, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
   SiDocker,
   SiPnpm,
@@ -18,21 +17,7 @@ import Card from './Cards/Card';
 
 type TechLogoItem = { node: ReactNode; title: string; href: string };
 
-type SkillsLoopProps = {
-  logos: TechLogoItem[];
-  speed?: number;
-  direction?: 'left' | 'right' | 'up' | 'down';
-  className?: string;
-  logoHeight?: number;
-  gap?: number;
-  hoverSpeed?: number;
-  scaleOnHover?: boolean;
-  ariaLabel?: string;
-};
-
-const TypedLogoLoop = LogoLoop as unknown as ComponentType<SkillsLoopProps>;
-
-const techLogos = [
+const techLogos: TechLogoItem[] = [
   {
     node: <SiHtml5 />,
     title: 'HTML5',
@@ -67,19 +52,35 @@ const techLogos = [
   { node: <SiFigma />, title: 'Figma', href: 'https://www.figma.com' },
 ];
 
+// Uma faixa parada, com o nome de cada tecnologia: nada se mexendo sozinho na tela enquanto a pessoa lê.
 function SkillsLoop() {
   return (
-    <Card className="w-full text-ctp-subtext-0" fileName="Skills.tsx">
-      <TypedLogoLoop
-        logos={techLogos}
-        speed={50}
-        direction="right"
-        logoHeight={30}
-        gap={90}
-        hoverSpeed={0}
-        scaleOnHover
-        ariaLabel="Technology partners"
-      />
+    <Card className="w-full" fileName="Skills.tsx">
+      <ul
+        aria-label="Tecnologias que uso"
+        className="grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-y-5 py-2"
+      >
+        {techLogos.map(({ node, title, href }) => (
+          <li key={title}>
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="group flex flex-col items-center gap-2 text-ctp-subtext-0 transition-colors hover:text-ctp-text"
+            >
+              <span
+                aria-hidden="true"
+                className="text-[26px] transition-transform duration-200 group-hover:-translate-y-0.5"
+              >
+                {node}
+              </span>
+              <span className="text-xs whitespace-nowrap text-ctp-meta transition-colors group-hover:text-ctp-subtext-1">
+                {title}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

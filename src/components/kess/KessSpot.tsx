@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { cn } from '@/lib/utils';
 import type { KessMood } from './Kess';
 import { getKessEnabled, subscribeKess } from './kessPreference';
+import { useSimple } from '@/components/simple/simpleMode';
 
 type KessSpotProps = {
   mood?: KessMood;
@@ -24,7 +25,8 @@ function KessSpot({
     getKessEnabled,
     () => true
   );
-  if (!enabled) return null;
+  const simple = useSimple();
+  if (!enabled || simple) return null;
 
   return (
     <div
