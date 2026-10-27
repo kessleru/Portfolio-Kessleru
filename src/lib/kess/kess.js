@@ -247,7 +247,7 @@
       // numa saia, e a barra com gominhos arredondados (cinco na frente). Perfil girado em volta do eixo,
       // achatado de frente para trás.
       function smooth(a, b, t) { t = Math.max(0, Math.min(1, (t - a) / (b - a))); return t * t * (3 - 2 * t); }
-      var GW = 1.02, GD = .76, DOME = 1, SIDE = .92, FLARE = .1, HEM = .24;
+      var GW = 1.02, GD = .76, DOME = 1, SIDE = .92, FLARE = .1, HEM = .5, hemPhase = 0;
       function shape(v) {
         var phi = Math.acos(Math.max(-1, Math.min(1, v.y))), th = Math.atan2(v.x, v.z), r, y;
         if (phi <= Math.PI / 2) {                           // cúpula
@@ -256,7 +256,8 @@
           var t = (phi - Math.PI / 2) / (Math.PI / 2);      // 0 no meio do corpo, 1 no centro da base
           if (t < .6) {                                     // laterais levemente cheias, abrindo em saia
             var u = t / .6;
-            r = 1 + .04 * Math.sin(u * Math.PI) + FLARE * u * u; y = SIDE - .92 - (SIDE - .14) * u;
+            r = 1 + .03 * Math.pow(Math.sin(u * Math.PI), 2) + FLARE * u * u;   // sem inclinação no começo: emenda lisa com a cúpula
+            y = SIDE - .92 - (SIDE - .14) * u;
           } else {                                          // canto bem arredondado (quarto de círculo) até a base
             var w = (t - .6) / .4, a = w * Math.PI / 2;
             r = (1 + FLARE) - .14 * (1 - Math.cos(a)) - (1 + FLARE - .14) * Math.pow(w, 1.6);
@@ -264,8 +265,11 @@
           }
           // gominhos da barra: bolinhas redondas ao longo da largura (quatro e meia de frente), com vãos entre elas.
           // Seguem o x (e não o ângulo) para que a base não tape os vãos quando visto de frente.
-          var lobe = Math.sqrt(.5 + .5 * Math.cos(2 * Math.PI * r * Math.sin(th) / .5));
-          y += HEM * (1 - lobe) * smooth(.45, .8, t);
+          // ondinhas suaves: perninhas de topo redondo e vãos lisos (sem pontas); só na beirada de baixo,
+          // então a linha do lado do corpo fica reta e contínua
+          var c = .5 + .5 * Math.cos(2 * Math.PI * r * Math.sin(th) / .64 + hemPhase);
+          var lobe = 1 - (1 - c) * (1 - c);
+          y += HEM * (1 - lobe) * smooth(.46, .84, t);
         }
         return v.set(GW * r * Math.sin(th), y, GD * r * Math.cos(th));
       }
@@ -284,7 +288,17 @@
       squash.position.y = -.78; tiltG.position.y = .78;
       var bodyG = new T.Group(); bodyG.scale.setScalar(.84); tiltG.add(bodyG);
 
-      bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 96, 72)), mat));
+      var bodyGeo = deform(new T.SphereGeometry(1, 144, 108));
+      bodyG.add(new T.Mesh(bodyGeo, mat));
+      // só a parte de baixo ondula: guarda as direções desses vértices para recalcular a barra a cada quadro
+      var hemIdx = [], hemDir = [], bp0 = new T.SphereGeometry(1, 144, 108).attributes.position;
+      for (var hi = 0; hi < bp0.count; hi++) { var hv = new T.Vector3().fromBufferAttribute(bp0, hi).normalize(); if (hv.y < -.3) { hemIdx.push(hi); hemDir.push(hv); } }
+      var hemTmp = new T.Vector3();
+      function rippleHem() {
+        var pos = bodyGeo.attributes.position;
+        for (var j = 0; j < hemIdx.length; j++) { shape(hemTmp.copy(hemDir[j])); pos.setXYZ(hemIdx[j], hemTmp.x, hemTmp.y, hemTmp.z); }
+        pos.needsUpdate = true;
+      }
 
       // rosto: olhos, boca e bochechas em cor sólida, flutuando um pouco à frente do corpo (a casca segue a curva,
       // com projeção plana, então o desenho não deforma). Uma sombra suave no corpo, logo abaixo, mostra o vão.
@@ -422,7 +436,7 @@
       var walkPh = 0, waddle = 0, lastLift = 0, pendingT = 0;
       this._hop = function (power) {
         if (REDUCE || y > .01 || pending) return;
-        sqV -= 3.2; pending = power; pendingT = 0;       // antecipação: amassa antes de pular
+        sqV -= 2.2; pending = power * .78; pendingT = 0; // antecipação: encolhe de leve antes de subir
       };
       this._recolor = function () { moodTarget.set(self._colorOf(self._mood)); };
       this._kick = function (v) { if (REDUCE) return; sqV += v; wobV += Math.abs(v) * 2.5; };
@@ -461,7 +475,8 @@
         if (!REDUCE) {
           // decola no fundo da agachada; se ela não vier (corpo já amassado, quadro perdido), decola logo depois
           if (pending) { pendingT += dt; if (sq < -.06 || pendingT > .25) { vy = pending; pending = 0; sqV += 4; } }
-          if (y > 0 || vy > 0) { vy -= 13 * dt; y += vy * dt; if (y <= 0) { y = 0; sqV -= Math.min(5, Math.abs(vy) * 1.2); vy = 0; wobV += 6; } }
+          // fantasma: sobe e desce devagar (gravidade baixa) e pousa macio, quase sem amassar
+          if (y > 0 || vy > 0) { vy -= 8 * dt; y += vy * dt; if (y <= 0) { y = 0; sqV -= Math.min(2.2, Math.abs(vy) * .5); vy = 0; wobV += 3; } }
           if (d.hops) { hopTimer -= dt; if (hopTimer <= 0 && y === 0) { self._hop(2.1); hopTimer = .75; } }
           sqV += (-120 * (sq - self._crouch) - 9 * sqV) * dt; sq += sqV * dt;
           wobV += (-160 * wob - 7 * wobV) * dt; wob += wobV * dt;
@@ -477,7 +492,9 @@
         var s = Math.max(-.3, Math.min(.3, sq + breath - air + (walking ? .04 - step * .08 : 0)));
         squash.scale.set(1 - s * .9, 1 + s, 1 - s * .9);
         var grounded = self.hasAttribute('grounded');
-        kess.position.y = y + step * .07 + (REDUCE || grounded ? 0 : Math.sin(tm * 2.4 + 1) * .03);
+        // fantasminha: paira um pouquinho acima do chão, subindo e descendo devagar
+        kess.position.y = y + step * .07 + (REDUCE ? 0 : .03 + Math.sin(tm * 1.8 + 1) * .03);
+        if (!REDUCE) { hemPhase = tm * 1.2; rippleHem(); }   // as ondinhas andam devagar
         // avisa a altura do pulo (para uma sombra de fora do canvas acompanhar)
         var lift = Math.min(1, y / .5);
         if (Math.abs(lift - lastLift) > .02 || (lift === 0 && lastLift !== 0)) {
@@ -495,6 +512,7 @@
         var tz = (d.tilt || 0) + (d.sleepy ? .1 : 0) + (d.droop ? .05 : 0);
         if (shakeT > 0) { shakeT -= dt; tz += Math.sin(tm * 60) * .05 * (shakeT / .5); }
         if (d.wobble && !REDUCE) tz += Math.sin(tm * 6) * .1;   // tonto: cambaleia
+        if (!REDUCE) tz += Math.sin(tm * 1.3) * .025;            // balança de leve no ar
         rotZ += (tz - rotZ) * k;
         waddle += ((walking ? Math.sin(walkPh) * .07 : 0) - waddle) * Math.min(1, dt * 12);
         tiltG.rotation.set(rotX, rotY, -rotZ - wob * .015 + waddle);

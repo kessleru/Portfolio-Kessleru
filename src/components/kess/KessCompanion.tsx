@@ -23,7 +23,8 @@ const BASE = 120;
 // Altura dos "pés" dentro da caixa do Kess (fração a partir do topo).
 const FOOT = 0.86;
 // Gravidade em px/s². É ela que tira a sensação de voo: sobe desacelerando e cai acelerando.
-const GRAVITY = 2600;
+// fantasma: gravidade baixa, os pulos viram voos curtos e lentos
+const GRAVITY = 1500;
 const IDLE_MS = 30_000;
 const YAWN_MS = 1_600;
 // Enquanto a pessoa rola, o Kess fica no lugar dele (e sai da tela junto com o conteúdo);
@@ -586,11 +587,11 @@ function KessCompanion() {
       const el = kess();
       if (el) {
         el.crouch = 0;
-        el.squash(-clamp(impact / 420, f.step ? 1.8 : 2, 6.5));
+        el.squash(-clamp(impact / 700, f.step ? 1 : 1.2, 3));
       }
       if (!f.step) {
         const power = clamp(impact / 1800, 0, 1);
-        if (impact > 450) dust(s.x, s.y, power);
+        if (impact > 1400) dust(s.x, s.y, power); // fantasma quase não levanta poeira
         if (impact > 800 && fresh.kind === 'perch') press(fresh.el, power);
         later(() => {
           if (s.mode === 'sit' && el) el.gaze = null;
@@ -624,14 +625,14 @@ function KessCompanion() {
       if (!el) return;
       const roll = Math.random();
       const g = s.ground;
-      const canJump = now - s.lastIdleJump > 40_000;
+      const canJump = now - s.lastIdleJump > 15_000;
       // de vez em quando troca de card (ex.: pula de um projeto para outro, em outra coluna)
       if (
         canJump &&
-        now - s.lastCardJump > 90_000 &&
+        now - s.lastCardJump > 35_000 &&
         g.kind === 'perch' &&
         !visibleSpot() &&
-        Math.random() < 0.1
+        Math.random() < 0.25
       ) {
         const to = otherPerch(g);
         if (to) {
@@ -650,7 +651,7 @@ function KessCompanion() {
         // fala uma coisinha
         say(pick(lines.idle));
       } else if (
-        roll < 0.26 &&
+        roll < 0.38 &&
         canJump &&
         g.kind === 'perch' &&
         g.right - g.left > s.size * 2
