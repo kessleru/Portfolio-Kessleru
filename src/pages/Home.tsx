@@ -2,8 +2,8 @@ import ProfileCard from '@/components/ui/ProfileCard';
 import SkillsLoop from '@/components/ui/SkillsLoop';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 import CommitHeatmapCard from '@/components/ui/CommitHeatmapCard';
-import { SiGithub, SiLinkedin } from 'react-icons/si';
-import { Download } from 'lucide-react';
+import { BookOpen, Download } from 'lucide-react';
+import { setSimple } from '@/components/simple/simpleMode';
 import KessSpot from '@/components/kess/KessSpot';
 
 function Home() {
@@ -35,7 +35,7 @@ function Home() {
                 projetos próprios, que estão no meu GitHub.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               <a
                 href="/curriculo-otavio-kessler-ustra.pdf"
                 download
@@ -45,28 +45,15 @@ function Home() {
                 <Download size={16} aria-hidden="true" />
                 Baixar CV
               </a>
-              <a
-                href="https://github.com/kessleru"
-                target="_blank"
-                rel="me noreferrer"
-                data-kess-mood="animado"
-                data-kess-say="os repositórios estão lá"
-                className="inline-flex items-center gap-2 text-sm text-ctp-subtext-1 transition-colors hover:text-ctp-accent"
+              {/* no celular o menu não tem a versão simples: ela fica aqui, ao lado do CV */}
+              <button
+                type="button"
+                onClick={() => setSimple(true)}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-ctp-surface-1 px-4 py-2 text-sm font-medium text-ctp-subtext-1 transition-colors hover:border-ctp-accent/60 hover:text-ctp-accent min-[650px]:hidden"
               >
-                <SiGithub size={18} aria-hidden="true" />
-                GitHub
-              </a>
-              <a
-                href="https://www.linkedin.com/in/otavio-ustra-8b50bb364/"
-                target="_blank"
-                rel="me noreferrer"
-                data-kess-mood="animado"
-                data-kess-say="vamos conversar?"
-                className="inline-flex items-center gap-2 text-sm text-ctp-subtext-1 transition-colors hover:text-ctp-accent"
-              >
-                <SiLinkedin size={18} aria-hidden="true" />
-                LinkedIn
-              </a>
+                <BookOpen size={16} aria-hidden="true" />
+                Versão simples
+              </button>
             </div>
           </div>
           <ProfileCard />

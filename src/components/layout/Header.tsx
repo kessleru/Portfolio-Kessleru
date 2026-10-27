@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BookOpen, Menu } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { Link, useLocation } from 'react-router-dom';
+import { SiGithub, SiLinkedin } from 'react-icons/si';
 import { setSimple } from '@/components/simple/simpleMode';
 
 const navItems = [
@@ -10,6 +11,44 @@ const navItems = [
   { label: 'Formação', to: '/training' },
   { label: 'Contato', to: '/contact' },
 ];
+
+const socials = [
+  {
+    label: 'GitHub',
+    href: 'https://github.com/kessleru',
+    Icon: SiGithub,
+    say: 'os repositórios estão lá',
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/otavio-ustra-8b50bb364/',
+    Icon: SiLinkedin,
+    say: 'vamos conversar?',
+  },
+];
+
+/** GitHub e LinkedIn só com o ícone, no canto do header (em toda página). */
+function Socials() {
+  return (
+    <span className="flex items-center gap-1">
+      {socials.map(({ label, href, Icon, say }) => (
+        <a
+          key={label}
+          href={href}
+          target="_blank"
+          rel="me noreferrer"
+          aria-label={label}
+          title={label}
+          data-kess-mood="animado"
+          data-kess-say={say}
+          className="grid size-8 place-items-center rounded-md text-ctp-meta transition-colors hover:text-ctp-accent"
+        >
+          <Icon size={17} aria-hidden="true" />
+        </a>
+      ))}
+    </span>
+  );
+}
 
 const pathnameLabelMap: Record<string, string> = {
   '/': 'início',
@@ -62,7 +101,8 @@ function Header() {
           </span>
           <span>/</span>
         </div>
-        <div className="min-[650px]:hidden">
+        <div className="flex items-center gap-2 min-[650px]:hidden">
+          <Socials />
           <button
             className="cursor-pointer text-ctp-accent transition-colors duration-200"
             aria-label="Abrir menu"
@@ -85,14 +125,6 @@ function Header() {
                   {item.label}
                 </Link>
               ))}
-              <button
-                type="button"
-                onClick={() => setSimple(true)}
-                className="flex w-full cursor-pointer items-center gap-2 text-left text-sm whitespace-nowrap text-ctp-subtext-0 hover:text-ctp-accent"
-              >
-                <BookOpen size={15} aria-hidden="true" />
-                Versão simples
-              </button>
             </div>
           </Modal>
         </div>
@@ -128,6 +160,8 @@ function Header() {
           >
             <BookOpen size={17} aria-hidden="true" />
           </button>
+          <span aria-hidden="true" className="mx-1 h-4 w-px bg-ctp-surface-1" />
+          <Socials />
         </nav>
       </div>
     </header>
