@@ -247,32 +247,30 @@
       // numa saia, e a barra com gominhos arredondados (cinco na frente). Perfil girado em volta do eixo,
       // achatado de frente para trás.
       function smooth(a, b, t) { t = Math.max(0, Math.min(1, (t - a) / (b - a))); return t * t * (3 - 2 * t); }
-      var GW = 1.02, GD = .76, DOME = 1, SIDE = .92, FLARE = .1, HEM = .5, hemPhase = 0;
-      function shape(v) {
-        var phi = Math.acos(Math.max(-1, Math.min(1, v.y))), th = Math.atan2(v.x, v.z), r, y;
-        if (phi <= Math.PI / 2) {                           // cúpula
-          r = Math.sin(phi); y = SIDE - .92 + DOME * Math.cos(phi);
-        } else {
-          var t = (phi - Math.PI / 2) / (Math.PI / 2);      // 0 no meio do corpo, 1 no centro da base
-          if (t < .6) {                                     // laterais levemente cheias, abrindo em saia
-            var u = t / .6;
-            r = 1 + .03 * Math.pow(Math.sin(u * Math.PI), 2) + FLARE * u * u;   // sem inclinação no começo: emenda lisa com a cúpula
-            y = SIDE - .92 - (SIDE - .14) * u;
-          } else {                                          // canto bem arredondado (quarto de círculo) até a base
-            var w = (t - .6) / .4, a = w * Math.PI / 2;
-            r = (1 + FLARE) - .14 * (1 - Math.cos(a)) - (1 + FLARE - .14) * Math.pow(w, 1.6);
-            y = -.78 - .14 * Math.sin(a);
-          }
-          // gominhos da barra: bolinhas redondas ao longo da largura (quatro e meia de frente), com vãos entre elas.
-          // Seguem o x (e não o ângulo) para que a base não tape os vãos quando visto de frente.
-          // ondinhas suaves: perninhas de topo redondo e vãos lisos (sem pontas); só na beirada de baixo,
-          // então a linha do lado do corpo fica reta e contínua
-          var c = .5 + .5 * Math.cos(2 * Math.PI * r * Math.sin(th) / .64 + hemPhase);
-          var lobe = 1 - (1 - c) * (1 - c);
-          y += HEM * (1 - lobe) * smooth(.46, .84, t);
-        }
-        return v.set(GW * r * Math.sin(th), y, GD * r * Math.cos(th));
+      var GW = 1.02, GD = .76, DOME = 1, SIDE = .92, FLARE = .06, HEM = .2, CORNER = .17, hemPhase = 0;
+      // borda de baixo da saia: onda senoidal pura ao longo da largura (lisa, sem pontas), que some perto dos lados,
+      // onde a borda sobe num quarto de círculo (cantos redondos)
+      function edgeY(xr) {
+        var ax = Math.abs(xr), xm = 1 + FLARE;
+        var lobe = .5 + .5 * Math.cos(2 * Math.PI * xr / .64 + hemPhase);
+        var y = -.92 + HEM * (1 - lobe) * (1 - smooth(.5, .85, ax / xm));
+        var d = ax - (xm - CORNER);
+        if (d > 0) y += CORNER - Math.sqrt(Math.max(0, CORNER * CORNER - d * d));
+        return y;
       }
+      // superfície por ângulo em volta (th) e altura (phi: 0 no topo, PI na barra): cúpula redonda em cima e,
+      // embaixo, a saia que desce em linha reta (abrindo de leve) até a borda ondulada. A saia é aberta embaixo.
+      function shapeTP(th, phi, out) {
+        var r, y, yj = SIDE - .92;
+        if (phi <= Math.PI / 2) { r = Math.sin(phi); y = yj + DOME * Math.cos(phi); }
+        else {
+          var t = (phi - Math.PI / 2) / (Math.PI / 2);
+          r = 1 + FLARE * t * t;                              // sem inclinação no começo: emenda lisa com a cúpula
+          y = yj + (edgeY((1 + FLARE) * Math.sin(th)) - yj) * t;
+        }
+        return out.set(GW * r * Math.sin(th), y, GD * r * Math.cos(th));
+      }
+      function shape(v) { return shapeTP(Math.atan2(v.x, v.z), Math.acos(Math.max(-1, Math.min(1, v.y))), v); }
       function deform(geo, k) {
         var p = geo.attributes.position, v = new T.Vector3();
         for (var i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).normalize(); shape(v).multiplyScalar(k || 1); p.setXYZ(i, v.x, v.y, v.z); }
@@ -288,17 +286,20 @@
       squash.position.y = -.78; tiltG.position.y = .78;
       var bodyG = new T.Group(); bodyG.scale.setScalar(.84); tiltG.add(bodyG);
 
-      var bodyGeo = deform(new T.SphereGeometry(1, 144, 108));
-      bodyG.add(new T.Mesh(bodyGeo, mat));
-      // só a parte de baixo ondula: guarda as direções desses vértices para recalcular a barra a cada quadro
-      var hemIdx = [], hemDir = [], bp0 = new T.SphereGeometry(1, 144, 108).attributes.position;
-      for (var hi = 0; hi < bp0.count; hi++) { var hv = new T.Vector3().fromBufferAttribute(bp0, hi).normalize(); if (hv.y < -.3) { hemIdx.push(hi); hemDir.push(hv); } }
-      var hemTmp = new T.Vector3();
-      function rippleHem() {
-        var pos = bodyGeo.attributes.position;
-        for (var j = 0; j < hemIdx.length; j++) { shape(hemTmp.copy(hemDir[j])); pos.setXYZ(hemIdx[j], hemTmp.x, hemTmp.y, hemTmp.z); }
-        pos.needsUpdate = true;
+      // corpo: malha própria (a última fileira fica exatamente na borda ondulada, então a borda sai lisa)
+      var BW = 160, BH = 120, bodyGeo = new T.BufferGeometry(), bodyPos = new Float32Array((BW + 1) * (BH + 1) * 3), bodyIdx = [], bv = new T.Vector3();
+      function bodyRows(from) {
+        for (var j = from; j <= BH; j++) for (var i = 0; i <= BW; i++) {
+          shapeTP(i / BW * 2 * Math.PI - Math.PI, j / BH * Math.PI, bv);
+          var o = (j * (BW + 1) + i) * 3; bodyPos[o] = bv.x; bodyPos[o + 1] = bv.y; bodyPos[o + 2] = bv.z;
+        }
       }
+      bodyRows(0);
+      for (var bj = 0; bj < BH; bj++) for (var bi = 0; bi < BW; bi++) { var ba = bj * (BW + 1) + bi, bb = ba + BW + 1; bodyIdx.push(ba, bb, ba + 1, bb, bb + 1, ba + 1); }
+      bodyGeo.setAttribute('position', new T.BufferAttribute(bodyPos, 3)); bodyGeo.setIndex(bodyIdx);
+      bodyG.add(new T.Mesh(bodyGeo, mat));
+      // a barra ondula: recalcula só a metade de baixo
+      function rippleHem() { bodyRows(BH / 2); bodyGeo.attributes.position.needsUpdate = true; }
 
       // rosto: olhos, boca e bochechas em cor sólida, flutuando um pouco à frente do corpo (a casca segue a curva,
       // com projeção plana, então o desenho não deforma). Uma sombra suave no corpo, logo abaixo, mostra o vão.
