@@ -59,7 +59,7 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
 
         <div>
           <p className="mb-2 text-sm font-semibold">Destaque</p>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="flex flex-wrap gap-2.5">
             {PALETTE_COLORS.map((item) => {
               const colorVar = `--ctp-${item}`;
               const active = item === accent;
@@ -70,10 +70,11 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
                   type="button"
                   onClick={() => setAccent(item)}
                   aria-label={item}
-                  className={`h-9 rounded-md border-2 cursor-pointer ${
+                  aria-pressed={active}
+                  className={`size-7 cursor-pointer rounded-full border-2 transition-[scale] duration-150 hover:scale-110 ${
                     active
-                      ? 'border-ctp-text ring-2 ring-ctp-accent/70'
-                      : 'border-ctp-overlay-0/40'
+                      ? 'border-ctp-mantle ring-2 ring-ctp-text/80'
+                      : 'border-transparent'
                   }`}
                   style={{ backgroundColor: `var(${colorVar})` }}
                 />

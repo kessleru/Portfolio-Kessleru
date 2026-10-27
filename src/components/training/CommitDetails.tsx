@@ -32,15 +32,13 @@ function CommitDetails({
           {commit.date && (
             <span className="text-ctp-meta tabular-nums">· {commit.date}</span>
           )}
-          {commit.planned && (
-            <span className="text-ctp-meta">· previsto</span>
-          )}
+          {commit.planned && <span className="text-ctp-meta">· previsto</span>}
         </p>
         <h3 className="text-sm font-semibold text-ctp-text sm:text-base">
           {commit.title}
         </h3>
         {commit.body && (
-          <div className="mt-2 space-y-1 text-xs text-ctp-subtext-0 sm:text-sm">
+          <div className="mt-2 max-w-[65ch] space-y-1 font-sans text-[15px] leading-relaxed text-ctp-subtext-1">
             {commit.body.map((line) => (
               <p key={line}>{line}</p>
             ))}

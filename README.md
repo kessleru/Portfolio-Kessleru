@@ -81,11 +81,13 @@ No celular o menu vira um botão que abre a navegação e fecha ao escolher uma 
 | 🟩 **Heatmap de commits** | Contribuições do último ano via [github-contributions-api](https://github.com/grubersjoe/github-contributions-api), com cache de 24 horas |
 | 🗂️ **Vitrine de projetos** | 10 repositórios com imagem de Open Graph do GitHub, stack e links |
 | ⌨️ **Editor digitando** | O `Profile.tsx` se escreve sozinho quando entra na tela, com ritmo humano, linha atual destacada, guias de indentação e colchetes coloridos; o card não muda de tamanho enquanto digita |
-| 🔁 **Faixa de skills** | Logos das tecnologias em loop contínuo (`LogoLoop`, também do React Bits) |
+| 🔁 **Skills** | Ícones e nomes das tecnologias, parados (nada se mexendo sozinho enquanto se lê) |
 | 🌿 **Formação em grafo** | Linha do tempo desenhada como `git log --graph`, animada com [Motion](https://motion.dev); clicar numa branch destaca o caminho dela e num commit mostra os detalhes |
 | 🧩 **Certificados como extensões** | 20 certificados agrupados por emissor, filtráveis por competência, com o código da credencial para copiar |
 | 🧭 **Rotas reais** | `/`, `/projects`, `/training`, `/contact` e página 404 |
 | 🤖 **Kess, o mascote** | Mascote 3D que mora na página: anda pela borda dos cards, pula com gravidade conforme a leitura avança, espia da borda da tela e dorme. Dá para esconder no `Theme.tsx` |
+| 📄 **Currículo** | Botão "Baixar CV" no início (PDF em `public/`) |
+| 📖 **Versão simples** | Ícone de livro no topo troca para uma versão só texto, em uma coluna, sem cards, sem Kess e sem animação (fica salva no navegador) |
 | 🔎 **SEO** | Cada página sai do build já em HTML, com título, descrição, Open Graph e dados estruturados (`ProfilePage`/`Person`), além de `sitemap.xml`, `robots.txt` e 404 de verdade |
 | 🗂️ **Abas no hover** | A aba de arquivo de cada card sobe de trás dele no hover/foco; em telas de toque fica sempre visível |
 | 📈 **Analytics** | [Vercel Analytics](https://vercel.com/analytics) |
@@ -179,7 +181,7 @@ src/
 │   ├── ui/                  # ProfileCard, SkillsLoop, CommitHeatmapCard, ThemeSwitcher, Cards…
 │   ├── kess/                # Kess, KessCompanion (o que anda pelo site) e KessSpot
 │   ├── seo/                 # RouteMeta: troca os metadados do <head> ao navegar
-│   └── react-bits/          # LogoLoop
+│   ├── simple/              # versão simples: layout, início e formação só texto
 └── styles/index.css         # tokens do Catppuccin (4 sabores) e @theme do Tailwind
 ```
 

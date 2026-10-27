@@ -307,7 +307,7 @@ function Extensions() {
                 type="button"
                 onClick={() => toggleSection(section.title)}
                 aria-expanded={!collapsed.has(section.title)}
-                className="flex w-full cursor-pointer items-center gap-2 border-t border-ctp-crust/60 pt-3 text-xs font-semibold tracking-wider text-ctp-subtext-1 uppercase hover:text-ctp-text"
+                className="flex w-full cursor-pointer items-center gap-2 border-t border-ctp-crust/60 pt-3 text-sm font-semibold text-ctp-subtext-1 hover:text-ctp-text"
               >
                 <ChevronDown
                   size={14}

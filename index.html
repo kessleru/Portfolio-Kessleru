@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Aplica o tema salvo antes da primeira pintura: quem usa Latte não vê o Mocha piscar. -->
+    <!-- Aplica o tema salvo (e a versão simples) antes da primeira pintura: nada pisca. -->
     <script>
       try {
         var theme = localStorage.getItem('portfolio-theme');
@@ -11,6 +11,7 @@
         var html = document.documentElement;
         if (/^(latte|frappe|macchiato|mocha)$/.test(theme)) html.setAttribute('data-theme', theme);
         if (/^[a-z]+$/.test(accent)) html.style.setProperty('--ctp-accent', 'var(--ctp-' + accent + ')');
+        if (localStorage.getItem('portfolio-simples') === 'on') html.setAttribute('data-simple', '');
       } catch (error) {}
     </script>
     <!-- Título, descrição, Open Graph e JSON-LD de cada página: gerados por src/seo.ts. -->

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Menu } from 'lucide-react';
+import { BookOpen, Menu } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { Link, useLocation } from 'react-router-dom';
+import { setSimple } from '@/components/simple/simpleMode';
 
 const navItems = [
   { label: 'Início', to: '/' },
@@ -47,7 +48,7 @@ function Header() {
 
       {/* conteúdo do header */}
       <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5">
-        <div className='text-sm sm:text-base tracking-widest relative after:content-[""] after:ml-0.5 after:inline-block after:w-2 after:h-4 after:bg-ctp-accent after:top-1 after:absolute after:cursor-blink *:mr-px'>
+        <div className='text-sm sm:text-base tracking-wide relative after:content-[""] after:ml-0.5 after:inline-block after:w-2 after:h-4 after:bg-ctp-accent after:top-1 after:absolute after:cursor-blink *:mr-px'>
           <Link to="/">
             <span className="text-ctp-accent font-medium hover:text-ctp-subtext-0">
               ~
@@ -84,6 +85,14 @@ function Header() {
                   {item.label}
                 </Link>
               ))}
+              <button
+                type="button"
+                onClick={() => setSimple(true)}
+                className="flex cursor-pointer items-center gap-2 text-sm text-ctp-subtext-0 hover:text-ctp-accent"
+              >
+                <BookOpen size={15} aria-hidden="true" />
+                Versão simples
+              </button>
             </div>
           </Modal>
         </div>
@@ -109,6 +118,16 @@ function Header() {
               )}
             </span>
           ))}
+          {/* discreto: só um ícone, para quem prefere ler sem a cara de editor */}
+          <button
+            type="button"
+            onClick={() => setSimple(true)}
+            aria-label="Ver a versão simples do site"
+            title="Versão simples"
+            className="ml-3 cursor-pointer text-ctp-meta transition-colors hover:text-ctp-accent"
+          >
+            <BookOpen size={17} aria-hidden="true" />
+          </button>
         </nav>
       </div>
     </header>

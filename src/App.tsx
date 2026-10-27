@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Home from '@/pages/Home';
@@ -11,8 +11,13 @@ import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
 import KessCompanion from '@/components/kess/KessCompanion';
 import RouteMeta from '@/components/seo/RouteMeta';
+import SimpleLayout from '@/components/simple/SimpleLayout';
+import SimpleHome from '@/components/simple/SimpleHome';
+import { useSimple } from '@/components/simple/simpleMode';
 
 const LazyTraining = lazy(loadTraining);
+// A versão simples da formação é só texto, mas usa os dados dos certificados: fica num pedaço à parte.
+const SimpleTraining = lazy(() => import('@/components/simple/SimpleTraining'));
 
 function TrainingRoute() {
   const Page = training.Page;
@@ -27,6 +32,14 @@ function TrainingRoute() {
 
 // O roteador fica de fora: BrowserRouter no navegador (main.tsx), StaticRouter no build (entry-server.tsx).
 export default function App() {
+  const simple = useSimple();
+
+  // Quem escolheu a versão simples não vê o HTML pré-renderizado (versão completa) piscar:
+  // o index.html esconde o #root até o React desenhar a versão certa.
+  useEffect(() => {
+    document.getElementById('root')?.setAttribute('data-app', '');
+  }, []);
+
   return (
     <ThemeProvider>
       <Analytics />
@@ -37,20 +50,39 @@ export default function App() {
       >
         Pular para o conteúdo
       </a>
-      <div className="container py-4 sm:py-6 lg:py-8">
-        <Header />
-        <main id="conteudo" tabIndex={-1} className="outline-none">
+      {simple ? (
+        <SimpleLayout>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<SimpleHome />} />
             <Route path="/projects" element={<Projects />} />
-            <Route path="/training" element={<TrainingRoute />} />
+            <Route
+              path="/training"
+              element={
+                <Suspense fallback={null}>
+                  <SimpleTraining />
+                </Suspense>
+              }
+            />
             <Route path="/contact" element={<Contact />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </main>
-        <Footer />
-        <KessCompanion />
-      </div>
+        </SimpleLayout>
+      ) : (
+        <div className="container py-4 sm:py-6 lg:py-8">
+          <Header />
+          <main id="conteudo" tabIndex={-1} className="outline-none">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/training" element={<TrainingRoute />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
+          <KessCompanion />
+        </div>
+      )}
     </ThemeProvider>
   );
 }

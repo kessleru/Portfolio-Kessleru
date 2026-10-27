@@ -12,7 +12,7 @@ function Contact() {
           Aviso
         </p>
         <h1 className="text-3xl font-bold sm:text-4xl">Em construção</h1>
-        <p className="max-w-[60ch] text-sm text-ctp-subtext-0 sm:text-base">
+        <p className="prose-text">
           A página de contato está em desenvolvimento.
         </p>
       </div>

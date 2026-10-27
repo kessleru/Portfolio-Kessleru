@@ -25,6 +25,32 @@
   }
 }
 
+/* Texto corrido: fonte do sistema (sem serifa) no lugar da mono, que cansa em parágrafos longos;
+   16–17px, altura de linha 1,7, no máximo ~65 caracteres por linha e um tom acima do subtext-0. */
+@utility prose-text {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 65ch;
+  color: var(--ctp-subtext-1);
+  text-wrap: pretty;
+
+  @media (min-width: 640px) {
+    font-size: 1.0625rem;
+  }
+
+  & p + p {
+    margin-top: 0.85em;
+  }
+
+  & strong {
+    color: var(--ctp-text);
+    font-weight: 600;
+  }
+}
+
 @keyframes blink {
   50% {
     opacity: 0;
@@ -54,6 +80,9 @@
   --color-ctp-overlay-2: var(--ctp-overlay-2);
   /* metadados pequenos (datas, contagens, rótulos): o tom que passa 4,5:1 em cada tema */
   --color-ctp-meta: var(--ctp-meta);
+  /* font-mono (datas, rótulos, nomes de branch) usa a mesma mono do resto do site */
+  --font-mono:
+    'JetBrains Mono', ui-monospace, Menlo, 'DejaVu Sans Mono', monospace;
   --color-ctp-overlay-1: var(--ctp-overlay-1);
   --color-ctp-overlay-0: var(--ctp-overlay-0);
   --color-ctp-surface-2: var(--ctp-surface-2);
@@ -597,4 +626,26 @@ body {
 .kess-body kess-mascot:focus-visible {
   outline-offset: -10px;
   border-radius: 40%;
+}
+
+/* ---------- Versão simples ---------- */
+/* Até o React desenhar a versão simples, o HTML pré-renderizado (completo) fica escondido. */
+html[data-simple] #root:not([data-app]) {
+  visibility: hidden;
+}
+
+/* A página de projetos é a mesma da versão completa: aqui ela vira uma lista de uma coluna,
+   sem o "> " antes do título. */
+.simple-page main h1 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.simple-page main span:has(+ h1) {
+  display: none;
+}
+
+.simple-page main .grid {
+  display: block;
 }

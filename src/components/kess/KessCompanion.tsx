@@ -166,7 +166,7 @@ function bestPerch(nearX: number) {
  * Um Kess só para o site todo, que mora na página como um bichinho de plataforma:
  * fica em pé no lugar dele no topo (KessSpot), na borda de cima dos cards e no rodapé,
  * e se move com gravidade, pulando de um lugar para outro conforme a leitura avança.
- * Parado, passeia gingando, olha em volta, cantarola, fala uma coisinha de vez em quando e dorme.
+ * Parado, passeia aos pulinhos, olha em volta, cantarola, fala uma coisinha de vez em quando e dorme.
  * Reage a clique (e a muitos cliques), carinho com o mouse, troca de tema, texto copiado,
  * volta para a aba e a quem digitar "kess". Quando não há onde pousar, espia da borda da tela.
  */
@@ -236,7 +236,7 @@ function KessCompanion() {
 
     const s = {
       ready: false,
-      mode: 'sit' as 'sit' | 'prep' | 'air' | 'walk' | 'peek',
+      mode: 'sit' as 'sit' | 'prep' | 'air' | 'peek',
       x: 0,
       y: 0,
       size: PERCH,
@@ -246,8 +246,7 @@ function KessCompanion() {
       launchAt: 0,
       launch: null as null | (() => void),
       peekSince: 0,
-      walkTo: null as number | null,
-      lastFrame: 0,
+      hopTo: null as number | null,
       nextIdle: performance.now() + 6000,
       dirty: true,
       lastEval: 0,
@@ -420,27 +419,16 @@ function KessCompanion() {
       );
     }
 
-    // ---------- caminhada: gingando pela borda do card, sem pular ----------
-    function startWalk(target: number) {
-      const el = kess();
-      s.walkTo = target;
-      s.mode = 'walk';
-      s.lastFrame = performance.now();
-      if (el) {
-        el.walking = true;
-        el.gaze = { x: Math.sign(target - s.x) * 0.9, y: 0.15 };
+    // ---------- passeio: pulinhos seguidos pela borda do card ----------
+    function hopStep(now: number) {
+      if (s.mode !== 'sit' || !s.ground || s.hopTo === null) return;
+      const dx = s.hopTo - s.x;
+      if (Math.abs(dx) <= 3) {
+        s.hopTo = null;
+        return;
       }
-      wake();
-    }
-
-    function stopWalk() {
-      const el = kess();
-      s.walkTo = null;
-      if (el) el.walking = false;
-      if (s.mode === 'walk') s.mode = 'sit';
-      later(() => {
-        if (s.mode === 'sit' && el) el.gaze = null;
-      }, 300);
+      const stride = Math.sign(dx) * Math.min(Math.abs(dx), s.size * 1.05);
+      jumpTo(s.ground, s.x + stride, now, true);
     }
 
     function startFlight(to: Ground, toX: number, small: boolean, now: number) {
@@ -467,7 +455,7 @@ function KessCompanion() {
         const dx = Math.abs(toX - x0);
         const up = y1 < y0 - 2;
         const height = small
-          ? s.size * 0.2
+          ? s.size * 0.34
           : s.size * (up ? 0.7 : 0.4) + Math.min(70, dx * 0.06);
         apex = Math.min(y0, y1) - height;
       }
@@ -499,7 +487,7 @@ function KessCompanion() {
 
     // Antecipação: olha para onde vai, agacha e só então pula.
     function jumpTo(to: Ground, toX: number, now: number, small = false) {
-      if (s.mode === 'walk') stopWalk();
+      if (!small) s.hopTo = null;
       const el = kess();
       const dx = toX - s.x;
       const dy = to.feet - s.y;
@@ -546,7 +534,7 @@ function KessCompanion() {
       const el = kess();
       if (el) {
         el.crouch = 0;
-        el.squash(-clamp(impact / 420, f.step ? 1 : 2, 6.5));
+        el.squash(-clamp(impact / 420, f.step ? 1.8 : 2, 6.5));
       }
       if (!f.step) {
         const power = clamp(impact / 1800, 0, 1);
@@ -555,8 +543,12 @@ function KessCompanion() {
         later(() => {
           if (s.mode === 'sit' && el) el.gaze = null;
         }, 380);
-      } else if (el) {
-        later(() => s.mode === 'sit' && (el.gaze = null), 300);
+      } else if (s.hopTo !== null && Math.abs(s.hopTo - s.x) > 3) {
+        // emenda o próximo pulinho depois de uma pausa curta, como um bichinho saltitando
+        later(() => hopStep(performance.now()), 110);
+      } else {
+        s.hopTo = null;
+        if (el) later(() => s.mode === 'sit' && (el.gaze = null), 300);
       }
       // chegou no fim da página
       if (fresh.el.tagName === 'FOOTER' && !s.saidFooter) {
@@ -590,10 +582,13 @@ function KessCompanion() {
         g.right - g.left > s.size * 2
       ) {
         // passeia pela borda do card
-        let target = g.left + Math.random() * (g.right - g.left);
-        if (Math.abs(target - s.x) < s.size * 1.2)
-          target = s.x > (g.left + g.right) / 2 ? g.left + s.size : g.right;
-        startWalk(clamp(target, g.left, g.right));
+        // de 2 a 5 pulinhos para um lado (o que tiver mais espaço, às vezes o outro)
+        const roomRight = g.right - s.x;
+        const roomLeft = s.x - g.left;
+        const dir = roomRight > roomLeft === Math.random() < 0.75 ? 1 : -1;
+        const distance = s.size * (1.6 + Math.random() * 3.4);
+        s.hopTo = clamp(s.x + dir * distance, g.left, g.right);
+        hopStep(now);
       } else if (roll < 0.58) {
         // olha em volta
         look(-0.9, -0.1, 700);
@@ -649,7 +644,7 @@ function KessCompanion() {
       // Continua onde está enquanto ele mesmo estiver na tela: só pula quando precisa.
       const sy = window.scrollY;
       const vh = window.innerHeight;
-      if ((s.mode === 'sit' || s.mode === 'walk') && s.ground) {
+      if (s.mode === 'sit' && s.ground) {
         const fresh = measure(s.ground.el);
         const visible =
           fresh &&
@@ -663,12 +658,12 @@ function KessCompanion() {
             s.y = fresh.feet;
             s.ground = fresh;
             s.x = clamp(s.x, fresh.left, fresh.right);
-            if (s.walkTo !== null)
-              s.walkTo = clamp(s.walkTo, fresh.left, fresh.right);
+            if (s.hopTo !== null)
+              s.hopTo = clamp(s.hopTo, fresh.left, fresh.right);
           }
           return;
         }
-        if (s.mode === 'walk') stopWalk();
+        s.hopTo = null;
       }
 
       const perch = bestPerch(s.x);
@@ -715,22 +710,18 @@ function KessCompanion() {
           // estica quando está rápido, solta no topo do pulo e se inclina para onde vai
           const el = kess();
           if (el)
-            el.crouch = f.step ? 0.04 : clamp(Math.abs(vy) / 3800, 0, 0.16);
-          s.rot = f.step ? 0 : clamp(f.vx / 110, -7, 7);
-        }
-      } else if (s.mode === 'walk' && s.walkTo !== null) {
-        const dt = Math.min((now - s.lastFrame) / 1000, 0.05);
-        const dir = Math.sign(s.walkTo - s.x);
-        s.x += dir * s.size * 1.4 * dt;
-        if (dir === 0 || (dir > 0 ? s.x >= s.walkTo : s.x <= s.walkTo)) {
-          s.x = s.walkTo;
-          stopWalk();
-          s.nextIdle = now + 4000 + Math.random() * 5000;
+            el.crouch = f.step
+              ? clamp(Math.abs(vy) / 3000, 0, 0.1)
+              : clamp(Math.abs(vy) / 3800, 0, 0.16);
+          s.rot = clamp(
+            f.vx / (f.step ? 90 : 110),
+            f.step ? -5 : -7,
+            f.step ? 5 : 7
+          );
         }
       } else if (s.mode === 'peek') {
         peekPosition();
       }
-      s.lastFrame = now;
 
       if (s.mode === 'sit' && now >= s.nextIdle) idle(now);
 
