@@ -247,16 +247,15 @@
       // numa saia, e a barra com gominhos arredondados (cinco na frente). Perfil girado em volta do eixo,
       // achatado de frente para trás.
       function smooth(a, b, t) { t = Math.max(0, Math.min(1, (t - a) / (b - a))); return t * t * (3 - 2 * t); }
-      var GW = 1.02, GD = .76, DOME = 1, SIDE = .92, FLARE = .06, HEM = .2, CORNER = .17, hemPhase = 0;
-      // borda de baixo da saia: onda senoidal pura ao longo da largura (lisa, sem pontas), que some perto dos lados,
-      // onde a borda sobe num quarto de círculo (cantos redondos)
+      var GW = 1.02, GD = .76, DOME = 1, SIDE = .92, FLARE = .06;
+      // borda de baixo da saia: cinco perninhas iguais e rasas (uma no meio e duas de cada lado), simétricas;
+      // depois da última, a borda sobe num quarto de círculo até a lateral (canto redondo)
+      var XM = 1 + FLARE, LEG = XM / 2.5, WAVE = .1, CORNER = XM - 2 * LEG;
       function edgeY(xr) {
-        var ax = Math.abs(xr), xm = 1 + FLARE;
-        var lobe = .5 + .5 * Math.cos(2 * Math.PI * xr / .64 + hemPhase);
-        var y = -.92 + HEM * (1 - lobe) * (1 - smooth(.5, .85, ax / xm));
-        var d = ax - (xm - CORNER);
-        if (d > 0) y += CORNER - Math.sqrt(Math.max(0, CORNER * CORNER - d * d));
-        return y;
+        var ax = Math.abs(xr);
+        if (ax <= 2 * LEG) return -.92 + WAVE * (.5 - .5 * Math.cos(2 * Math.PI * ax / LEG));
+        var d = ax - 2 * LEG;
+        return -.92 + CORNER - Math.sqrt(Math.max(0, CORNER * CORNER - d * d));
       }
       // superfície por ângulo em volta (th) e altura (phi: 0 no topo, PI na barra): cúpula redonda em cima e,
       // embaixo, a saia que desce em linha reta (abrindo de leve) até a borda ondulada. A saia é aberta embaixo.
@@ -298,8 +297,6 @@
       for (var bj = 0; bj < BH; bj++) for (var bi = 0; bi < BW; bi++) { var ba = bj * (BW + 1) + bi, bb = ba + BW + 1; bodyIdx.push(ba, bb, ba + 1, bb, bb + 1, ba + 1); }
       bodyGeo.setAttribute('position', new T.BufferAttribute(bodyPos, 3)); bodyGeo.setIndex(bodyIdx);
       bodyG.add(new T.Mesh(bodyGeo, mat));
-      // a barra ondula: recalcula só a metade de baixo
-      function rippleHem() { bodyRows(BH / 2); bodyGeo.attributes.position.needsUpdate = true; }
 
       // rosto: olhos, boca e bochechas em cor sólida, flutuando um pouco à frente do corpo (a casca segue a curva,
       // com projeção plana, então o desenho não deforma). Uma sombra suave no corpo, logo abaixo, mostra o vão.
@@ -495,7 +492,6 @@
         var grounded = self.hasAttribute('grounded');
         // fantasminha: paira um pouquinho acima do chão, subindo e descendo devagar
         kess.position.y = y + step * .07 + (REDUCE ? 0 : .03 + Math.sin(tm * 1.8 + 1) * .03);
-        if (!REDUCE) { hemPhase = tm * 1.2; rippleHem(); }   // as ondinhas andam devagar
         // avisa a altura do pulo (para uma sombra de fora do canvas acompanhar)
         var lift = Math.min(1, y / .5);
         if (Math.abs(lift - lastLift) > .02 || (lift === 0 && lastLift !== 0)) {
