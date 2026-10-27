@@ -314,7 +314,10 @@
       var SW = 256, silCv = document.createElement('canvas'), shCv = document.createElement('canvas');
       silCv.width = silCv.height = shCv.width = shCv.height = SW;
       var sctx = silCv.getContext('2d'), shctx = shCv.getContext('2d');
+      // a transparência sai do canal verde: a sombra é cinza sobre preto (e não branco transparente), e sem mipmaps,
+      // senão no Kess pequeno ela se espalha e escurece o rosto todo
       var shadowTex = new T.CanvasTexture(shCv);
+      shadowTex.generateMipmaps = false; shadowTex.minFilter = T.LinearFilter;
       shadowTex.offset.set(-.004, .013);                   // logo abaixo do elemento, um tiquinho para a direita
       var STAMPS = [];
       [1, 2, 3].forEach(function (r) { for (var a = 0; a < 8; a++) STAMPS.push([Math.cos(a * Math.PI / 4 + r) * r, Math.sin(a * Math.PI / 4 + r) * r]); });
@@ -322,12 +325,12 @@
         sctx.globalCompositeOperation = 'copy'; sctx.imageSmoothingQuality = 'high';
         sctx.drawImage(faceCv, 0, 0, SW, SW);
         sctx.globalCompositeOperation = 'source-in'; sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, SW, SW);
-        shctx.clearRect(0, 0, SW, SW); shctx.globalAlpha = .1;
+        shctx.globalAlpha = 1; shctx.fillStyle = '#000'; shctx.fillRect(0, 0, SW, SW); shctx.globalAlpha = .1;
         STAMPS.forEach(function (o) { shctx.drawImage(silCv, o[0], o[1]); });
         shctx.globalAlpha = 1;
         shadowTex.needsUpdate = true;
       }
-      var faceShadow = new T.Mesh(faceShell(1.003), new T.MeshBasicMaterial({ color: 0x0b0b12, alphaMap: shadowTex, transparent: true, opacity: .22, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      var faceShadow = new T.Mesh(faceShell(1.003), new T.MeshBasicMaterial({ color: 0x0b0b12, alphaMap: shadowTex, transparent: true, opacity: .32, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
       faceShadow.renderOrder = 1; bodyG.add(faceShadow);
       var face = new T.Mesh(faceShell(1.06), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
       face.renderOrder = 2;
