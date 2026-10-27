@@ -1,7 +1,5 @@
-import { useSyncExternalStore } from 'react';
 import { cn } from '@/lib/utils';
 import type { KessMood } from './Kess';
-import { getKessEnabled, subscribeKess } from './kessPreference';
 import { useSimple } from '@/components/simple/simpleMode';
 
 type KessSpotProps = {
@@ -13,20 +11,15 @@ type KessSpotProps = {
 /**
  * Lugar reservado para o Kess numa página. Não desenha nada: o KessCompanion
  * pula até aqui enquanto o espaço está na tela, no tamanho e com a emoção do spot.
- * Com o Kess desligado no Theme.tsx, o espaço some junto; no celular também (CSS .kess-only).
+ * Na versão simples o espaço some junto; no celular também (CSS .kess-only).
  */
 function KessSpot({
   mood = 'normal',
   size = 'clamp(56px, 7vw, 76px)',
   className,
 }: KessSpotProps) {
-  const enabled = useSyncExternalStore(
-    subscribeKess,
-    getKessEnabled,
-    () => true
-  );
   const simple = useSimple();
-  if (!enabled || simple) return null;
+  if (simple) return null;
 
   return (
     <div

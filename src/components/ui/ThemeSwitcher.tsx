@@ -1,10 +1,4 @@
-import { useSyncExternalStore } from 'react';
 import Card from '@/components/ui/Cards/Card';
-import {
-  getKessEnabled,
-  setKessEnabled,
-  subscribeKess,
-} from '@/components/kess/kessPreference';
 import {
   PALETTE_COLORS,
   useTheme,
@@ -24,11 +18,6 @@ type ThemeSwitcherProps = {
 
 function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
   const { theme, setTheme, accent, setAccent } = useTheme();
-  const kessEnabled = useSyncExternalStore(
-    subscribeKess,
-    getKessEnabled,
-    () => true
-  );
 
   return (
     <Card fileName="Theme.tsx" className={`w-full ${className}`}>
@@ -81,37 +70,6 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
               );
             })}
           </div>
-        </div>
-
-        <div className="kess-only flex items-center justify-between gap-4">
-          <p id="kess-toggle-label" className="text-sm font-semibold">
-            Kess
-          </p>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={kessEnabled}
-            aria-labelledby="kess-toggle-label"
-            onClick={() => setKessEnabled(!kessEnabled)}
-            className="flex cursor-pointer items-center gap-2 text-xs text-ctp-subtext-0 transition-colors hover:text-ctp-text"
-          >
-            {kessEnabled ? 'andando pelo site' : 'escondido'}
-            <span
-              className={`relative h-5 w-9 rounded-full border transition-colors duration-200 ${
-                kessEnabled
-                  ? 'border-ctp-accent bg-ctp-accent/25'
-                  : 'border-ctp-overlay-0 bg-ctp-surface-0'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 size-3.5 rounded-full transition-[translate,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                  kessEnabled
-                    ? 'translate-x-4 bg-ctp-accent'
-                    : 'translate-x-0 bg-ctp-overlay-1'
-                }`}
-              />
-            </span>
-          </button>
         </div>
       </div>
     </Card>

@@ -20,8 +20,11 @@ function SimpleLayout({ children }: { children: ReactNode }) {
   return (
     <div className="simple-page mx-auto flex min-h-dvh max-w-[46rem] flex-col px-5 font-sans sm:px-8">
       <header className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-b border-ctp-surface-0 py-6">
-        <Link to="/" className="font-semibold text-ctp-text">
-          Otávio Kessler Ustra
+        <Link
+          to="/"
+          className="font-mono text-sm font-semibold text-ctp-text transition-colors hover:text-ctp-accent"
+        >
+          kessleru
         </Link>
         <div className="flex items-center gap-5">
           <nav
@@ -36,7 +39,7 @@ function SimpleLayout({ children }: { children: ReactNode }) {
                 className={({ isActive }) =>
                   isActive
                     ? 'text-ctp-text underline decoration-ctp-accent decoration-2 underline-offset-[6px]'
-                    : 'text-ctp-subtext-1 transition-colors hover:text-ctp-text'
+                    : 'text-ctp-subtext-0 transition-colors hover:text-ctp-text'
                 }
               >
                 {item.label}

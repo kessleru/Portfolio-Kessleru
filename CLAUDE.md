@@ -12,7 +12,8 @@ React 19 + TypeScript + Vite 7 + Tailwind v4 + Catppuccin. Gerenciador: **pnpm**
 
 ## Fluxo de trabalho
 
-- **Mostrar fotos (screenshots) das mudanças visuais antes de commitar** e esperar a aprovação.
+- Terminou: commit e push direto na `main`, sem PR e sem pedir aprovação ou mandar fotos
+  (mas confira você mesmo: build, navegador e teste de rolagem do Kess).
 - Commits **sem coautoria** (sem `Co-Authored-By`, sem `Claude-Session`). Autor:
   `Otávio Kessler Ustra <90390195+kessleru@users.noreply.github.com>`.
 - Mensagens de commit em português, no formato `tipo: descrição` (`feat:`, `fix:`, `style:`…).

@@ -85,7 +85,7 @@ No celular o menu vira um botão que abre a navegação e fecha ao escolher uma 
 | 🌿 **Formação em grafo** | Linha do tempo desenhada como `git log --graph`, animada com [Motion](https://motion.dev); clicar numa branch destaca o caminho dela e num commit mostra os detalhes |
 | 🧩 **Certificados como extensões** | 20 certificados agrupados por emissor, filtráveis por competência, com o código da credencial para copiar |
 | 🧭 **Rotas reais** | `/`, `/projects`, `/training`, `/contact` e página 404 |
-| 🤖 **Kess, o mascote** | Mascote 3D que mora na página: anda pela borda dos cards, pula com gravidade conforme a leitura avança, espia da borda da tela e dorme. Dá para esconder no `Theme.tsx` |
+| 🤖 **Kess, o mascote** | Mascote 3D que mora na página: anda pela borda dos cards, pula com gravidade conforme a leitura avança, espia da borda da tela e dorme. No celular e na versão simples ele não aparece |
 | 📄 **Currículo** | Botão "Baixar CV" no início (PDF em `public/`) |
 | 📖 **Versão simples** | Ícone de livro no topo troca para uma versão só texto, em uma coluna, sem cards, sem Kess e sem animação (fica salva no navegador) |
 | 🔎 **SEO** | Cada página sai do build já em HTML, com título, descrição, Open Graph e dados estruturados (`ProfilePage`/`Person`), além de `sitemap.xml`, `robots.txt` e 404 de verdade |
@@ -121,7 +121,7 @@ marcam onde ele pode ficar:
 - **Parado:** passeia pela borda do card, olha em volta, espia o conteúdo, dá pulinhos e, após 30 s sem
   ninguém mexer, dorme. Acompanha a rolagem com o olhar.
 - **Visitante:** elementos com `data-kess-mood="animado"` (ou outra emoção) mudam a expressão no
-  hover/foco, e o clique deixa ele feliz. O switch em `Theme.tsx` esconde o Kess (fica salvo no navegador).
+  hover/foco, e o clique deixa ele feliz.
 - **Personalidade:** boca e bochechas em cada emoção (olhos de coração, de estrela e de espiral), emotes
   (♥, z, !, ?, ♪) e poucas falas curtas e úteis em `src/components/kess/kessLines.ts`: cumprimento pela hora,
   dica ao abrir uma página, "copiado!", troca de tema, volta para a aba e quem digitar "kess". Clique, vários

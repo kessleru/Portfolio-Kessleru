@@ -367,6 +367,14 @@
   color-scheme: light;
   --ctp-subtext-0: #5f627a;
   --ctp-meta: #5f627a;
+  /* Latte em tom creme: o fundo é papel, os cards ficam mais claros que ele (e não iguais),
+     e as superfícies e bordas puxam para o quente. Os textos e as cores de destaque seguem do Catppuccin. */
+  --ctp-base: #f3eee3;
+  --ctp-mantle: #fffcf6;
+  --ctp-crust: #e6decd;
+  --ctp-surface-0: #e4dccb;
+  --ctp-surface-1: #d3c9b5;
+  --ctp-surface-2: #bfb49e;
 }
 
 @layer base {
@@ -432,7 +440,8 @@
   background: color-mix(in srgb, var(--ctp-accent) 75%, var(--ctp-surface-1));
 }
 
-/* Aba dos cards: com mouse ela fica atrás do card e sobe como uma gaveta no hover/foco.
+/* Aba dos cards: com mouse ela fica atrás do card e sobe como uma gaveta no hover (ou foco de teclado;
+   clicar num botão do card não deixa a aba presa aberta).
    Aparece dezenas de vezes por visita, então é rápida, sem quique, e some mais rápido do que surge. */
 @media (hover: hover) and (pointer: fine) {
   .card-tab {
@@ -466,7 +475,7 @@
       border-color 200ms ease;
   }
 
-  .card-shell:is(:hover, :focus-within) .card-tab {
+  .card-shell:is(:hover, :has(:focus-visible)) .card-tab {
     translate: 0 0;
     opacity: 1;
     transition:
@@ -474,7 +483,7 @@
       opacity 160ms ease-out;
   }
 
-  .card-shell:is(:hover, :focus-within) .card-tab__icon {
+  .card-shell:is(:hover, :has(:focus-visible)) .card-tab__icon {
     rotate: 0deg;
     scale: 1;
     transition:
@@ -482,7 +491,7 @@
       scale 240ms cubic-bezier(0.23, 1, 0.32, 1) 40ms;
   }
 
-  .card-shell:is(:hover, :focus-within) .card-tab__name {
+  .card-shell:is(:hover, :has(:focus-visible)) .card-tab__name {
     opacity: 1;
     filter: blur(0);
     transition:
@@ -490,7 +499,7 @@
       filter 200ms ease-out 60ms;
   }
 
-  .card-shell:is(:hover, :focus-within) .card-body {
+  .card-shell:is(:hover, :has(:focus-visible)) .card-body {
     border-top-left-radius: 0;
     border-color: color-mix(in srgb, var(--ctp-crust) 45%, transparent);
     transition:
@@ -637,9 +646,9 @@ html[data-simple] #root:not([data-app]) {
 /* A página de projetos é a mesma da versão completa: aqui ela vira uma lista de uma coluna,
    sem o "> " antes do título. */
 .simple-page main h1 {
-  font-size: 1.875rem;
+  font-size: 2.25rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .simple-page main span:has(+ h1) {

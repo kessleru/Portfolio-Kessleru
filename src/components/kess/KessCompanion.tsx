@@ -12,10 +12,8 @@ import Kess, { type KessMood } from './Kess';
 import { createBubble, hideBubble, spawnEmote, type Emote } from './kessEmotes';
 import { greeting, lines, pageLines, pick } from './kessLines';
 import {
-  getKessEnabled,
   KESS_EVENT,
   kessFitsScreen,
-  subscribeKess,
   subscribeScreen,
   type KessEventDetail,
 } from './kessPreference';
@@ -64,6 +62,7 @@ type Actions = {
   say(text: string): void;
   wave(): void;
   hop(power?: number): void;
+  arrive(): void;
 };
 
 type Ground = {
@@ -171,17 +170,12 @@ function bestPerch(nearX: number) {
  * volta para a aba e a quem digitar "kess". Quando não há onde pousar, espia da borda da tela.
  */
 function KessCompanion() {
-  const wanted = useSyncExternalStore(
-    subscribeKess,
-    getKessEnabled,
-    () => true
-  );
   const fits = useSyncExternalStore(
     subscribeScreen,
     kessFitsScreen,
     () => false
   );
-  const enabled = wanted && fits;
+  const enabled = fits;
   const { pathname } = useLocation();
   // Na pré-renderização (build) não há document: o Kess só existe no navegador.
   const [layer] = useState(() => {
@@ -359,11 +353,31 @@ function KessCompanion() {
       );
     }
 
+    // Trocou de página: o chão antigo sumiu junto com a página (e a formação ainda pode estar
+    // carregando). Ele some, espera o lugar dele na página nova aparecer e cai lá de cima.
+    let arriveUntil = 0;
+    function arrive() {
+      s.flight = null;
+      s.launch = null;
+      s.hopTo = null;
+      s.ground = null;
+      s.mode = 'sit';
+      arriveUntil = performance.now() + 1500;
+      wrap!.style.opacity = '0';
+      if (s.bubble) {
+        window.clearTimeout(s.bubble.timer);
+        hideBubble(s.bubble.el);
+        s.bubble = null;
+      }
+      wake();
+    }
+
     actions.current = {
       emote,
       say,
       wave: () => kess()?.wave(),
       hop: (power) => kess()?.hop(power),
+      arrive,
     };
 
     function setGround(ground: Ground) {
@@ -628,6 +642,31 @@ function KessCompanion() {
       if (s.ready && now - s.scrolledAt < SETTLE_MS) return;
 
       const spot = visibleSpot();
+      if (arriveUntil) {
+        // espera só enquanto a página nova ainda não desenhou nada (a formação carrega à parte)
+        const loading = !document.querySelector('main')?.childElementCount;
+        if (!spot && loading && now < arriveUntil) {
+          s.dirty = true;
+          return;
+        }
+        arriveUntil = 0;
+        wrap!.style.opacity = '1';
+        const target =
+          spot ?? bestPerch(window.scrollX + window.innerWidth * 0.3);
+        if (target) {
+          const x = target.kind === 'spot' ? target.left : target.right;
+          if (reduce) {
+            place(target, x);
+          } else {
+            s.x = x;
+            s.y = target.feet - target.size * 1.6;
+            s.size = target.size;
+            startFlight(target, x, false, now);
+          }
+          return;
+        }
+      }
+
       if (spot) {
         if (s.ground?.el !== spot.el) {
           if (!s.ready) place(spot, spot.left);
@@ -802,6 +841,16 @@ function KessCompanion() {
       window.removeEventListener('resize', wake);
     };
   }, [enabled, layer, flash]);
+
+  // Navegou para outra página (não conta a primeira)
+  const firstPath = useRef(true);
+  useEffect(() => {
+    if (firstPath.current) {
+      firstPath.current = false;
+      return;
+    }
+    actions.current?.arrive();
+  }, [pathname]);
 
   // Ao chegar: na primeira página da visita, cumprimenta (pela hora, dia ou data especial);
   // nas seguintes, às vezes comenta a página. No 404, sempre.
