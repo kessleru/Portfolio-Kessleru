@@ -59,8 +59,8 @@ React 19 + TypeScript + Vite 7 + Tailwind v4 + Catppuccin. Gerenciador: **pnpm**
 
 ## SEO e acessibilidade
 
-- `/minicurso-ci` é uma rota escondida (sem link, fora do sitemap, `noindex`) que o `vercel.json` repassa
-  para o deploy do repositório separado `kessleru/kessleru-minicurso-ci`. Não tem relação com o portfólio.
+- `/ci` é uma rota escondida (sem link, fora do sitemap, `noindex`) que o `vercel.json` repassa
+  para o deploy do repositório separado `kessleru/Minicurso-CI` (material do minicurso). Não tem relação com o portfólio.
 - O `vercel.json` fixa `"buildCommand": "pnpm build"`: sem a pré-renderização, `/projects`,
   `/training` e `/contact` dão 404 em produção (não há mais fallback para o `index.html`).
 - Metadados de cada página em `src/seo.ts` (título ≤ 60 caracteres, descrição ≤ 160). Página nova:

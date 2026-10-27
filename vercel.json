@@ -27,12 +27,12 @@
   ],
   "rewrites": [
     {
-      "source": "/minicurso-ci",
-      "destination": "https://kessleru-minicurso-ci.vercel.app/"
+      "source": "/ci",
+      "destination": "https://minicurso-ci.vercel.app/"
     },
     {
-      "source": "/minicurso-ci/:path*",
-      "destination": "https://kessleru-minicurso-ci.vercel.app/:path*"
+      "source": "/ci/:path*",
+      "destination": "https://minicurso-ci.vercel.app/:path*"
     },
     {
       "source": "/projects",
@@ -49,7 +49,7 @@
   ],
   "headers": [
     {
-      "source": "/minicurso-ci(.*)",
+      "source": "/ci(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",
