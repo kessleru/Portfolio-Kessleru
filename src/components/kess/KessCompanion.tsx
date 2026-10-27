@@ -341,6 +341,7 @@ function KessCompanion() {
       const groundY = g.feet;
       const lift = Math.max(0, groundY - s.y);
       const fade = clamp(1 - lift / 70, 0, 1);
+      // a sombra fica toda abaixo das perninhas (a barra é aberta: alta demais, ela aparece entre elas)
       // em cima de um card, a sombra não passa da borda dele
       let half = (s.size * 0.8 * (0.6 + 0.4 * fade)) / 2;
       if (g.kind === 'perch') {
@@ -352,9 +353,9 @@ function KessCompanion() {
         return;
       }
       shadow!.style.opacity = String(0.3 * fade);
-      shadow!.style.transform = `translate3d(${s.x - half}px, ${groundY - s.size * 0.06}px, 0)`;
+      shadow!.style.transform = `translate3d(${s.x - half}px, ${groundY - s.size * 0.012}px, 0)`;
       shadow!.style.width = `${half * 2}px`;
-      shadow!.style.height = `${s.size * 0.12}px`;
+      shadow!.style.height = `${s.size * 0.08}px`;
     }
 
     // ---------- falas e emotes ----------
