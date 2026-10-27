@@ -104,10 +104,7 @@ function Header() {
             <span key={item.to} className="flex items-center">
               <Link
                 to={item.to}
-                aria-current={
-                  location.pathname === item.to ? 'page' : undefined
-                }
-                className="nav-link relative cursor-pointer py-1 text-sm hover:text-ctp-accent lg:text-base"
+                className="relative text-sm lg:text-base cursor-pointer hover:text-ctp-accent"
               >
                 {item.label}
               </Link>
