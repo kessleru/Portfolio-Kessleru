@@ -244,7 +244,7 @@
       function sgn(v, p) { return Math.sign(v) * Math.pow(Math.abs(v), p); }
       function shape(v) {
         var top = v.y >= 0;
-        return v.set(1.2 * sgn(v.x, .8), (top ? 1 : .92) * sgn(v.y, 2 / (top ? 2.4 : 3.4)), .74 * sgn(v.z, .8));
+        return v.set(1.2 * sgn(v.x, .8), (top ? 1 : .92) * sgn(v.y, 2 / (top ? 2.4 : 3.4)), .8 * sgn(v.z, .8));
       }
       function deform(geo, k) {
         var p = geo.attributes.position, v = new T.Vector3();
@@ -252,8 +252,13 @@
         geo.computeVertexNormals(); return geo;
       }
 
-      // corpo em cor chapada (sem luz, sem brilho), cinza-grafite
-      var mat = new T.MeshBasicMaterial({ color: 0x3b3d4f, toneMapped: false });
+      // luz quase toda por igual (3D mais plano): só um toque mais claro no alto à esquerda,
+      // o bastante para olhos e boca parecerem peças que saem do corpo
+      scene.add(new T.HemisphereLight(0xffffff, 0x9a9cae, 1));
+      var key = new T.DirectionalLight(0xffffff, .22); key.position.set(-2.5, 3.5, 4); scene.add(key);
+
+      // corpo cinza-grafite, fosco
+      var mat = new T.MeshStandardMaterial({ color: 0x3e4053, roughness: .75, metalness: 0 });
 
       var kess = new T.Group(); scene.add(kess);           // altura (pulo)
       var squash = new T.Group(); kess.add(squash);        // amassa e estica, pivô na base
@@ -263,15 +268,41 @@
 
       bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 96, 72)), mat));
 
-      // rosto: uma lâmina chapada na frente do corpo, sempre de frente para a câmera. Olhos, boca e bochechas
-      // são um elemento à parte (como um adesivo): não giram nem entortam com o corpo, só deslizam junto (paralaxe)
+      // rosto: olhos, boca e bochechas são uma folha fina, de cor chapada (sem luz), um pouco acima do corpo
+      // (projeção plana, o desenho não deforma). Uma sombra leve embaixo mostra que a folha é uma peça à parte.
       var FW = 512, FK = FW / 1024, FR = 1.25, faceCv = document.createElement('canvas'); faceCv.width = faceCv.height = FW;
       var fctx = faceCv.getContext('2d');
       var faceTex = new T.CanvasTexture(faceCv); faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      var face = new T.Mesh(new T.PlaneGeometry(2 * FR, 2 * FR), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
-      face.renderOrder = 1; face.scale.setScalar(.84);
-      var FZ = .84 * .74 + .05;                            // logo na frente do corpo
-      var faceG = new T.Group(); faceG.position.set(0, .78, FZ); faceG.add(face); squash.add(faceG);
+      // sombra da folha: silhueta do rosto, um pouco borrada (reduz e amplia, funciona em qualquer navegador)
+      var HW = 256, silCv = document.createElement('canvas'), smallCv = document.createElement('canvas'), hCv = document.createElement('canvas');
+      silCv.width = silCv.height = FW; smallCv.width = smallCv.height = 96; hCv.width = hCv.height = HW;
+      var sctx = silCv.getContext('2d'), smctx = smallCv.getContext('2d'), hctx = hCv.getContext('2d');
+      var shadowTex = new T.CanvasTexture(hCv);
+      shadowTex.offset.set(-.004, .009);                   // sombra um pouco para baixo e para a direita (luz do alto à esquerda)
+      function drawHeight() {
+        sctx.globalCompositeOperation = 'source-over'; sctx.clearRect(0, 0, FW, FW); sctx.drawImage(faceCv, 0, 0);
+        sctx.globalCompositeOperation = 'source-in'; sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, FW, FW);
+        smctx.clearRect(0, 0, 96, 96); smctx.drawImage(silCv, 0, 0, 96, 96);
+        hctx.fillStyle = '#000'; hctx.fillRect(0, 0, HW, HW);
+        hctx.imageSmoothingQuality = 'high';
+        hctx.globalAlpha = .5; hctx.drawImage(smallCv, 0, 0, HW, HW);    // borda suave
+        hctx.globalAlpha = .5; hctx.drawImage(silCv, 0, 0, HW, HW);      // forma
+        hctx.globalAlpha = 1;
+        shadowTex.needsUpdate = true;
+      }
+      function faceShell(k) {
+        var g = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), k);
+        var fp = g.attributes.position, fuv = g.attributes.uv;
+        for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR), .5 + fp.getY(i) / (2 * FR));
+        fuv.needsUpdate = true; return g;
+      }
+      // sombra da folha, colada no corpo
+      var contact = new T.Mesh(faceShell(1.003), new T.MeshBasicMaterial({ color: 0x0b0b12, alphaMap: shadowTex, transparent: true, opacity: .3, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      contact.renderOrder = 1; bodyG.add(contact);
+      // a folha fica um pouco acima do corpo: ao virar, ela desliza de leve sobre ele, como uma peça à parte
+      var face = new T.Mesh(faceShell(1.018), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
+      face.renderOrder = 2;
+      bodyG.add(face);
 
       // bolinha: deitada sobre a curva do topo, rente ao corpo
       var dir = new T.Vector3(.46, .84, .4).normalize();
@@ -360,6 +391,7 @@
         });
         fctx.restore();
         faceTex.needsUpdate = true;
+        drawHeight();
       }
 
       /* ---------- animação ---------- */
@@ -430,16 +462,13 @@
         if (d.lookUp) { tx = .55; ty = -.6; }
         if (d.shy) { tx *= .4; ty = .55; }                  // tímido olha para baixo
         var k = 1 - Math.pow(.004, dt);
-        rotY += (tx * .16 - rotY) * k; rotX += (ty * .08 - rotX) * k;   // o corpo gira pouco; quem olha é o rosto
+        rotY += (tx * .14 - rotY) * k; rotX += (ty * .07 - rotX) * k;   // o corpo gira pouco; quem olha é o rosto
         var tz = (d.tilt || 0) + (d.sleepy ? .1 : 0) + (d.droop ? .05 : 0);
         if (shakeT > 0) { shakeT -= dt; tz += Math.sin(tm * 60) * .05 * (shakeT / .5); }
         if (d.wobble && !REDUCE) tz += Math.sin(tm * 6) * .1;   // tonto: cambaleia
         rotZ += (tz - rotZ) * k;
         waddle += ((walking ? Math.sin(walkPh) * .07 : 0) - waddle) * Math.min(1, dt * 12);
         tiltG.rotation.set(rotX, rotY, -rotZ - wob * .015 + waddle);
-        // o rosto acompanha onde a frente do corpo foi parar, mas continua chapado, virado para a câmera
-        faceG.position.set(Math.sin(rotY) * FZ, .78 - Math.sin(rotX) * FZ, FZ);
-        faceG.rotation.z = tiltG.rotation.z;
         look.x += (tx - look.x) * k; look.y += (ty - look.y) * k;
         ballSpin.rotation.set(wob * .06, 0, wob * .09);   // a bolinha fica sempre rente ao corpo
 
