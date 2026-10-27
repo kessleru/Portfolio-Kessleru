@@ -275,18 +275,22 @@
         for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR * k), .5 + fp.getY(i) / (2 * FR * k));
         fuv.needsUpdate = true; return g;
       }
-      // sombra do rosto: silhueta do desenho, borrada (reduz e amplia, funciona em qualquer navegador)
-      var SW = 128, silCv = document.createElement('canvas'), blurCv = document.createElement('canvas');
-      silCv.width = silCv.height = SW; blurCv.width = blurCv.height = 32;
-      var sctx = silCv.getContext('2d'), bctx = blurCv.getContext('2d');
-      var shadowTex = new T.CanvasTexture(silCv);
+      // sombra do rosto: silhueta do desenho em 256 px, borrada carimbando-a várias vezes em volta de si (borda lisa,
+      // sem serrilhado, igual em qualquer navegador)
+      var SW = 256, silCv = document.createElement('canvas'), shCv = document.createElement('canvas');
+      silCv.width = silCv.height = shCv.width = shCv.height = SW;
+      var sctx = silCv.getContext('2d'), shctx = shCv.getContext('2d');
+      var shadowTex = new T.CanvasTexture(shCv);
       shadowTex.offset.set(-.008, .028);                   // um pouco para baixo e para a direita
+      var STAMPS = [];
+      [2.5, 5, 7.5].forEach(function (r) { for (var a = 0; a < 8; a++) STAMPS.push([Math.cos(a * Math.PI / 4 + r) * r, Math.sin(a * Math.PI / 4 + r) * r]); });
       function drawShadow() {
-        bctx.clearRect(0, 0, 32, 32); bctx.drawImage(faceCv, 0, 0, 32, 32);
         sctx.globalCompositeOperation = 'copy'; sctx.imageSmoothingQuality = 'high';
-        sctx.drawImage(blurCv, 0, 0, SW, SW);
+        sctx.drawImage(faceCv, 0, 0, SW, SW);
         sctx.globalCompositeOperation = 'source-in'; sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, SW, SW);
-        sctx.globalCompositeOperation = 'source-over';
+        shctx.clearRect(0, 0, SW, SW); shctx.globalAlpha = .075;
+        STAMPS.forEach(function (o) { shctx.drawImage(silCv, o[0], o[1]); });
+        shctx.globalAlpha = 1;
         shadowTex.needsUpdate = true;
       }
       var faceShadow = new T.Mesh(faceShell(1.003), new T.MeshBasicMaterial({ color: 0x0b0b12, alphaMap: shadowTex, transparent: true, opacity: .22, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
