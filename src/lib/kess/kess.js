@@ -243,9 +243,31 @@
 
       // forma: superelipsoide 1,2 × 1, topo cheio e base achatada; rasa de frente para trás (menos volume)
       function sgn(v, p) { return Math.sign(v) * Math.pow(Math.abs(v), p); }
+      // fantasminha (como os de papel e de crochê): cúpula redonda em cima, laterais quase retas que abrem
+      // numa saia, e a barra com gominhos arredondados (cinco na frente). Perfil girado em volta do eixo,
+      // achatado de frente para trás.
+      function smooth(a, b, t) { t = Math.max(0, Math.min(1, (t - a) / (b - a))); return t * t * (3 - 2 * t); }
+      var GW = 1.02, GD = .76, DOME = 1, SIDE = .92, FLARE = .1, HEM = .24;
       function shape(v) {
-        var top = v.y >= 0;
-        return v.set(1.2 * sgn(v.x, .8), (top ? 1 : .92) * sgn(v.y, 2 / (top ? 2.4 : 3.4)), .74 * sgn(v.z, .8));
+        var phi = Math.acos(Math.max(-1, Math.min(1, v.y))), th = Math.atan2(v.x, v.z), r, y;
+        if (phi <= Math.PI / 2) {                           // cúpula
+          r = Math.sin(phi); y = SIDE - .92 + DOME * Math.cos(phi);
+        } else {
+          var t = (phi - Math.PI / 2) / (Math.PI / 2);      // 0 no meio do corpo, 1 no centro da base
+          if (t < .6) {                                     // laterais levemente cheias, abrindo em saia
+            var u = t / .6;
+            r = 1 + .04 * Math.sin(u * Math.PI) + FLARE * u * u; y = SIDE - .92 - (SIDE - .14) * u;
+          } else {                                          // canto bem arredondado (quarto de círculo) até a base
+            var w = (t - .6) / .4, a = w * Math.PI / 2;
+            r = (1 + FLARE) - .14 * (1 - Math.cos(a)) - (1 + FLARE - .14) * Math.pow(w, 1.6);
+            y = -.78 - .14 * Math.sin(a);
+          }
+          // gominhos da barra: bolinhas redondas ao longo da largura (quatro e meia de frente), com vãos entre elas.
+          // Seguem o x (e não o ângulo) para que a base não tape os vãos quando visto de frente.
+          var lobe = Math.sqrt(.5 + .5 * Math.cos(2 * Math.PI * r * Math.sin(th) / .5));
+          y += HEM * (1 - lobe) * smooth(.45, .8, t);
+        }
+        return v.set(GW * r * Math.sin(th), y, GD * r * Math.cos(th));
       }
       function deform(geo, k) {
         var p = geo.attributes.position, v = new T.Vector3();
@@ -270,7 +292,7 @@
       var fctx = faceCv.getContext('2d');
       var faceTex = new T.CanvasTexture(faceCv); faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
       function faceShell(k) {
-        var g = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), k);
+        var g = deform(new T.SphereGeometry(1, 96, 64, Math.PI / 2 - 1.45, 2.9, .3, 2.5), k);   // cobre a frente e um pouco dos lados
         var fp = g.attributes.position, fuv = g.attributes.uv;
         for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR * k), .5 + fp.getY(i) / (2 * FR * k));
         fuv.needsUpdate = true; return g;
@@ -295,7 +317,7 @@
       }
       var faceShadow = new T.Mesh(faceShell(1.003), new T.MeshBasicMaterial({ color: 0x0b0b12, alphaMap: shadowTex, transparent: true, opacity: .22, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
       faceShadow.renderOrder = 1; bodyG.add(faceShadow);
-      var face = new T.Mesh(faceShell(1.045), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
+      var face = new T.Mesh(faceShell(1.06), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
       face.renderOrder = 2;
       bodyG.add(face);
 
@@ -347,7 +369,7 @@
         function layer(px, py, src) {
           src = src || look;
           fctx.setTransform(1, 0, 0, 1, 0, 0);
-          fctx.translate(FW / 2 + src.x * px * FK, (560 + src.y * py) * FK);   // um pouco abaixo do meio do corpo
+          fctx.translate(FW / 2 + src.x * px * FK, (520 + src.y * py) * FK);   // um pouco abaixo do meio do corpo
           fctx.scale(16.5 * FK, 16.5 * FK);                                // olhos, boca e bochechas maiores
           fctx.translate(-63, -50);
         }
@@ -357,7 +379,9 @@
         if (d.blush) {
           fctx.save(); fctx.globalAlpha = .9; fctx.fillStyle = PINK;
           var bw = 3.4 + 1.6 * d.blush, bh = 1.9 + .9 * d.blush;
-          [[43.5, 59.5], [82.5, 59.5]].forEach(function (c) { fctx.beginPath(); fctx.ellipse(c[0], c[1], bw, bh, 0, 0, Math.PI * 2); fctx.fill(); });
+          // nas emoções mais fortes as bochechas passam um pouco do contorno: peça à parte, não pintura
+          var out = d.blush >= 1 ? 4 : 0;
+          [[45.5 - out, 59.5], [80.5 + out, 59.5]].forEach(function (c) { fctx.beginPath(); fctx.ellipse(c[0], c[1], bw, bh, 0, 0, Math.PI * 2); fctx.fill(); });
           fctx.restore();
         }
         // boca (não pisca)

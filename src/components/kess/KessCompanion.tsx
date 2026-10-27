@@ -624,14 +624,14 @@ function KessCompanion() {
       if (!el) return;
       const roll = Math.random();
       const g = s.ground;
-      const canJump = now - s.lastIdleJump > 20_000;
+      const canJump = now - s.lastIdleJump > 40_000;
       // de vez em quando troca de card (ex.: pula de um projeto para outro, em outra coluna)
       if (
         canJump &&
-        now - s.lastCardJump > 45_000 &&
+        now - s.lastCardJump > 90_000 &&
         g.kind === 'perch' &&
         !visibleSpot() &&
-        Math.random() < 0.15
+        Math.random() < 0.1
       ) {
         const to = otherPerch(g);
         if (to) {
@@ -650,7 +650,7 @@ function KessCompanion() {
         // fala uma coisinha
         say(pick(lines.idle));
       } else if (
-        roll < 0.34 &&
+        roll < 0.26 &&
         canJump &&
         g.kind === 'perch' &&
         g.right - g.left > s.size * 2
