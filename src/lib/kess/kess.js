@@ -281,14 +281,14 @@
       silCv.width = silCv.height = shCv.width = shCv.height = SW;
       var sctx = silCv.getContext('2d'), shctx = shCv.getContext('2d');
       var shadowTex = new T.CanvasTexture(shCv);
-      shadowTex.offset.set(-.008, .028);                   // um pouco para baixo e para a direita
+      shadowTex.offset.set(-.004, .013);                   // logo abaixo do elemento, um tiquinho para a direita
       var STAMPS = [];
-      [2.5, 5, 7.5].forEach(function (r) { for (var a = 0; a < 8; a++) STAMPS.push([Math.cos(a * Math.PI / 4 + r) * r, Math.sin(a * Math.PI / 4 + r) * r]); });
+      [1, 2, 3].forEach(function (r) { for (var a = 0; a < 8; a++) STAMPS.push([Math.cos(a * Math.PI / 4 + r) * r, Math.sin(a * Math.PI / 4 + r) * r]); });
       function drawShadow() {
         sctx.globalCompositeOperation = 'copy'; sctx.imageSmoothingQuality = 'high';
         sctx.drawImage(faceCv, 0, 0, SW, SW);
         sctx.globalCompositeOperation = 'source-in'; sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, SW, SW);
-        shctx.clearRect(0, 0, SW, SW); shctx.globalAlpha = .075;
+        shctx.clearRect(0, 0, SW, SW); shctx.globalAlpha = .1;
         STAMPS.forEach(function (o) { shctx.drawImage(silCv, o[0], o[1]); });
         shctx.globalAlpha = 1;
         shadowTex.needsUpdate = true;
