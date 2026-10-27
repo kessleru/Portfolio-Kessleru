@@ -45,11 +45,11 @@ function Home() {
                 <Download size={16} aria-hidden="true" />
                 Baixar CV
               </a>
-              {/* no celular o menu não tem a versão simples: ela fica aqui, ao lado do CV */}
+              {/* único caminho para a versão simples (o header só tem as páginas e as redes) */}
               <button
                 type="button"
                 onClick={() => setSimple(true)}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-ctp-surface-1 px-4 py-2 text-sm font-medium text-ctp-subtext-1 transition-colors hover:border-ctp-accent/60 hover:text-ctp-accent min-[650px]:hidden"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-ctp-surface-1 px-4 py-2 text-sm font-medium text-ctp-subtext-1 transition-colors hover:border-ctp-accent/60 hover:text-ctp-accent"
               >
                 <BookOpen size={16} aria-hidden="true" />
                 Versão simples

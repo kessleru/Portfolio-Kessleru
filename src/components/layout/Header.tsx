@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { Link, useLocation } from 'react-router-dom';
 import { SiGithub, SiLinkedin } from 'react-icons/si';
-import { setSimple } from '@/components/simple/simpleMode';
 
 const navItems = [
   { label: 'Início', to: '/' },
@@ -150,17 +149,10 @@ function Header() {
               )}
             </span>
           ))}
-          {/* discreto: só um ícone, para quem prefere ler sem a cara de editor */}
-          <button
-            type="button"
-            onClick={() => setSimple(true)}
-            aria-label="Ver a versão simples do site"
-            title="Versão simples"
-            className="ml-3 cursor-pointer text-ctp-meta transition-colors hover:text-ctp-accent"
-          >
-            <BookOpen size={17} aria-hidden="true" />
-          </button>
-          <span aria-hidden="true" className="mx-1 h-4 w-px bg-ctp-surface-1" />
+          <span
+            aria-hidden="true"
+            className="mr-1 ml-3 h-4 w-px bg-ctp-surface-1"
+          />
           <Socials />
         </nav>
       </div>
