@@ -139,7 +139,7 @@
   function fallbackSVG(color) {
     return '<svg viewBox="0 0 120 110" aria-hidden="true">' +
       '<ellipse cx="60" cy="103" rx="34" ry="3.6" fill="#000" opacity=".25"/>' +
-            '<rect x="11" y="15" width="98" height="81" rx="40" fill="#0c0c14"/>' +
+      '<rect x="11" y="15" width="98" height="81" rx="40" fill="#3b3d4f"/>' +
       '<ellipse cx="0" cy="0" rx="10.6" ry="5.2" fill="' + color + '" transform="translate(88.4 22.4) rotate(27)"/>' +
       '<path d="M49 56 V71 M71 56 V71" stroke="#fff" stroke-width="9.5" stroke-linecap="round"/></svg>';
   }
@@ -233,17 +233,18 @@
       this._renderer = renderer;
 
       var scene = new T.Scene();
-      var camera = new T.PerspectiveCamera(28, 1, .1, 50);
-      camera.position.set(0, .5, 6.2); camera.lookAt(0, .06, 0);
+      // lente mais fechada e de mais longe: pouca perspectiva, cara de ilustração e não de "filme 3D"
+      var camera = new T.PerspectiveCamera(16, 1, .1, 50);
+      camera.position.set(0, .88, 10.9); camera.lookAt(0, .06, 0);
 
       var mood = new T.Color(this._colorOf(this._mood)), moodTarget = mood.clone();
 
 
-      // forma: superelipsoide 1,2 × 1, topo cheio e base achatada
+      // forma: superelipsoide 1,2 × 1, topo cheio e base achatada; rasa de frente para trás (menos volume)
       function sgn(v, p) { return Math.sign(v) * Math.pow(Math.abs(v), p); }
       function shape(v) {
         var top = v.y >= 0;
-        return v.set(1.2 * sgn(v.x, .8), (top ? 1 : .92) * sgn(v.y, 2 / (top ? 2.4 : 3.4)), 1.02 * sgn(v.z, .8));
+        return v.set(1.2 * sgn(v.x, .8), (top ? 1 : .92) * sgn(v.y, 2 / (top ? 2.4 : 3.4)), .74 * sgn(v.z, .8));
       }
       function deform(geo, k) {
         var p = geo.attributes.position, v = new T.Vector3();
@@ -251,8 +252,8 @@
         geo.computeVertexNormals(); return geo;
       }
 
-      // corpo em cor chapada (sem luz, sem brilho)
-      var mat = new T.MeshBasicMaterial({ color: 0x0c0c14, toneMapped: false });
+      // corpo em cor chapada (sem luz, sem brilho), cinza-grafite
+      var mat = new T.MeshBasicMaterial({ color: 0x3b3d4f, toneMapped: false });
 
       var kess = new T.Group(); scene.add(kess);           // altura (pulo)
       var squash = new T.Group(); kess.add(squash);        // amassa e estica, pivô na base
@@ -262,17 +263,15 @@
 
       bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 96, 72)), mat));
 
-      // rosto: casca frontal do corpo com projeção plana (o desenho dos olhos não deforma na curva)
+      // rosto: uma lâmina chapada na frente do corpo, sempre de frente para a câmera. Olhos, boca e bochechas
+      // são um elemento à parte (como um adesivo): não giram nem entortam com o corpo, só deslizam junto (paralaxe)
       var FW = 512, FK = FW / 1024, FR = 1.25, faceCv = document.createElement('canvas'); faceCv.width = faceCv.height = FW;
       var fctx = faceCv.getContext('2d');
       var faceTex = new T.CanvasTexture(faceCv); faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      var faceGeo = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), 1.006);
-      var fp = faceGeo.attributes.position, fuv = faceGeo.attributes.uv;
-      for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR), .5 + fp.getY(i) / (2 * FR));
-      fuv.needsUpdate = true;
-      var face = new T.Mesh(faceGeo, new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
-      face.renderOrder = 1;
-      bodyG.add(face);
+      var face = new T.Mesh(new T.PlaneGeometry(2 * FR, 2 * FR), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
+      face.renderOrder = 1; face.scale.setScalar(.84);
+      var FZ = .84 * .74 + .05;                            // logo na frente do corpo
+      var faceG = new T.Group(); faceG.position.set(0, .78, FZ); faceG.add(face); squash.add(faceG);
 
       // bolinha: deitada sobre a curva do topo, rente ao corpo
       var dir = new T.Vector3(.46, .84, .4).normalize();
@@ -315,10 +314,16 @@
       var eyeOpen = 1, look = { x: 0, y: 0 }, lastFace = '', frameNo = 0, spin = 0;
       function drawFace(d, colCss) {
         fctx.clearRect(0, 0, FW, FW);
+        // paralaxe: cada camada do rosto anda um tanto para o lado do olhar (olhos mais, bochechas menos),
+        // em vez de o corpo girar muito e o desenho entortar na curva
+        function layer(px, py) {
+          fctx.setTransform(1, 0, 0, 1, 0, 0);
+          fctx.translate(FW / 2 + look.x * px * FK, (560 + look.y * py) * FK);   // um pouco abaixo do meio do corpo
+          fctx.scale(14 * FK, 14 * FK);
+          fctx.translate(-63, -50);
+        }
         fctx.save();
-        fctx.translate(FW / 2 + look.x * 16 * FK, (560 + look.y * 12) * FK);   // centro dos olhos, um pouco abaixo do meio do corpo
-        fctx.scale(14 * FK, 14 * FK);
-        fctx.translate(-63, -50);
+        layer(12, 8);
         // bochechas sempre rosadas (não na cor da emoção): é o que deixa o rosto fofo
         if (d.blush) {
           fctx.save(); fctx.globalAlpha = .9; fctx.fillStyle = PINK;
@@ -327,11 +332,13 @@
           fctx.restore();
         }
         // boca (não pisca)
+        layer(22, 14);
         fctx.lineCap = 'round'; fctx.lineJoin = 'round';
         (d.mouth || []).forEach(function (e) {
           if (e.t === 'f') { fctx.fillStyle = e.c; fctx.fill(pathOf(e)); }
           else { fctx.strokeStyle = '#ffffff'; fctx.lineWidth = e.w; fctx.stroke(pathOf(e)); }
         });
+        layer(34, 22);
         fctx.translate(63, 50); fctx.scale(1, Math.max(.08, eyeOpen)); fctx.translate(-63, -50);   // piscar
         fctx.fillStyle = fctx.strokeStyle = '#ffffff';
         d.eyes.forEach(function (e) {
@@ -423,13 +430,16 @@
         if (d.lookUp) { tx = .55; ty = -.6; }
         if (d.shy) { tx *= .4; ty = .55; }                  // tímido olha para baixo
         var k = 1 - Math.pow(.004, dt);
-        rotY += (tx * .42 - rotY) * k; rotX += (ty * .22 - rotX) * k;
+        rotY += (tx * .16 - rotY) * k; rotX += (ty * .08 - rotX) * k;   // o corpo gira pouco; quem olha é o rosto
         var tz = (d.tilt || 0) + (d.sleepy ? .1 : 0) + (d.droop ? .05 : 0);
         if (shakeT > 0) { shakeT -= dt; tz += Math.sin(tm * 60) * .05 * (shakeT / .5); }
         if (d.wobble && !REDUCE) tz += Math.sin(tm * 6) * .1;   // tonto: cambaleia
         rotZ += (tz - rotZ) * k;
         waddle += ((walking ? Math.sin(walkPh) * .07 : 0) - waddle) * Math.min(1, dt * 12);
         tiltG.rotation.set(rotX, rotY, -rotZ - wob * .015 + waddle);
+        // o rosto acompanha onde a frente do corpo foi parar, mas continua chapado, virado para a câmera
+        faceG.position.set(Math.sin(rotY) * FZ, .78 - Math.sin(rotX) * FZ, FZ);
+        faceG.rotation.z = tiltG.rotation.z;
         look.x += (tx - look.x) * k; look.y += (ty - look.y) * k;
         ballSpin.rotation.set(wob * .06, 0, wob * .09);   // a bolinha fica sempre rente ao corpo
 
