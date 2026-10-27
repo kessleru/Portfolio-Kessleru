@@ -34,6 +34,7 @@
  *   k.walking = true;            // o corpo ginga e quica a cada passo (quem move o Kess é quem chama)
  *   KessMascot.MOODS             // lista de emoções e cores
  *   k.addEventListener('kess-poke', () => { ... })   // disparado quando clicam no Kess
+ *   k.addEventListener('kess-lift', (e) => e.detail)  // altura do pulo dentro do canvas (0 no chão, 1 no alto)
  */
 (function () {
   'use strict';
@@ -244,7 +245,7 @@
       function sgn(v, p) { return Math.sign(v) * Math.pow(Math.abs(v), p); }
       function shape(v) {
         var top = v.y >= 0;
-        return v.set(1.2 * sgn(v.x, .8), (top ? 1 : .92) * sgn(v.y, 2 / (top ? 2.4 : 3.4)), .8 * sgn(v.z, .8));
+        return v.set(1.2 * sgn(v.x, .8), (top ? 1 : .92) * sgn(v.y, 2 / (top ? 2.4 : 3.4)), .74 * sgn(v.z, .8));
       }
       function deform(geo, k) {
         var p = geo.attributes.position, v = new T.Vector3();
@@ -252,13 +253,8 @@
         geo.computeVertexNormals(); return geo;
       }
 
-      // luz quase toda por igual (3D mais plano): só um toque mais claro no alto à esquerda,
-      // o bastante para olhos e boca parecerem peças que saem do corpo
-      scene.add(new T.HemisphereLight(0xffffff, 0x9a9cae, 1));
-      var key = new T.DirectionalLight(0xffffff, .22); key.position.set(-2.5, 3.5, 4); scene.add(key);
-
-      // corpo cinza-grafite, fosco
-      var mat = new T.MeshStandardMaterial({ color: 0x3e4053, roughness: .75, metalness: 0 });
+      // corpo em cor sólida (sem luz, sem brilho), cinza-grafite: o volume aparece só no contorno e no movimento
+      var mat = new T.MeshBasicMaterial({ color: 0x3b3d4f, toneMapped: false });
 
       var kess = new T.Group(); scene.add(kess);           // altura (pulo)
       var squash = new T.Group(); kess.add(squash);        // amassa e estica, pivô na base
@@ -269,7 +265,7 @@
       bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 96, 72)), mat));
 
       // rosto: as expressões são um desenho no corpo, como tinta em papel colado nele. A casca segue a curva
-      // (projeção plana, o desenho não deforma) e recebe a mesma luz do corpo: parece desenhado, não flutuando.
+      // (projeção plana, o desenho não deforma). Tudo em cor sólida, sem luz.
       var FW = 512, FK = FW / 1024, FR = 1.25, faceCv = document.createElement('canvas'); faceCv.width = faceCv.height = FW;
       var fctx = faceCv.getContext('2d');
       var faceTex = new T.CanvasTexture(faceCv); faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -277,7 +273,7 @@
       var fp = faceGeo.attributes.position, fuv = faceGeo.attributes.uv;
       for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR), .5 + fp.getY(i) / (2 * FR));
       fuv.needsUpdate = true;
-      var face = new T.Mesh(faceGeo, new T.MeshStandardMaterial({ map: faceTex, transparent: true, depthWrite: false, roughness: .75, metalness: 0, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+      var face = new T.Mesh(faceGeo, new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
       face.renderOrder = 2;
       bodyG.add(face);
 
@@ -320,13 +316,16 @@
 
       // olhos grandes, baixos e próximos (proporção "bebê")
       var eyeOpen = 1, look = { x: 0, y: 0 }, lastFace = '', frameNo = 0, spin = 0;
+      // olhos com vida própria: chegam antes do corpo no alvo e, parados, dão espiadinhas rápidas (sacadas)
+      var eye = { x: 0, y: 0 }, dart = { x: 0, y: 0 }, nextDart = 1.2, lastTx = 0;
       function drawFace(d, colCss) {
         fctx.clearRect(0, 0, FW, FW);
         // paralaxe: cada camada do rosto anda um tanto para o lado do olhar (olhos mais, bochechas menos),
         // em vez de o corpo girar muito e o desenho entortar na curva
-        function layer(px, py) {
+        function layer(px, py, src) {
+          src = src || look;
           fctx.setTransform(1, 0, 0, 1, 0, 0);
-          fctx.translate(FW / 2 + look.x * px * FK, (560 + look.y * py) * FK);   // um pouco abaixo do meio do corpo
+          fctx.translate(FW / 2 + src.x * px * FK, (560 + src.y * py) * FK);   // um pouco abaixo do meio do corpo
           fctx.scale(14 * FK, 14 * FK);
           fctx.translate(-63, -50);
         }
@@ -346,7 +345,7 @@
           if (e.t === 'f') { fctx.fillStyle = e.c; fctx.fill(pathOf(e)); }
           else { fctx.strokeStyle = '#ffffff'; fctx.lineWidth = e.w; fctx.stroke(pathOf(e)); }
         });
-        layer(34, 22);
+        layer(34, 22, eye);                                            // os olhos andam sozinhos (olhar + espiadinhas)
         fctx.translate(63, 50); fctx.scale(1, Math.max(.08, eyeOpen)); fctx.translate(-63, -50);   // piscar
         fctx.fillStyle = fctx.strokeStyle = '#ffffff';
         d.eyes.forEach(function (e) {
@@ -373,10 +372,10 @@
       /* ---------- animação ---------- */
       var y = 0, vy = 0, sq = 0, sqV = 0, wob = 0, wobV = 0, pending = 0, nextBlink = 2, blinkT = -1;
       var rotY = 0, rotX = 0, rotZ = 0, ptr = { x: 0, y: 0, has: false }, hopTimer = 0, shakeT = 0, tm = 0;
-      var walkPh = 0, waddle = 0;
+      var walkPh = 0, waddle = 0, lastLift = 0, pendingT = 0;
       this._hop = function (power) {
         if (REDUCE || y > .01 || pending) return;
-        sqV -= 3.2; pending = power;                     // antecipação: amassa antes de pular
+        sqV -= 3.2; pending = power; pendingT = 0;       // antecipação: amassa antes de pular
       };
       this._recolor = function () { moodTarget.set(self._colorOf(self._mood)); };
       this._kick = function (v) { if (REDUCE) return; sqV += v; wobV += Math.abs(v) * 2.5; };
@@ -413,7 +412,8 @@
         ballMat.color.copy(mood);
 
         if (!REDUCE) {
-          if (pending && sq < -.06) { vy = pending; pending = 0; sqV += 4; }
+          // decola no fundo da agachada; se ela não vier (corpo já amassado, quadro perdido), decola logo depois
+          if (pending) { pendingT += dt; if (sq < -.06 || pendingT > .25) { vy = pending; pending = 0; sqV += 4; } }
           if (y > 0 || vy > 0) { vy -= 13 * dt; y += vy * dt; if (y <= 0) { y = 0; sqV -= Math.min(5, Math.abs(vy) * 1.2); vy = 0; wobV += 6; } }
           if (d.hops) { hopTimer -= dt; if (hopTimer <= 0 && y === 0) { self._hop(2.1); hopTimer = .75; } }
           sqV += (-120 * (sq - self._crouch) - 9 * sqV) * dt; sq += sqV * dt;
@@ -431,6 +431,12 @@
         squash.scale.set(1 - s * .9, 1 + s, 1 - s * .9);
         var grounded = self.hasAttribute('grounded');
         kess.position.y = y + step * .07 + (REDUCE || grounded ? 0 : Math.sin(tm * 2.4 + 1) * .03);
+        // avisa a altura do pulo (para uma sombra de fora do canvas acompanhar)
+        var lift = Math.min(1, y / .5);
+        if (Math.abs(lift - lastLift) > .02 || (lift === 0 && lastLift !== 0)) {
+          lastLift = lift;
+          self.dispatchEvent(new CustomEvent('kess-lift', { detail: lift, bubbles: true }));
+        }
 
         var gz = self._gaze;
         var tx = gz ? gz.x : ptr.has ? ptr.x : (REDUCE ? 0 : Math.sin(tm * .5) * .25), ty = gz ? gz.y : ptr.has ? ptr.y : 0;
@@ -438,7 +444,7 @@
         if (d.lookUp) { tx = .55; ty = -.6; }
         if (d.shy) { tx *= .4; ty = .55; }                  // tímido olha para baixo
         var k = 1 - Math.pow(.004, dt);
-        rotY += (tx * .14 - rotY) * k; rotX += (ty * .07 - rotX) * k;   // o corpo gira pouco; quem olha é o rosto
+        rotY += (tx * .1 - rotY) * k; rotX += (ty * .05 - rotX) * k;   // o corpo gira pouco; quem olha é o rosto
         var tz = (d.tilt || 0) + (d.sleepy ? .1 : 0) + (d.droop ? .05 : 0);
         if (shakeT > 0) { shakeT -= dt; tz += Math.sin(tm * 60) * .05 * (shakeT / .5); }
         if (d.wobble && !REDUCE) tz += Math.sin(tm * 6) * .1;   // tonto: cambaleia
@@ -446,6 +452,22 @@
         waddle += ((walking ? Math.sin(walkPh) * .07 : 0) - waddle) * Math.min(1, dt * 12);
         tiltG.rotation.set(rotX, rotY, -rotZ - wob * .015 + waddle);
         look.x += (tx - look.x) * k; look.y += (ty - look.y) * k;
+        // sacadas: de tempos em tempos os olhos pulam para um ponto perto do alvo e ficam lá (mais longe quando ninguém mexe o mouse)
+        if (!REDUCE && !d.sleepy && !d.lookUp) {
+          nextDart -= dt;
+          if (nextDart <= 0) {
+            var amp = gz || ptr.has ? .12 : .32;
+            dart.x = (Math.random() * 2 - 1) * amp; dart.y = (Math.random() * 2 - 1) * amp * .5;
+            if (Math.random() < .35) dart.x = dart.y = 0;               // às vezes volta para o centro
+            nextDart = .6 + Math.random() * 2.4;
+          }
+        } else dart.x = dart.y = 0;
+        // os olhos chegam bem antes do corpo (o olhar lidera); virada grande pede uma piscada
+        var ek = 1 - Math.pow(1e-7, dt);
+        eye.x += (Math.max(-1.2, Math.min(1.2, tx + dart.x)) - eye.x) * ek;
+        eye.y += (Math.max(-1, Math.min(1, ty + dart.y)) - eye.y) * ek;
+        if (Math.abs(tx - lastTx) > .7 && blinkT < 0 && !REDUCE) blinkT = 0;
+        lastTx = tx;
         ballSpin.rotation.set(wob * .06, 0, wob * .09);   // a bolinha fica sempre rente ao corpo
 
         if (!d.sleepy && !REDUCE) {
@@ -461,7 +483,7 @@
 
         // o rosto só é redesenhado (e reenviado para a GPU) quando muda de verdade
         if (d.wobble) spin += dt * 7;
-        var faceKey = self._mood + '|' + mood.getHexString() + '|' + Math.round(look.x * 200) + '|' + Math.round(look.y * 200) + '|' + Math.round(eyeOpen * 40) + (d.wobble ? '|' + Math.round(spin * 8) : '');
+        var faceKey = self._mood + '|' + mood.getHexString() + '|' + Math.round(look.x * 200) + '|' + Math.round(look.y * 200) + '|' + Math.round(eye.x * 200) + '|' + Math.round(eye.y * 200) + '|' + Math.round(eyeOpen * 40) + (d.wobble ? '|' + Math.round(spin * 8) : '');
         // parado (só respirando e piscando), 30 quadros por segundo bastam
         var calm = !pending && y === 0 && Math.abs(sqV) < .2 && Math.abs(wobV) < .2 && !walking && faceKey === lastFace;
         frameNo += 1;

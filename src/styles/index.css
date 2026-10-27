@@ -567,7 +567,14 @@ body {
   top: 0;
   left: 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(0 0 0 / 0.45), transparent);
+  /* sombra suave: centro leve e borda que some devagar, sem contorno marcado */
+  background: radial-gradient(
+    closest-side,
+    rgb(0 0 0 / 0.26),
+    rgb(0 0 0 / 0.12) 45%,
+    rgb(0 0 0 / 0.04) 75%,
+    transparent
+  );
   opacity: 0;
 }
 

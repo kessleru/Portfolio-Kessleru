@@ -161,6 +161,30 @@ function bestPerch(nearX: number) {
   return best;
 }
 
+/** Outra borda de card na tela, de preferência longe para o lado (outra coluna), para ele trocar de lugar. */
+function otherPerch(current: Ground) {
+  const vh = window.innerHeight;
+  const size = PERCH;
+  const here = (current.left + current.right) / 2;
+  const options: { ground: Ground; weight: number }[] = [];
+  for (const el of document.querySelectorAll('[data-kess-perch]')) {
+    if (el === current.el) continue;
+    const r = el.getBoundingClientRect();
+    if (r.top < size * 1.4 || r.top > vh - 28) continue;
+    const ground = measure(el);
+    if (!ground || ground.kind !== 'perch') continue;
+    const dx = Math.abs((ground.left + ground.right) / 2 - here);
+    const dy = Math.abs(ground.feet - current.feet);
+    if (dx < size * 2 && dy < size) continue;
+    // mais chance para quem está do lado (outra coluna) e não muito acima ou abaixo
+    options.push({ ground, weight: 1 + dx / 200 - Math.min(0.8, dy / 600) });
+  }
+  if (!options.length) return null;
+  let roll = Math.random() * options.reduce((t, o) => t + o.weight, 0);
+  for (const o of options) if ((roll -= o.weight) <= 0) return o.ground;
+  return options[options.length - 1].ground;
+}
+
 /**
  * Um Kess só para o site todo, que mora na página como um bichinho de plataforma:
  * fica em pé no lugar dele no topo (KessSpot), na borda de cima dos cards e no rodapé,
@@ -240,6 +264,9 @@ function KessCompanion() {
       launchAt: 0,
       launch: null as null | (() => void),
       peekSince: 0,
+      // pulos à toa (passear, trocar de card) têm intervalo mínimo: pular toda hora fica estranho
+      lastIdleJump: 0,
+      lastCardJump: 0,
       hopTo: null as number | null,
       nextIdle: performance.now() + 6000,
       dirty: true,
@@ -298,24 +325,35 @@ function KessCompanion() {
         el.style.transform = `translate3d(${x}px, ${s.y - s.size * 0.72}px, 0) translate(${right ? '0' : '-100%'}, -100%)`;
       }
 
-      // A sombra fica no chão, não grudada no Kess: some quando ele sobe e reaparece no pouso.
+      // A sombra fica no chão, não grudada no Kess: some logo que ele sobe e reaparece no pouso.
+      // Sem Kess à vista (escondido, chegando na página, espiando) não tem sombra.
       const f = s.flight;
-      const groundY = f
+      const g = f
         ? f.vy0 + GRAVITY * ((performance.now() - f.start) / 1000) < 0 && f.from
-          ? f.from.feet
-          : f.to.feet
-        : s.ground?.feet;
-      if (groundY === undefined || s.mode === 'peek') {
+          ? f.from
+          : f.to
+        : s.ground;
+      if (!g || s.mode === 'peek' || wrap!.style.opacity === '0') {
         shadow!.style.opacity = '0';
         return;
       }
+      const groundY = g.feet;
       const lift = Math.max(0, groundY - s.y);
-      const fade = clamp(1 - lift / 160, 0, 1);
-      const w = s.size * 0.9 * (0.55 + 0.45 * fade);
-      shadow!.style.opacity = String(0.55 * fade);
-      shadow!.style.transform = `translate3d(${s.x - w / 2}px, ${groundY - s.size * 0.09}px, 0)`;
-      shadow!.style.width = `${w}px`;
-      shadow!.style.height = `${s.size * 0.18}px`;
+      const fade = clamp(1 - lift / 70, 0, 1);
+      // em cima de um card, a sombra não passa da borda dele
+      let half = (s.size * 0.8 * (0.6 + 0.4 * fade)) / 2;
+      if (g.kind === 'perch') {
+        const edge = s.size * 0.3;
+        half = Math.min(half, s.x - (g.left - edge), g.right + edge - s.x);
+      }
+      if (fade <= 0 || half < s.size * 0.12) {
+        shadow!.style.opacity = '0';
+        return;
+      }
+      shadow!.style.opacity = String(0.3 * fade);
+      shadow!.style.transform = `translate3d(${s.x - half}px, ${groundY - s.size * 0.06}px, 0)`;
+      shadow!.style.width = `${half * 2}px`;
+      shadow!.style.height = `${s.size * 0.12}px`;
     }
 
     // ---------- falas e emotes ----------
@@ -586,15 +624,38 @@ function KessCompanion() {
       if (!el) return;
       const roll = Math.random();
       const g = s.ground;
+      const canJump = now - s.lastIdleJump > 20_000;
+      // de vez em quando troca de card (ex.: pula de um projeto para outro, em outra coluna)
+      if (
+        canJump &&
+        now - s.lastCardJump > 45_000 &&
+        g.kind === 'perch' &&
+        !visibleSpot() &&
+        Math.random() < 0.15
+      ) {
+        const to = otherPerch(g);
+        if (to) {
+          s.lastIdleJump = s.lastCardJump = now;
+          const toX = to.left + Math.random() * (to.right - to.left);
+          later(
+            () => s.mode === 'sit' && jumpTo(to, toX, performance.now()),
+            450
+          );
+          look(toX > s.x ? 1 : -1, to.feet < s.y ? -0.4 : 0.2, 500);
+          return;
+        }
+      }
 
       if (roll < 0.14 && now - s.lastSay > IDLE_LINE_MS) {
         // fala uma coisinha
         say(pick(lines.idle));
       } else if (
-        roll < 0.45 &&
+        roll < 0.34 &&
+        canJump &&
         g.kind === 'perch' &&
         g.right - g.left > s.size * 2
       ) {
+        s.lastIdleJump = now;
         // passeia pela borda do card
         // de 2 a 5 pulinhos para um lado (o que tiver mais espaço, às vezes o outro)
         const roomRight = g.right - s.x;
@@ -615,9 +676,10 @@ function KessCompanion() {
         flash('feliz', 1700);
         emote('note');
         later(() => emote('note'), 600);
-      } else if (roll < 0.9) {
+      } else if (roll < 0.94 || !canJump) {
         el.wave();
       } else {
+        s.lastIdleJump = now;
         el.hop(2.6);
       }
     }
@@ -816,6 +878,14 @@ function KessCompanion() {
       attributes: true,
       attributeFilter: ['class'],
     });
+    // pulo dentro do próprio canvas (clique, susto): a sombra no chão encolhe e clareia junto
+    const onLift = (e: Event) => {
+      const lift = (e as CustomEvent<number>).detail;
+      shadow.style.scale = lift ? String(1 - lift * 0.4) : '';
+      shadow.style.filter = lift ? `opacity(${1 - lift * 0.8})` : '';
+    };
+    wrap.addEventListener('kess-lift', onLift);
+
     const resize = new ResizeObserver(wake);
     resize.observe(document.body);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -833,6 +903,7 @@ function KessCompanion() {
         window.clearTimeout(s.bubble.timer);
         s.bubble.el.remove();
       }
+      wrap.removeEventListener('kess-lift', onLift);
       kessEl?.removeEventListener('pointerenter', petStart);
       kessEl?.removeEventListener('pointerleave', petEnd);
       mutations.disconnect();
