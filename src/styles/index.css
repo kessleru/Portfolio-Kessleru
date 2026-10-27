@@ -659,3 +659,20 @@ html[data-simple] #root:not([data-app]) {
 .simple-page main .grid {
   display: block;
 }
+
+/* Linha embaixo do item do menu da versão simples, encostada na borda do header; sem animação.
+   Fica dentro do item (bottom: 0), senão cria rolagem no menu. */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--ctp-accent);
+  opacity: 0;
+}
+
+.nav-link[aria-current='page']::after,
+.nav-link:hover::after {
+  opacity: 1;
+}
