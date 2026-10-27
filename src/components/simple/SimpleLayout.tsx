@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { LayoutGrid, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { SiGithub, SiLinkedin } from 'react-icons/si';
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { setSimple } from './simpleMode';
 
 const nav = [
   { label: 'Início', to: '/' },
@@ -83,13 +82,6 @@ function SimpleLayout({ children }: { children: ReactNode }) {
             >
               <SiLinkedin size={14} aria-hidden="true" /> LinkedIn
             </a>
-            <button
-              type="button"
-              onClick={() => setSimple(false)}
-              className="inline-flex cursor-pointer items-center gap-1.5 transition-colors hover:text-ctp-text"
-            >
-              <LayoutGrid size={14} aria-hidden="true" /> Versão completa
-            </button>
           </div>
         </footer>
       </div>
