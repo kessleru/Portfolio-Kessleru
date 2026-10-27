@@ -264,16 +264,34 @@
 
       bodyG.add(new T.Mesh(deform(new T.SphereGeometry(1, 96, 72)), mat));
 
-      // rosto: as expressões são um desenho no corpo, como tinta em papel colado nele. A casca segue a curva
-      // (projeção plana, o desenho não deforma). Tudo em cor sólida, sem luz.
+      // rosto: olhos, boca e bochechas em cor sólida, flutuando um pouco à frente do corpo (a casca segue a curva,
+      // com projeção plana, então o desenho não deforma). Uma sombra suave no corpo, logo abaixo, mostra o vão.
       var FW = 512, FK = FW / 1024, FR = 1.25, faceCv = document.createElement('canvas'); faceCv.width = faceCv.height = FW;
       var fctx = faceCv.getContext('2d');
       var faceTex = new T.CanvasTexture(faceCv); faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      var faceGeo = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), 1.004);
-      var fp = faceGeo.attributes.position, fuv = faceGeo.attributes.uv;
-      for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR), .5 + fp.getY(i) / (2 * FR));
-      fuv.needsUpdate = true;
-      var face = new T.Mesh(faceGeo, new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+      function faceShell(k) {
+        var g = deform(new T.SphereGeometry(1, 80, 60, Math.PI / 2 - 1.15, 2.3, .4, 2.3), k);
+        var fp = g.attributes.position, fuv = g.attributes.uv;
+        for (var i = 0; i < fp.count; i++) fuv.setXY(i, .5 + fp.getX(i) / (2 * FR * k), .5 + fp.getY(i) / (2 * FR * k));
+        fuv.needsUpdate = true; return g;
+      }
+      // sombra do rosto: silhueta do desenho, borrada (reduz e amplia, funciona em qualquer navegador)
+      var SW = 128, silCv = document.createElement('canvas'), blurCv = document.createElement('canvas');
+      silCv.width = silCv.height = SW; blurCv.width = blurCv.height = 32;
+      var sctx = silCv.getContext('2d'), bctx = blurCv.getContext('2d');
+      var shadowTex = new T.CanvasTexture(silCv);
+      shadowTex.offset.set(-.008, .028);                   // um pouco para baixo e para a direita
+      function drawShadow() {
+        bctx.clearRect(0, 0, 32, 32); bctx.drawImage(faceCv, 0, 0, 32, 32);
+        sctx.globalCompositeOperation = 'copy'; sctx.imageSmoothingQuality = 'high';
+        sctx.drawImage(blurCv, 0, 0, SW, SW);
+        sctx.globalCompositeOperation = 'source-in'; sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, SW, SW);
+        sctx.globalCompositeOperation = 'source-over';
+        shadowTex.needsUpdate = true;
+      }
+      var faceShadow = new T.Mesh(faceShell(1.003), new T.MeshBasicMaterial({ color: 0x0b0b12, alphaMap: shadowTex, transparent: true, opacity: .22, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      faceShadow.renderOrder = 1; bodyG.add(faceShadow);
+      var face = new T.Mesh(faceShell(1.045), new T.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, toneMapped: false }));
       face.renderOrder = 2;
       bodyG.add(face);
 
@@ -326,7 +344,7 @@
           src = src || look;
           fctx.setTransform(1, 0, 0, 1, 0, 0);
           fctx.translate(FW / 2 + src.x * px * FK, (560 + src.y * py) * FK);   // um pouco abaixo do meio do corpo
-          fctx.scale(14 * FK, 14 * FK);
+          fctx.scale(16.5 * FK, 16.5 * FK);                                // olhos, boca e bochechas maiores
           fctx.translate(-63, -50);
         }
         fctx.save();
@@ -335,7 +353,7 @@
         if (d.blush) {
           fctx.save(); fctx.globalAlpha = .9; fctx.fillStyle = PINK;
           var bw = 3.4 + 1.6 * d.blush, bh = 1.9 + .9 * d.blush;
-          [[40, 60], [86, 60]].forEach(function (c) { fctx.beginPath(); fctx.ellipse(c[0], c[1], bw, bh, 0, 0, Math.PI * 2); fctx.fill(); });
+          [[43.5, 59.5], [82.5, 59.5]].forEach(function (c) { fctx.beginPath(); fctx.ellipse(c[0], c[1], bw, bh, 0, 0, Math.PI * 2); fctx.fill(); });
           fctx.restore();
         }
         // boca (não pisca)
@@ -367,6 +385,7 @@
         });
         fctx.restore();
         faceTex.needsUpdate = true;
+        drawShadow();
       }
 
       /* ---------- animação ---------- */
