@@ -27,6 +27,14 @@
   ],
   "rewrites": [
     {
+      "source": "/minicurso-ci",
+      "destination": "https://kessleru-minicurso-ci.vercel.app/"
+    },
+    {
+      "source": "/minicurso-ci/:path*",
+      "destination": "https://kessleru-minicurso-ci.vercel.app/:path*"
+    },
+    {
       "source": "/projects",
       "destination": "/projects/index.html"
     },
@@ -37,6 +45,17 @@
     {
       "source": "/contact",
       "destination": "/contact/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/minicurso-ci(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ]
 }
