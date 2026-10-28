@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Check, ChevronDown, Copy, Settings } from 'lucide-react';
+import { Check, ChevronDown, Copy, ExternalLink, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { certificates, issuers, type Certificate } from './certificates';
+import {
+  certificates,
+  issuers,
+  verifyUrl,
+  type Certificate,
+} from './certificates';
 
 const VISIBLE_CHIPS = 10;
 
@@ -207,6 +212,18 @@ function ExtensionCard({
                       {copied ? 'copiado' : 'copiar código'}
                     </span>
                   </button>
+                  {verifyUrl(certificate) && (
+                    <a
+                      href={verifyUrl(certificate)}
+                      target="_blank"
+                      rel="noreferrer"
+                      data-kess-mood="curioso"
+                      className="mt-2 flex items-center gap-1.5 text-ctp-accent underline-offset-4 hover:underline sm:justify-end"
+                    >
+                      Ver certificado
+                      <ExternalLink size={13} aria-hidden="true" />
+                    </a>
+                  )}
                 </div>
               )}
             </div>

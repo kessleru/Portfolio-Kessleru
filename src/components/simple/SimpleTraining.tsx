@@ -1,5 +1,9 @@
 import { branches } from '@/components/training/history';
-import { certificates, issuers } from '@/components/training/certificates';
+import {
+  certificates,
+  issuers,
+  verifyUrl,
+} from '@/components/training/certificates';
 import SectionTitle from './SectionTitle';
 
 // Do mais recente para o mais antigo: estágio, PET, graduação e ensino médio.
@@ -53,9 +57,20 @@ function SimpleTraining() {
                     key={item.id}
                     className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
                   >
-                    <span className="text-[15px] text-ctp-subtext-1">
-                      {item.name}
-                    </span>
+                    {verifyUrl(item) ? (
+                      <a
+                        href={verifyUrl(item)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[15px] text-ctp-subtext-1 underline decoration-ctp-surface-2 underline-offset-4 transition-colors hover:text-ctp-text hover:decoration-ctp-accent"
+                      >
+                        {item.name}
+                      </a>
+                    ) : (
+                      <span className="text-[15px] text-ctp-subtext-1">
+                        {item.name}
+                      </span>
+                    )}
                     <span className="shrink-0 font-mono text-xs text-ctp-meta tabular-nums">
                       {item.date}
                     </span>

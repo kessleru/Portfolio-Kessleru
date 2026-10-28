@@ -33,7 +33,19 @@ export type Certificate = {
 
 export const issuers = ['Origamid', 'Anthropic', 'IFTM'] as const;
 
-// Do LinkedIn. Os certificados do IFTM foram todos emitidos em nov/2025.
+/** Página para conferir o certificado no site de quem emitiu. O IFTM não tem uma página pública de verificação. */
+export function verifyUrl(certificate: Certificate) {
+  const { issuer, credential } = certificate;
+  if (!credential) return undefined;
+  if (issuer === 'Origamid')
+    return `https://www.origamid.com/certificate/${credential}`;
+  if (issuer === 'Anthropic')
+    return `https://verify.skilljar.com/c/${credential}`;
+  return undefined;
+}
+
+// Do LinkedIn, conferidos nos sites da Origamid e da Anthropic. Os certificados do IFTM foram todos emitidos em nov/2025.
+// O Front/Back End & UX/UI Design (51f018a0) é a formação de Front End que a Origamid atualizou: um certificado só.
 export const certificates: Certificate[] = [
   {
     id: 'node-puro',
@@ -144,16 +156,6 @@ export const certificates: Certificate[] = [
     skills: ['JavaScript'],
     icon: SiJavascript,
     color: 'var(--ctp-yellow)',
-  },
-  {
-    id: 'front-ux',
-    name: 'Front End & UX/UI Design',
-    issuer: 'Origamid',
-    date: 'nov/2025',
-    credential: '51f018a0',
-    skills: ['Front-end', 'UI Design', 'Web design'],
-    icon: SiFigma,
-    color: 'var(--ctp-mauve)',
   },
   {
     id: 'flexbox',
