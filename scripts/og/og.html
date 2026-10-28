@@ -61,6 +61,9 @@
         font-size: 20px;
         font-weight: 500;
       }
+      .photo-wrap { position: relative; flex: none; }
+      /* o Kess (o mascote do site) sentado na borda da foto */
+      kess-mascot { position: absolute; left: -58px; bottom: -14px; }
       .photo {
         flex: none;
         width: 288px;
@@ -103,7 +106,7 @@
           <p class="path">~/kessleru <b>/</b></p>
           <h1>Otávio Kessler Ustra</h1>
           <p class="role">Dev Full Stack Júnior</p>
-          <p class="where">Front-end · Back-end · Ituiutaba, MG</p>
+          <p class="where">Front-end · Back-end</p>
           <div class="chips">
             <span style="color: #89dceb; border-color: rgb(137 220 235 / 0.4)">React</span>
             <span style="color: #89b4fa; border-color: rgb(137 180 250 / 0.4)">TypeScript</span>
@@ -111,12 +114,22 @@
             <span style="color: #bac2de; border-color: rgb(186 194 222 / 0.4)">Express</span>
           </div>
         </div>
-        <div class="photo"><img src="avatar.jpg" alt="" /></div>
+        <div class="photo-wrap">
+          <div class="photo"><img src="avatar.jpg" alt="" /></div>
+          <kess-mascot mood="feliz" size="132" color="#a6e3a1" no-follow></kess-mascot>
+        </div>
       </div>
       <div class="status">
         <span class="site">kessleru.com.br</span>
         <span>TypeScript&nbsp;&nbsp;UTF-8&nbsp;&nbsp;LF</span>
       </div>
     </div>
+    <script src="../../src/lib/kess/kess.js"></script>
+    <script>
+      // olha para o nome, à esquerda
+      customElements.whenDefined('kess-mascot').then(() => {
+        document.querySelector('kess-mascot').gaze = { x: -0.7, y: -0.1 };
+      });
+    </script>
   </body>
 </html>

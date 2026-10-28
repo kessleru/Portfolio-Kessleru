@@ -10,14 +10,20 @@ const root = join(__dirname, '..', '..');
 const pub = (file) => join(root, 'public', file);
 
 (async () => {
-  const browser = await chromium.launch();
+  // WebGL por software, para o Kess (Three.js) aparecer na imagem
+  const browser = await chromium.launch({
+    args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+  });
 
   const og = await browser.newPage({ viewport: { width: 1200, height: 630 } });
   await og.goto('file://' + join(__dirname, 'og.html'));
   await og.evaluate(() => document.fonts.ready);
-  await og.waitForTimeout(300);
+  await og.waitForTimeout(3000); // o Kess carrega o Three.js e aparece
   await og.screenshot({ path: pub('og.png') });
+  await browser.close();
 
+  // Ícones num navegador comum: com o WebGL por software, a captura das páginas pequenas falha
+  const plain = await chromium.launch();
   // Ícones: quadrado cheio para a Apple (o iOS arredonda sozinho), cantos arredondados nos demais.
   const svg = readFileSync(pub('favicon.svg'), 'utf8');
   const square = svg.replace('rx="3.5"', 'rx="0"');
@@ -28,7 +34,7 @@ const pub = (file) => join(root, 'public', file);
     ['icon-512.png', 512, svg],
   ];
   for (const [file, size, source] of icons) {
-    const page = await browser.newPage({ viewport: { width: size, height: size } });
+    const page = await plain.newPage({ viewport: { width: size, height: size } });
     await page.setContent(
       `<style>*{margin:0}svg{display:block;width:${size}px;height:${size}px}</style>${source}`
     );
@@ -36,6 +42,6 @@ const pub = (file) => join(root, 'public', file);
     await page.close();
   }
 
-  await browser.close();
+  await plain.close();
   console.log('og.png e ícones gerados em public/');
 })();
