@@ -320,6 +320,9 @@ function KessCompanion() {
       // pulos à toa (passear, trocar de card) têm intervalo mínimo: pular toda hora fica estranho
       lastIdleJump: 0,
       lastCardJump: 0,
+      // alguém levou ele para outro canto (arrastou, pulão, ↑): nesta página ele não volta sozinho
+      // para o lugar do topo; fica nos cards (só volta se não houver card na tela)
+      placed: false,
       // altura do pulo dentro do canvas (0 no chão, 1 no alto), para a sombra encolher junto
       lift: 0,
       hopTo: null as number | null,
@@ -494,6 +497,7 @@ function KessCompanion() {
     let arriveUntil = 0;
     function arrive() {
       halt('sit');
+      s.placed = false;
       arriveUntil = performance.now() + 1500;
       wrap!.style.opacity = '0';
       if (s.bubble) {
@@ -853,7 +857,7 @@ function KessCompanion() {
         }
       }
 
-      if (spot) {
+      const toSpot = (spot: Ground) => {
         if (s.ground?.el !== spot.el) {
           if (!s.ready) place(spot, spot.left);
           else jumpTo(spot, spot.left, now);
@@ -863,6 +867,10 @@ function KessCompanion() {
         ) {
           place(spot, spot.left);
         }
+      };
+      // o lugar dele no topo vem primeiro, a não ser que alguém tenha levado ele para outro canto
+      if (spot && !s.placed) {
+        toSpot(spot);
         return;
       }
 
@@ -899,6 +907,11 @@ function KessCompanion() {
             : perch.right;
         if (!s.ready) place(perch, toX);
         else jumpTo(perch, toX, now);
+        return;
+      }
+      // levaram ele para outro canto, mas não sobrou card na tela: aí, sim, volta para o lugar dele
+      if (spot) {
+        toSpot(spot);
         return;
       }
 
@@ -1110,6 +1123,7 @@ function KessCompanion() {
         }
       };
       const to = perchBelow(s.x, s.y, s.size) ?? visibleSpot();
+      s.placed = !!to;
       if (!to) {
         // nada na tela onde pousar: ele mesmo decide (espia da borda)
         s.mode = 'sit';
@@ -1129,6 +1143,7 @@ function KessCompanion() {
       body!.crouch = 0;
       // carga cheia: salta para outro card
       if (k >= 1 && cardJump(performance.now())) {
+        s.placed = true;
         flash('animado', 1800);
         remark(lines.charged);
         return;
@@ -1312,7 +1327,8 @@ function KessCompanion() {
         emote('question');
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (!cardJump(now)) body.hop(3.6);
+        if (cardJump(now)) s.placed = true;
+        else body.hop(3.6);
       }
     };
 
