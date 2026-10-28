@@ -25,12 +25,14 @@ const FOOT = 0.86;
 // Gravidade em px/s². É ela que tira a sensação de voo: sobe desacelerando e cai acelerando.
 // fantasma: gravidade baixa, os pulos viram voos curtos e lentos
 const GRAVITY = 1500;
-const IDLE_MS = 30_000;
+const IDLE_MS = 60_000;
 const YAWN_MS = 1_600;
 // Enquanto a pessoa rola, o Kess fica no lugar dele (e sai da tela junto com o conteúdo);
 // só escolhe outro lugar quando a rolagem para por este tempo. Sem isso, subindo e descendo
 // rápido ele passaria o tempo todo no ar, perseguindo a página.
 const SETTLE_MS = 220;
+// Passeios e pulos à toa só começam com a página parada há um tempo (nunca durante a rolagem).
+const QUIET_MS = 1200;
 // Fala sozinho (sem ninguém mexer nele) no máximo uma vez a cada 45 s.
 const IDLE_LINE_MS = 45_000;
 const HELLO_KEY = 'kess-oi';
@@ -484,6 +486,11 @@ function KessCompanion() {
     // ---------- passeio: pulinhos seguidos pela borda do card ----------
     function hopStep(now: number) {
       if (s.mode !== 'sit' || !s.ground || s.hopTo === null) return;
+      if (now - s.scrolledAt < QUIET_MS) {
+        // rolaram no meio do passeio: espera a página parar para dar o próximo pulinho
+        later(() => hopStep(performance.now()), 300);
+        return;
+      }
       const dx = s.hopTo - s.x;
       if (Math.abs(dx) <= 3) {
         s.hopTo = null;
@@ -629,28 +636,29 @@ function KessCompanion() {
         !s.ground
       )
         return;
-      s.nextIdle = now + 5000 + Math.random() * 6000;
+      s.nextIdle = now + 3500 + Math.random() * 4500;
       const el = kess();
       if (!el) return;
       const roll = Math.random();
       const g = s.ground;
-      const canJump = now - s.lastIdleJump > 15_000;
+      const canJump = now - s.lastIdleJump > 7_000;
       // de vez em quando troca de card (ex.: pula de um projeto para outro, em outra coluna)
       if (
         canJump &&
-        now - s.lastCardJump > 35_000 &&
+        now - s.lastCardJump > 14_000 &&
         g.kind === 'perch' &&
         !visibleSpot() &&
-        Math.random() < 0.25
+        Math.random() < 0.5
       ) {
         const to = otherPerch(g);
         if (to) {
           s.lastIdleJump = s.lastCardJump = now;
           const toX = to.left + Math.random() * (to.right - to.left);
-          later(
-            () => s.mode === 'sit' && jumpTo(to, toX, performance.now()),
-            450
-          );
+          later(() => {
+            const t = performance.now();
+            if (s.mode === 'sit' && t - s.scrolledAt >= QUIET_MS)
+              jumpTo(to, toX, t);
+          }, 450);
           look(toX > s.x ? 1 : -1, to.feet < s.y ? -0.4 : 0.2, 500);
           return;
         }
@@ -660,7 +668,7 @@ function KessCompanion() {
         // fala uma coisinha
         say(pick(lines.idle));
       } else if (
-        roll < 0.38 &&
+        roll < 0.55 &&
         canJump &&
         g.kind === 'perch' &&
         g.right - g.left > s.size * 2
@@ -674,19 +682,19 @@ function KessCompanion() {
         const distance = s.size * (1.6 + Math.random() * 3.4);
         s.hopTo = clamp(s.x + dir * distance, g.left, g.right);
         hopStep(now);
-      } else if (roll < 0.58) {
+      } else if (roll < 0.68) {
         // olha em volta
         look(-0.9, -0.1, 700);
         later(() => s.mode === 'sit' && look(0.9, -0.1, 700), 750);
-      } else if (roll < 0.68) {
+      } else if (roll < 0.76) {
         // espia o conteúdo do card
         look(0, 0.8, 1200);
-      } else if (roll < 0.8) {
+      } else if (roll < 0.86) {
         // cantarola
         flash('feliz', 1700);
         emote('note');
         later(() => emote('note'), 600);
-      } else if (roll < 0.94 || !canJump) {
+      } else if (roll < 0.95 || !canJump) {
         el.wave();
       } else {
         s.lastIdleJump = now;
@@ -834,7 +842,10 @@ function KessCompanion() {
         peekPosition();
       }
 
-      if (s.mode === 'sit' && now >= s.nextIdle) idle(now);
+      if (s.mode === 'sit' && now >= s.nextIdle) {
+        if (now - s.scrolledAt < QUIET_MS) s.nextIdle = now + QUIET_MS;
+        else idle(now);
+      }
 
       if (!s.ready) {
         s.ready = true;
