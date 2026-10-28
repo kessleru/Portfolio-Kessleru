@@ -38,6 +38,14 @@ const IDLE_LINE_MS = 45_000;
 const HELLO_KEY = 'kess-oi';
 const HINT_KEY = 'kess-dica';
 const PERCH = 46;
+// No colo: segurar parado por HOLD_MS começa a carregar o pulão (cheio em CHARGE_MS);
+// mover DRAG_PX com o botão apertado pega ele no colo.
+const HOLD_MS = 260;
+const CHARGE_MS = 900;
+const DRAG_PX = 6;
+// A velocidade do arremesso sai dos movimentos destes últimos ms antes de soltar.
+const THROW_MS = 150;
+const THROW_SPEED = 1600;
 
 // Emote que sai quando a emoção começa…
 const MOOD_EMOTE: Partial<Record<KessMood, Emote>> = {
@@ -93,15 +101,15 @@ type Flight = {
   toX: number;
   fromSize: number;
   step: boolean;
+  /** O que fazer ao pousar (some junto se o voo for interrompido). */
+  onLand?: () => void;
 };
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
-function measure(el: Element): Ground | null {
-  if (!el.isConnected) return null;
-  const r = el.getBoundingClientRect();
-  if (r.width === 0) return null;
+function measure(el: Element, r = el.getBoundingClientRect()): Ground | null {
+  if (!el.isConnected || r.width === 0) return null;
   const sx = window.scrollX;
   const sy = window.scrollY;
 
@@ -142,21 +150,52 @@ function visibleSpot() {
   return null;
 }
 
-/** A borda de card mais perto da linha de leitura, com espaço para o Kess caber inteiro. */
-function bestPerch(nearX: number) {
-  const vh = window.innerHeight;
-  const size = PERCH;
-  const line = vh * 0.38;
-  let best: Ground | null = null;
-  let bestScore = Infinity;
-
+/** Bordas de card com o topo entre `top` e `bottom` (px da tela). */
+function perchesOnScreen(top: number, bottom: number) {
+  const found: Ground[] = [];
   for (const el of document.querySelectorAll('[data-kess-perch]')) {
     const r = el.getBoundingClientRect();
-    if (r.top < size * 1.4 || r.top > vh - 28) continue;
-    const ground = measure(el);
-    if (!ground) continue;
+    if (r.top < top || r.top > bottom) continue;
+    const ground = measure(el, r);
+    if (ground?.kind === 'perch') found.push(ground);
+  }
+  return found;
+}
+
+// com espaço para o Kess caber inteiro acima da borda
+const roomyPerches = () =>
+  perchesOnScreen(PERCH * 1.4, window.innerHeight - 28);
+
+/** A borda de card mais perto da linha de leitura. */
+function bestPerch(nearX: number) {
+  const line = window.scrollY + window.innerHeight * 0.38;
+  let best: Ground | null = null;
+  let bestScore = Infinity;
+  for (const ground of roomyPerches()) {
     const x = clamp(nearX, ground.left, ground.right);
-    const score = Math.abs(r.top - line) + Math.abs(x - nearX) * 0.08;
+    const score = Math.abs(ground.feet - line) + Math.abs(x - nearX) * 0.08;
+    if (score < bestScore) {
+      best = ground;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/** A borda de card na tela logo abaixo de um ponto da página (onde ele foi solto). */
+function perchBelow(x: number, y: number, size: number) {
+  let best: Ground | null = null;
+  let bestScore = Infinity;
+  for (const ground of perchesOnScreen(0, window.innerHeight - 20)) {
+    const dx =
+      x < ground.left
+        ? ground.left - x
+        : x > ground.right
+          ? x - ground.right
+          : 0;
+    const dy = ground.feet - y;
+    // abaixo do ponto ganha; acima, só se não houver nada embaixo
+    const score = (dy >= -size * 0.4 ? dy : 600 - dy) + dx * 2;
     if (score < bestScore) {
       best = ground;
       bestScore = score;
@@ -167,16 +206,11 @@ function bestPerch(nearX: number) {
 
 /** Outra borda de card na tela, de preferência longe para o lado (outra coluna), para ele trocar de lugar. */
 function otherPerch(current: Ground) {
-  const vh = window.innerHeight;
   const size = PERCH;
   const here = (current.left + current.right) / 2;
   const options: { ground: Ground; weight: number }[] = [];
-  for (const el of document.querySelectorAll('[data-kess-perch]')) {
-    if (el === current.el) continue;
-    const r = el.getBoundingClientRect();
-    if (r.top < size * 1.4 || r.top > vh - 28) continue;
-    const ground = measure(el);
-    if (!ground || ground.kind !== 'perch') continue;
+  for (const ground of roomyPerches()) {
+    if (ground.el === current.el) continue;
     const dx = Math.abs((ground.left + ground.right) / 2 - here);
     const dy = Math.abs(ground.feet - current.feet);
     if (dx < size * 2 && dy < size) continue;
@@ -187,6 +221,20 @@ function otherPerch(current: Ground) {
   let roll = Math.random() * options.reduce((t, o) => t + o.weight, 0);
   for (const o of options) if ((roll -= o.weight) <= 0) return o.ground;
   return options[options.length - 1].ground;
+}
+
+// O que só acontece uma vez por visita (cumprimento, dica). Sem sessionStorage, vale até recarregar a página.
+const seen = new Set<string>();
+function firstInSession(key: string) {
+  if (seen.has(key)) return false;
+  seen.add(key);
+  try {
+    if (sessionStorage.getItem(key)) return false;
+    sessionStorage.setItem(key, '1');
+  } catch {
+    // sem sessionStorage: fica só a lembrança acima
+  }
+  return true;
 }
 
 /**
@@ -249,16 +297,17 @@ function KessCompanion() {
     const host = layer;
     const wrap = wrapRef.current;
     const shadow = shadowRef.current;
-    if (!wrap || !shadow) return;
+    const body = wrap?.querySelector<KessMascotElement>('kess-mascot');
+    if (!wrap || !shadow || !body) return;
 
     const reduce = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches;
-    const kess = () => wrap.querySelector<KessMascotElement>('kess-mascot');
 
     const s = {
       ready: false,
-      mode: 'sit' as 'sit' | 'prep' | 'air' | 'peek' | 'drag',
+      // charge: segurado parado, carregando o pulão; drag: no colo, pendurado no cursor
+      mode: 'sit' as 'sit' | 'prep' | 'air' | 'peek' | 'charge' | 'drag',
       x: 0,
       y: 0,
       size: PERCH,
@@ -292,47 +341,54 @@ function KessCompanion() {
         fn();
       }, ms);
       timers.add(id);
+      return id;
     };
 
-    // estado do colo (segurar, carregar o pulão, arrastar)
-    const HOLD_MS = 260;
-    const CHARGE_MS = 900;
-    const DRAG_PX = 6;
-    let hold: null | {
-      id: number;
-      x: number;
-      y: number;
-      charge: number;
-      chargeFrom: number;
-      full: boolean;
-    } = null;
+    // segurado: onde o botão desceu e, carregando, desde quando
+    let hold: null | { id: number; x: number; y: number; chargeFrom: number } =
+      null;
     let holdTimer = 0;
-    let chargeRaf = 0;
     let swallowClick = false;
-    let afterLand: null | (() => void) = null;
-    const ptr = { x: 0, y: 0, t: 0, vx: 0, vy: 0 };
-    // últimas posições do cursor no arrasto: a velocidade do arremesso sai delas (o vx acima só balança o corpo)
+    // no colo: o cursor e suas últimas posições (a velocidade sai delas)
+    const ptr = { x: 0, y: 0 };
     const trail: { t: number; x: number; y: number }[] = [];
+    const newCarry = (now: number) => ({
+      // última vez que o cursor se mexeu, o lado para onde ia e quando virou (chacoalhar)
+      movedAt: now,
+      dir: 0,
+      flips: [] as number[],
+      kickAt: now + 1100,
+      shakenAt: 0,
+      held: false,
+      high: false,
+    });
+    let carry = newCarry(0);
+    // a reação mais recente no colo: só ela devolve o "animado" quando acaba
+    let carryMood = 0;
 
     let gazeUntil = 0;
     function look(x: number, y: number, ms: number) {
-      const el = kess();
-      if (!el) return;
-      el.gaze = { x, y };
+      body!.gaze = { x, y };
       gazeUntil = performance.now() + ms;
       later(() => {
-        if (performance.now() >= gazeUntil && s.mode === 'sit') el.gaze = null;
+        if (performance.now() >= gazeUntil && s.mode === 'sit')
+          body!.gaze = null;
       }, ms + 10);
     }
+
+    // A cabeça dele na tela: para onde ele olha e em volta do que o mouse gira.
+    const screenHead = () => ({
+      x: s.x - window.scrollX,
+      y: s.y - s.size * 0.5 - window.scrollY,
+    });
 
     // O canvas é desenhado no tamanho em que o Kess aparece, não no tamanho base: bem menos pixels por quadro.
     let pixels = 0;
     function fitResolution(size: number) {
-      const el = kess();
       const wanted = Math.round(size * (window.devicePixelRatio || 1) * 1.6);
-      if (el && Math.abs(wanted - pixels) > pixels * 0.1) {
+      if (Math.abs(wanted - pixels) > pixels * 0.1) {
         pixels = wanted;
-        el.setAttribute('pixels', String(wanted));
+        body!.setAttribute('pixels', String(wanted));
       }
     }
 
@@ -424,15 +480,20 @@ function KessCompanion() {
       );
     }
 
-    // Trocou de página: o chão antigo sumiu junto com a página (e a formação ainda pode estar
-    // carregando). Ele some, espera o lugar dele na página nova aparecer e cai lá de cima.
-    let arriveUntil = 0;
-    function arrive() {
+    // Para o que estiver fazendo (voo, pulo marcado, passeio) e sai do chão.
+    function halt(mode: typeof s.mode) {
       s.flight = null;
       s.launch = null;
       s.hopTo = null;
       s.ground = null;
-      s.mode = 'sit';
+      s.mode = mode;
+    }
+
+    // Trocou de página: o chão antigo sumiu junto com a página (e a formação ainda pode estar
+    // carregando). Ele some, espera o lugar dele na página nova aparecer e cai lá de cima.
+    let arriveUntil = 0;
+    function arrive() {
+      halt('sit');
       arriveUntil = performance.now() + 1500;
       wrap!.style.opacity = '0';
       if (s.bubble) {
@@ -446,8 +507,8 @@ function KessCompanion() {
     actions.current = {
       emote,
       say,
-      wave: () => kess()?.wave(),
-      hop: (power) => kess()?.hop(power),
+      wave: () => body.wave(),
+      hop: (power) => body.hop(power),
       arrive,
     };
 
@@ -505,13 +566,9 @@ function KessCompanion() {
     }
 
     // ---------- passeio: pulinhos seguidos pela borda do card ----------
+    // (rolar a página no meio do passeio encerra o passeio: ver onScroll)
     function hopStep(now: number) {
       if (s.mode !== 'sit' || !s.ground || s.hopTo === null) return;
-      if (now - s.scrolledAt < QUIET_MS) {
-        // rolaram no meio do passeio: espera a página parar para dar o próximo pulinho
-        later(() => hopStep(performance.now()), 300);
-        return;
-      }
       const dx = s.hopTo - s.x;
       if (Math.abs(dx) <= 3) {
         s.hopTo = null;
@@ -521,7 +578,25 @@ function KessCompanion() {
       jumpTo(s.ground, s.x + stride, now, true);
     }
 
-    function startFlight(to: Ground, toX: number, small: boolean, now: number) {
+    // Anda aos pulinhos pela borda do card, até `distance` px para um lado. Sem espaço, devolve false.
+    function stroll(dir: number, distance: number, now: number) {
+      const g = s.ground;
+      if (!g || g.kind !== 'perch') return false;
+      const to = clamp(s.x + dir * distance, g.left, g.right);
+      if (Math.abs(to - s.x) <= 3) return false;
+      s.lastIdleJump = now;
+      s.hopTo = to;
+      hopStep(now);
+      return true;
+    }
+
+    function startFlight(
+      to: Ground,
+      toX: number,
+      small: boolean,
+      now: number,
+      onLand?: () => void
+    ) {
       let x0 = s.x;
       let y0 = s.y;
       const y1 = to.feet;
@@ -567,43 +642,47 @@ function KessCompanion() {
         toX,
         fromSize: s.size,
         step: small,
+        onLand,
       };
       s.ground = null;
       s.mode = 'air';
       fitResolution(Math.max(s.size, to.size));
-      const el = kess();
-      if (el) el.crouch = 0;
+      body!.crouch = 0;
+    }
+
+    // Com movimento reduzido ele não voa: some e aparece no lugar novo.
+    function settle(to: Ground, x: number, onLand?: () => void) {
+      s.mode = 'prep'; // sem pulo marcado: só para nada mexer nele até aparecer
+      s.launch = null;
+      wrap!.style.opacity = '0';
+      later(() => {
+        place(to, x);
+        s.mode = 'sit';
+        render();
+        wrap!.style.opacity = '1';
+        onLand?.();
+      }, 160);
     }
 
     // Antecipação: olha para onde vai, agacha e só então pula.
     function jumpTo(to: Ground, toX: number, now: number, small = false) {
       if (!small) s.hopTo = null;
-      const el = kess();
+      if (reduce) {
+        settle(to, toX);
+        return;
+      }
+
       const dx = toX - s.x;
       const dy = to.feet - s.y;
       const offscreen =
         s.y + s.size * 0.2 < window.scrollY ||
         s.y - s.size > window.scrollY + window.innerHeight ||
         s.mode === 'peek';
-
-      if (reduce) {
-        wrap!.style.opacity = '0';
-        later(() => {
-          place(to, toX);
-          s.mode = 'sit';
-          render();
-          wrap!.style.opacity = '1';
-        }, 160);
-        return;
-      }
-
-      if (el) {
-        el.gaze = {
-          x: Math.abs(dx) < 4 ? 0 : Math.sign(dx) * 0.9,
-          y: clamp(dy / 300, -0.7, 0.7),
-        };
-        el.crouch = small ? -0.08 : -0.22;
-      }
+      body!.gaze = {
+        x: Math.abs(dx) < 4 ? 0 : Math.sign(dx) * 0.9,
+        y: clamp(dy / 300, -0.7, 0.7),
+      };
+      body!.crouch = small ? -0.08 : -0.22;
       if (offscreen && s.mode !== 'peek') {
         startFlight(to, toX, small, now);
       } else {
@@ -621,24 +700,20 @@ function KessCompanion() {
       place(fresh, clamp(f.toX, fresh.left, fresh.right));
       s.flight = null;
       s.mode = 'sit';
-      const el = kess();
-      if (el) {
-        el.crouch = 0;
-        el.squash(-clamp(impact / 700, f.step ? 1 : 1.2, 3));
-      }
+      body!.crouch = 0;
+      body!.squash(-clamp(impact / 700, f.step ? 1 : 1.2, 3));
+      const ungaze = () => s.mode === 'sit' && (body!.gaze = null);
       if (!f.step) {
         const power = clamp(impact / 1800, 0, 1);
         if (impact > 1400) dust(s.x, s.y, power); // fantasma quase não levanta poeira
         if (impact > 800 && fresh.kind === 'perch') press(fresh.el, power);
-        later(() => {
-          if (s.mode === 'sit' && el) el.gaze = null;
-        }, 380);
+        later(ungaze, 380);
       } else if (s.hopTo !== null && Math.abs(s.hopTo - s.x) > 3) {
         // emenda o próximo pulinho depois de uma pausa curta, como um bichinho saltitando
         later(() => hopStep(performance.now()), 110);
       } else {
         s.hopTo = null;
-        if (el) later(() => s.mode === 'sit' && (el.gaze = null), 300);
+        later(ungaze, 300);
       }
       // chegou no fim da página
       if (fresh.el.tagName === 'FOOTER' && !s.saidFooter) {
@@ -647,24 +722,42 @@ function KessCompanion() {
       }
       s.nextIdle = now + 4000 + Math.random() * 5000;
       s.dirty = true;
-      if (afterLand) {
-        const done = afterLand;
-        afterLand = null;
-        done();
-      }
+      f.onLand?.();
     }
 
+    // Salta para outro card na tela, de preferência em outra coluna; com `delay`, olha para lá antes.
+    // Sem card livre (ou com movimento reduzido), devolve false.
+    let cardJumpTimer = 0;
+    function cardJump(now: number, delay = 0) {
+      const to =
+        s.ground?.kind === 'perch' && !reduce ? otherPerch(s.ground) : null;
+      if (!to) return false;
+      const x = to.left + Math.random() * (to.right - to.left);
+      s.lastIdleJump = s.lastCardJump = now;
+      if (!delay) {
+        jumpTo(to, x, now);
+        return true;
+      }
+      look(x > s.x ? 1 : -1, to.feet < s.y ? -0.4 : 0.2, 500);
+      cardJumpTimer = later(
+        () => s.mode === 'sit' && jumpTo(to, x, performance.now()),
+        delay
+      );
+      return true;
+    }
+
+    // Coisas à toa: só parado, acordado, sem ninguém segurando e com a página quieta
+    // (a rolagem adia o próximo: ver onScroll).
     function idle(now: number) {
       if (
         reduce ||
+        hold ||
         sleepRef.current !== 'awake' ||
         s.mode !== 'sit' ||
         !s.ground
       )
         return;
       s.nextIdle = now + 3500 + Math.random() * 4500;
-      const el = kess();
-      if (!el) return;
       const roll = Math.random();
       const g = s.ground;
       const canJump = now - s.lastIdleJump > 7_000;
@@ -672,22 +765,11 @@ function KessCompanion() {
       if (
         canJump &&
         now - s.lastCardJump > 14_000 &&
-        g.kind === 'perch' &&
-        !visibleSpot() &&
-        Math.random() < 0.5
+        Math.random() < 0.5 &&
+        !visibleSpot()
       ) {
-        const to = otherPerch(g);
-        if (to) {
-          s.lastIdleJump = s.lastCardJump = now;
-          const toX = to.left + Math.random() * (to.right - to.left);
-          later(() => {
-            const t = performance.now();
-            if (s.mode === 'sit' && t - s.scrolledAt >= QUIET_MS)
-              jumpTo(to, toX, t);
-          }, 450);
-          look(toX > s.x ? 1 : -1, to.feet < s.y ? -0.4 : 0.2, 500);
-          return;
-        }
+        s.lastCardJump = now; // sem card livre agora, tenta de novo só mais tarde
+        if (cardJump(now, 450)) return;
       }
 
       if (roll < 0.14 && now - s.lastSay > IDLE_LINE_MS) {
@@ -699,15 +781,12 @@ function KessCompanion() {
         g.kind === 'perch' &&
         g.right - g.left > s.size * 2
       ) {
-        s.lastIdleJump = now;
         // passeia pela borda do card
         // de 2 a 5 pulinhos para um lado (o que tiver mais espaço, às vezes o outro)
         const roomRight = g.right - s.x;
         const roomLeft = s.x - g.left;
         const dir = roomRight > roomLeft === Math.random() < 0.75 ? 1 : -1;
-        const distance = s.size * (1.6 + Math.random() * 3.4);
-        s.hopTo = clamp(s.x + dir * distance, g.left, g.right);
-        hopStep(now);
+        stroll(dir, s.size * (1.6 + Math.random() * 3.4), now);
       } else if (roll < 0.68) {
         // olha em volta
         look(-0.9, -0.1, 700);
@@ -721,10 +800,10 @@ function KessCompanion() {
         emote('note');
         later(() => emote('note'), 600);
       } else if (roll < 0.95 || !canJump) {
-        el.wave();
+        body!.wave();
       } else {
         s.lastIdleJump = now;
-        el.hop(2.6);
+        body!.hop(2.6);
       }
     }
 
@@ -744,7 +823,8 @@ function KessCompanion() {
     function evaluate(now: number) {
       s.dirty = false;
       s.lastEval = now;
-      if (s.mode === 'air' || s.mode === 'prep' || s.mode === 'drag') return;
+      // no meio de um pulo ou nas mãos de alguém, ele não procura outro lugar
+      if (s.mode !== 'sit' && s.mode !== 'peek') return;
       if (s.ready && now - s.scrolledAt < SETTLE_MS) return;
 
       const spot = visibleSpot();
@@ -827,8 +907,7 @@ function KessCompanion() {
         s.ground = null;
         s.peekSince = now;
         setBaseMood('curioso');
-        const el = kess();
-        if (el) el.gaze = { x: -0.7, y: -0.6 };
+        body!.gaze = { x: -0.7, y: -0.6 };
       }
     }
 
@@ -853,34 +932,27 @@ function KessCompanion() {
           s.y = f.y0 + f.vy0 * t + 0.5 * GRAVITY * t * t;
           s.size = f.fromSize + (f.to.size - f.fromSize) * (t / f.duration);
           // estica quando está rápido, solta no topo do pulo e se inclina para onde vai
-          const el = kess();
-          if (el)
-            el.crouch = f.step
-              ? clamp(Math.abs(vy) / 3000, 0, 0.1)
-              : clamp(Math.abs(vy) / 3800, 0, 0.16);
+          body!.crouch = f.step
+            ? clamp(Math.abs(vy) / 3000, 0, 0.1)
+            : clamp(Math.abs(vy) / 3800, 0, 0.16);
           s.rot = clamp(
             f.vx / (f.step ? 90 : 110),
             f.step ? -5 : -7,
             f.step ? 5 : 7
           );
         }
+      } else if (s.mode === 'charge') {
+        // agacha cada vez mais e treme com a força guardada
+        const k = charged(now);
+        body!.crouch = -0.28 * k;
+        s.rot = reduce ? 0 : Math.sin(now / 16) * 3 * k;
       } else if (s.mode === 'drag') {
-        // pendurado pela cabeça: o corpo fica para trás do movimento e volta ao prumo devagar
-        ptr.vx *= 0.88;
-        const swing = clamp(ptr.vx / 55, -24, 24) * (reduce ? 0.3 : 1);
-        s.rot += (swing - s.rot) * 0.25;
-        const a = (s.rot * Math.PI) / 180;
-        const h = s.size * 0.78;
-        s.x = ptr.x + window.scrollX - h * Math.sin(a);
-        s.y = ptr.y + window.scrollY + h * Math.cos(a);
+        carried(now);
       } else if (s.mode === 'peek') {
         peekPosition();
       }
 
-      if (s.mode === 'sit' && now >= s.nextIdle) {
-        if (now - s.scrolledAt < QUIET_MS) s.nextIdle = now + QUIET_MS;
-        else idle(now);
-      }
+      if (s.mode === 'sit' && now >= s.nextIdle) idle(now);
 
       if (!s.ready) {
         s.ready = true;
@@ -895,11 +967,16 @@ function KessCompanion() {
       if (!raf) raf = requestAnimationFrame(frame);
     }
 
-    // Rolando: ele acompanha o movimento com o olhar.
+    // Rolando: ele acompanha o movimento com o olhar e não sai andando. O passeio e o pulo
+    // de card que estavam para começar ficam para depois; à toa, só com a página quieta.
     function onScroll() {
+      const now = performance.now();
       const dy = window.scrollY - s.lastScrollY;
       s.lastScrollY = window.scrollY;
-      s.scrolledAt = performance.now();
+      s.scrolledAt = now;
+      s.hopTo = null;
+      window.clearTimeout(cardJumpTimer);
+      s.nextIdle = Math.max(s.nextIdle, now + QUIET_MS);
       if (s.mode === 'sit' && Math.abs(dy) > 2 && !reduce) {
         look(0, dy > 0 ? 0.6 : -0.6, 450);
       }
@@ -918,97 +995,113 @@ function KessCompanion() {
       window.clearTimeout(petTimer);
       setPetting(false);
     };
-    const kessEl = kess();
-    kessEl?.addEventListener('pointerenter', petStart);
-    kessEl?.addEventListener('pointerleave', petEnd);
+
+    // fala puxada por interação (pegar no colo, seleção…): não corta o balão que ainda está na tela
+    function remark(options: readonly string[]) {
+      if (!s.bubble) say(pick(options));
+    }
 
     // ---------- no colo: segurar, carregar o pulão e arrastar ----------
-    // Segurar parado: ele agacha cada vez mais; ao soltar, pula (carga cheia: salta para outro card).
+    // Segurar parado: ele agacha e treme cada vez mais; ao soltar, pula (carga cheia: salta para outro card).
     // Segurar e mover: ele fica pendurado no cursor e, solto, flutua até a borda logo abaixo.
-    function chargeTick() {
-      if (!hold || s.mode === 'drag') return;
-      const k = clamp((performance.now() - hold.chargeFrom) / CHARGE_MS, 0, 1);
-      hold.charge = k;
-      const el = kess();
-      if (el) el.crouch = -0.28 * k;
-      if (k >= 1 && !hold.full) {
-        hold.full = true;
-        emote('sparkle');
-      }
-      chargeRaf = requestAnimationFrame(chargeTick);
+    function charged(now: number) {
+      return hold?.chargeFrom
+        ? clamp((now - hold.chargeFrom) / CHARGE_MS, 0, 1)
+        : 0;
+    }
+
+    // Velocidade do cursor no colo (px/s), pelos movimentos dos últimos THROW_MS.
+    // Se ele parou o mouse um instante antes, é zero (soltou parado: não foi arremesso).
+    function velocity(now: number) {
+      const last = trail[trail.length - 1];
+      let i = trail.length - 2;
+      if (!last || i < 0 || now - last.t >= THROW_MS) return { x: 0, y: 0 };
+      while (i > 0 && last.t - trail[i - 1].t <= THROW_MS) i--;
+      const dt = (last.t - trail[i].t) / 1000;
+      if (dt <= 0) return { x: 0, y: 0 };
+      return { x: (last.x - trail[i].x) / dt, y: (last.y - trail[i].y) / dt };
+    }
+
+    // reação passageira no colo; quando acaba, ele volta a ficar animado
+    function carriedMood(mood: KessMood, ms: number) {
+      flash(mood, ms);
+      const id = ++carryMood;
+      later(() => {
+        if (id === carryMood && s.mode === 'drag') flash('animado', 30_000);
+      }, ms);
     }
 
     function pickUp() {
       window.clearTimeout(holdTimer);
-      cancelAnimationFrame(chargeRaf);
-      s.flight = null;
-      s.launch = null;
-      s.hopTo = null;
-      s.ground = null;
-      s.mode = 'drag';
-      const el = kess();
-      if (el) {
-        el.crouch = 0.1;
-        el.gaze = { x: 0, y: 0.6 };
-      }
-      flash('surpreso', 700);
-      later(() => s.mode === 'drag' && flash('animado', 30_000), 700);
-      if (performance.now() - s.lastSay > 8000) say(pick(lines.grab));
+      halt('drag');
+      carry = newCarry(performance.now());
+      // um susto: estica de uma vez e fica pendurado, olhando para baixo
+      body!.crouch = 0.1;
+      body!.squash(3);
+      body!.gaze = { x: 0, y: 0.6 };
+      carriedMood('surpreso', 700);
+      remark(lines.grab);
       wake();
     }
 
-    // borda de card na tela logo abaixo do ponto onde ele foi solto
-    function groundBelow(x: number, y: number) {
-      const vh = window.innerHeight;
-      let best: Ground | null = null;
-      let bestScore = Infinity;
-      for (const el of document.querySelectorAll('[data-kess-perch]')) {
-        const r = el.getBoundingClientRect();
-        if (r.top < 0 || r.top > vh - 20) continue;
-        const g = measure(el);
-        if (!g || g.kind !== 'perch') continue;
-        const dx = x < g.left ? g.left - x : x > g.right ? x - g.right : 0;
-        const dy = g.feet - y;
-        const score = (dy >= -s.size * 0.4 ? dy : 600 - dy) + dx * 2;
-        if (score < bestScore) {
-          best = g;
-          bestScore = score;
+    // Pendurado pela cabeça: o corpo fica para trás do movimento e volta ao prumo devagar.
+    // Olha para onde está indo e, parado no ar, balança as perninhas.
+    function carried(now: number) {
+      const v = velocity(now);
+      const swing = clamp(v.x / 60, -24, 24) * (reduce ? 0.3 : 1);
+      s.rot += (swing - s.rot) * 0.25;
+      const a = (s.rot * Math.PI) / 180;
+      const h = s.size * 0.78;
+      s.x = ptr.x + window.scrollX - h * Math.sin(a);
+      s.y = ptr.y + window.scrollY + h * Math.cos(a);
+      body!.gaze = { x: v.x / 900, y: 0.6 + v.y / 900 };
+
+      const still = now - carry.movedAt;
+      if (!reduce && still > 400 && now >= carry.kickAt) {
+        carry.kickAt = now + 1100;
+        body!.wave();
+      }
+      // segurado parado no ar por um bom tempo: fica sem graça
+      if (still > 3500 && !carry.held) {
+        carry.held = true;
+        carriedMood('timido', 2600);
+        remark(lines.held);
+      }
+    }
+
+    // Chacoalhar (vai e volta rápido, várias vezes em 1 s) deixa ele tonto; levantar lá no alto, assustado.
+    function carryMove(dx: number, dy: number, now: number) {
+      if (Math.abs(dx) + Math.abs(dy) > 1) carry.movedAt = now;
+      if (Math.abs(dx) > 6 && Math.sign(dx) !== carry.dir) {
+        carry.dir = Math.sign(dx);
+        carry.flips = [...carry.flips.filter((t) => now - t < 1000), now];
+        if (carry.flips.length >= 4 && now - carry.shakenAt > 4000) {
+          carry.shakenAt = now;
+          carry.flips = [];
+          carriedMood('tonto', 1800);
+          emote('sweat');
+          say(pick(lines.shaken));
         }
       }
-      return best;
+      if (!carry.high && hold && ptr.y < 90 && hold.y - ptr.y > 100) {
+        carry.high = true;
+        carriedMood('surpreso', 1200);
+        emote('sweat');
+        say(pick(lines.high));
+      }
     }
 
     function drop() {
       const now = performance.now();
-      // velocidade do arremesso (px/s): os últimos movimentos antes de soltar. Se ele parou o mouse
-      // um instante antes de soltar, não foi arremesso.
-      const last = trail[trail.length - 1];
-      const recent = last ? trail.filter((q) => last.t - q.t <= 150) : [];
-      const first = recent.length > 1 ? recent[0] : trail[trail.length - 2];
-      const speed =
-        first && last && last.t > first.t && now - last.t < 150
-          ? (Math.hypot(last.x - first.x, last.y - first.y) /
-              (last.t - first.t)) *
-            1000
-          : 0;
+      const v = velocity(now);
+      const thrown = Math.hypot(v.x, v.y) > THROW_SPEED;
       trail.length = 0;
-      const el = kess();
-      if (el) {
-        el.crouch = 0;
-        el.gaze = null;
-      }
+      body!.crouch = 0;
+      body!.gaze = null;
       s.rot = 0;
       s.lastIdleJump = now;
-      s.nextIdle = now + 6000;
-      const to = groundBelow(s.x, s.y) ?? visibleSpot() ?? bestPerch(s.x);
-      if (!to) {
-        // nada na tela onde pousar: ele mesmo decide (espia da borda)
-        s.mode = 'sit';
-        wake();
-        return;
-      }
-      afterLand = () => {
-        if (speed > 1600) {
+      const react = () => {
+        if (thrown) {
           flash('tonto', 2400);
           say(pick(lines.thrown));
         } else {
@@ -1016,128 +1109,106 @@ function KessCompanion() {
           if (Math.random() < 0.5) say(pick(lines.dropped));
         }
       };
-      const toX = clamp(s.x, to.left, to.right);
-      if (reduce) {
-        place(to, toX);
+      const to = perchBelow(s.x, s.y, s.size) ?? visibleSpot();
+      if (!to) {
+        // nada na tela onde pousar: ele mesmo decide (espia da borda)
         s.mode = 'sit';
-        render();
-        const done = afterLand;
-        afterLand = null;
-        done();
-      } else {
-        startFlight(to, toX, false, now);
+        react();
+        wake();
+        return;
       }
+      const x = clamp(s.x, to.left, to.right);
+      if (reduce) settle(to, x, react);
+      else startFlight(to, x, false, now, react);
       wake();
     }
 
     function releaseCharge(k: number) {
-      const el = kess();
-      if (!el) return;
-      el.crouch = 0;
-      const now = performance.now();
-      const to =
-        k >= 1 && s.ground?.kind === 'perch' && !reduce
-          ? otherPerch(s.ground)
-          : null;
-      if (to) {
+      s.mode = 'sit';
+      s.rot = 0;
+      body!.crouch = 0;
+      // carga cheia: salta para outro card
+      if (k >= 1 && cardJump(performance.now())) {
         flash('animado', 1800);
-        s.lastIdleJump = s.lastCardJump = now;
-        jumpTo(to, to.left + Math.random() * (to.right - to.left), now);
+        remark(lines.charged);
         return;
       }
       flash(k > 0.6 ? 'animado' : 'feliz', 1400);
-      el.hop(3 + 1.2 * k);
+      body!.hop(3 + 1.2 * k);
+      render();
     }
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0 || e.pointerType === 'touch') return;
       if (s.mode !== 'sit' && s.mode !== 'peek') return;
       e.preventDefault(); // sem selecionar texto nem arrastar a imagem do navegador
-      hold = {
-        id: e.pointerId,
-        x: e.clientX,
-        y: e.clientY,
-        charge: 0,
-        chargeFrom: 0,
-        full: false,
-      };
+      const h = { id: e.pointerId, x: e.clientX, y: e.clientY, chargeFrom: 0 };
+      hold = h;
+      s.hopTo = null; // segurou no meio do passeio: ele para
       ptr.x = e.clientX;
       ptr.y = e.clientY;
-      ptr.t = performance.now();
-      ptr.vx = ptr.vy = 0;
       trail.length = 0;
-      kessEl?.setPointerCapture(e.pointerId);
+      body.setPointerCapture(e.pointerId);
+      // segurou parado: começa a carregar o pulão (espiando da borda, não)
       holdTimer = window.setTimeout(() => {
-        if (!hold || s.mode === 'drag') return;
-        hold.chargeFrom = performance.now();
+        if (s.mode !== 'sit') return;
+        h.chargeFrom = performance.now();
+        s.mode = 'charge';
         flash('concentrado', 20_000);
-        chargeTick();
+        // sua com a força e, com a carga cheia, solta uma faísca
+        const charging = () => hold === h && s.mode === 'charge';
+        later(() => charging() && emote('sweat'), CHARGE_MS * 0.6);
+        later(() => charging() && emote('sparkle'), CHARGE_MS);
+        wake();
       }, HOLD_MS);
     };
     const onPtrMove = (e: PointerEvent) => {
       if (!hold || e.pointerId !== hold.id) return;
       const now = performance.now();
-      const dt = Math.max(8, now - ptr.t);
-      ptr.vx = ptr.vx * 0.5 + ((e.clientX - ptr.x) / dt) * 500;
-      ptr.vy = ptr.vy * 0.5 + ((e.clientY - ptr.y) / dt) * 500;
+      const dx = e.clientX - ptr.x;
+      const dy = e.clientY - ptr.y;
       ptr.x = e.clientX;
       ptr.y = e.clientY;
-      ptr.t = now;
       trail.push({ t: now, x: e.clientX, y: e.clientY });
       if (trail.length > 8) trail.shift();
-      if (
-        s.mode !== 'drag' &&
-        Math.hypot(e.clientX - hold.x, e.clientY - hold.y) >= DRAG_PX
-      )
+      if (s.mode === 'drag') carryMove(dx, dy, now);
+      else if (Math.hypot(e.clientX - hold.x, e.clientY - hold.y) >= DRAG_PX)
         pickUp();
     };
     const onUp = (e: PointerEvent) => {
       if (!hold || e.pointerId !== hold.id) return;
-      const done = hold;
+      const k = e.type === 'pointercancel' ? 0 : charged(performance.now());
       hold = null;
       window.clearTimeout(holdTimer);
-      cancelAnimationFrame(chargeRaf);
-      if (kessEl?.hasPointerCapture(e.pointerId))
-        kessEl.releasePointerCapture(e.pointerId);
-      if (s.mode === 'drag') {
-        swallowClick = true;
-        drop();
-      } else if (done.chargeFrom) {
-        swallowClick = true;
-        releaseCharge(e.type === 'pointercancel' ? 0 : done.charge);
-      }
-      // o clique que vem depois de arrastar ou carregar não conta como cutucada
-      window.setTimeout(() => (swallowClick = false), 0);
+      // o clique que vem logo depois de arrastar ou carregar não conta como cutucada
+      swallowClick = s.mode === 'drag' || s.mode === 'charge';
+      if (s.mode === 'drag') drop();
+      else if (s.mode === 'charge') releaseCharge(k);
+      if (swallowClick) window.setTimeout(() => (swallowClick = false), 0);
     };
     const onClickCapture = (e: MouseEvent) => {
       if (!swallowClick) return;
-      swallowClick = false;
       e.stopPropagation();
       e.preventDefault();
     };
-    kessEl?.addEventListener('pointerdown', onDown);
-    kessEl?.addEventListener('pointermove', onPtrMove);
-    kessEl?.addEventListener('pointerup', onUp);
-    kessEl?.addEventListener('pointercancel', onUp);
-    wrap.addEventListener('click', onClickCapture, true);
 
     // ---------- reações ----------
     function lookAtRect(r: DOMRect, ms: number) {
-      if (s.mode !== 'sit') return;
-      const kx = s.x - window.scrollX;
-      const ky = s.y - s.size * 0.5 - window.scrollY;
+      const head = screenHead();
       look(
-        clamp((r.left + r.width / 2 - kx) / 420, -1, 1),
-        clamp((r.top + r.height / 2 - ky) / 320, -1, 1),
+        (r.left + r.width / 2 - head.x) / 420,
+        (r.top + r.height / 2 - head.y) / 320,
         ms
       );
     }
 
-    // olha para onde o foco do teclado foi (link, botão…)
+    // olha para onde o foco do teclado foi (link, botão…); o foco que vem de um clique não conta
     const onFocusIn = (e: FocusEvent) => {
       const t = e.target;
-      if (!(t instanceof Element) || host.contains(t)) return;
-      lookAtRect(t.getBoundingClientRect(), 1400);
+      if (s.mode !== 'sit' || !(t instanceof Element) || host.contains(t))
+        return;
+      if (t.matches(':focus-visible'))
+        lookAtRect(t.getBoundingClientRect(), 1400);
     };
 
     // olha para o texto selecionado e, de vez em quando, lembra que dá para copiar
@@ -1145,18 +1216,26 @@ function KessCompanion() {
     let lastSelect = 0;
     const onSelection = () => {
       window.clearTimeout(selTimer);
+      if (s.mode !== 'sit') return;
       selTimer = window.setTimeout(() => {
         const sel = document.getSelection();
-        if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
-        if (sel.toString().trim().length < 12) return;
-        const r = sel.getRangeAt(0).getBoundingClientRect();
+        if (s.mode !== 'sit' || !sel || sel.isCollapsed || !sel.rangeCount)
+          return;
+        const range = sel.getRangeAt(0);
+        // uma palavra solta não conta (seleção longa, que passa de um trecho a outro, nem vira texto)
+        if (
+          range.startContainer === range.endContainer &&
+          range.toString().trim().length < 12
+        )
+          return;
+        const r = range.getBoundingClientRect();
         if (!r.width) return;
         lookAtRect(r, 1800);
         const now = performance.now();
-        if (now - lastSelect > 30_000 && s.mode === 'sit') {
+        if (now - lastSelect > 30_000) {
           lastSelect = now;
           flash('curioso', 1400);
-          if (now - s.lastSay > 8000) say(pick(lines.select));
+          remark(lines.select);
         }
       }, 500);
     };
@@ -1166,21 +1245,25 @@ function KessCompanion() {
     let lastAngle: number | null = null;
     let turnFrom = 0;
     let lastDizzy = 0;
+    const resetTurn = (now: number) => {
+      turn = 0;
+      lastAngle = null;
+      turnFrom = now;
+    };
     const onWindowMove = (e: PointerEvent) => {
       if (s.mode !== 'sit' || hold || e.pointerType === 'touch') return;
-      const dx = e.clientX - (s.x - window.scrollX);
-      const dy = e.clientY - (s.y - s.size * 0.45 - window.scrollY);
+      const head = screenHead();
+      const dx = e.clientX - head.x;
+      const dy = e.clientY - head.y;
       const dist = Math.hypot(dx, dy);
-      const now = performance.now();
-      const near = dist > s.size * 0.4 && dist < s.size * 3.5;
-      if (!near || now - turnFrom > 3000) {
-        turn = 0;
-        lastAngle = null;
-        turnFrom = now;
-        if (!near) return;
+      if (dist < s.size * 0.4 || dist > s.size * 3.5) {
+        lastAngle = null; // saiu de perto: volta a contar do zero quando voltar
+        return;
       }
+      const now = performance.now();
       const a = Math.atan2(dy, dx);
-      if (lastAngle !== null) {
+      if (lastAngle === null || now - turnFrom > 3000) resetTurn(now);
+      else {
         let d = a - lastAngle;
         if (d > Math.PI) d -= 2 * Math.PI;
         else if (d < -Math.PI) d += 2 * Math.PI;
@@ -1189,21 +1272,31 @@ function KessCompanion() {
       lastAngle = a;
       if (Math.abs(turn) > 4 * Math.PI && now - lastDizzy > 15_000) {
         lastDizzy = now;
-        turn = 0;
-        lastAngle = null;
+        resetTurn(now);
         flash('tonto', 2600);
         say(pick(lines.dizzy));
       }
     };
 
-    // duplo clique: uma pirueta
+    // duplo clique: uma pirueta; três seguidas deixam ele tonto
+    let spins: number[] = [];
     const onDblClick = () => {
       if (s.mode !== 'sit' || reduce) return;
-      kess()?.animate([{ rotate: '0deg' }, { rotate: '360deg' }], {
+      const now = performance.now();
+      spins = [...spins.filter((t) => now - t < 4000), now];
+      body.animate([{ rotate: '0deg' }, { rotate: '360deg' }], {
         duration: 700,
         easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
       });
-      emote('sparkle');
+      if (spins.length < 3) {
+        emote('sparkle');
+        return;
+      }
+      spins = [];
+      later(() => {
+        flash('tonto', 2200);
+        say(pick(lines.spun));
+      }, 700);
     };
 
     // com o foco nele, as setas fazem ele andar (← →) e pular para outro card (↑)
@@ -1212,33 +1305,16 @@ function KessCompanion() {
       const now = performance.now();
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
-        if (s.ground.kind !== 'perch') {
-          kess()?.hop(3);
-          return;
-        }
-        const dir = e.key === 'ArrowRight' ? 1 : -1;
-        s.hopTo = clamp(
-          s.x + dir * s.size * 1.6,
-          s.ground.left,
-          s.ground.right
-        );
-        s.lastIdleJump = now;
-        hopStep(now);
+        if (stroll(e.key === 'ArrowRight' ? 1 : -1, s.size * 1.6, now)) return;
+        // sem espaço para aquele lado: balança e estranha
+        if (e.repeat) return;
+        body.wave();
+        emote('question');
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        const to = s.ground.kind === 'perch' ? otherPerch(s.ground) : null;
-        if (to && !reduce) {
-          s.lastIdleJump = s.lastCardJump = now;
-          jumpTo(to, (to.left + to.right) / 2, now);
-        } else kess()?.hop(3.6);
+        if (!cardJump(now)) body.hop(3.6);
       }
     };
-
-    document.addEventListener('focusin', onFocusIn);
-    document.addEventListener('selectionchange', onSelection);
-    window.addEventListener('pointermove', onWindowMove, { passive: true });
-    kessEl?.addEventListener('dblclick', onDblClick);
-    kessEl?.addEventListener('keydown', onKeyNav);
 
     const idleTimer = window.setInterval(() => {
       if (s.mode === 'sit' && performance.now() >= s.nextIdle) wake();
@@ -1257,45 +1333,47 @@ function KessCompanion() {
       s.lift = (e as CustomEvent<number>).detail;
       placeShadow();
     };
-    wrap.addEventListener('kess-lift', onLift);
-
     const resize = new ResizeObserver(wake);
     resize.observe(document.body);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', wake);
+
+    const listeners = new AbortController();
+    const signal = listeners.signal;
+    body.addEventListener('pointerenter', petStart, { signal });
+    body.addEventListener('pointerleave', petEnd, { signal });
+    body.addEventListener('pointerdown', onDown, { signal });
+    body.addEventListener('pointermove', onPtrMove, { signal });
+    body.addEventListener('pointerup', onUp, { signal });
+    body.addEventListener('pointercancel', onUp, { signal });
+    body.addEventListener('dblclick', onDblClick, { signal });
+    body.addEventListener('keydown', onKeyNav, { signal });
+    wrap.addEventListener('click', onClickCapture, { capture: true, signal });
+    wrap.addEventListener('kess-lift', onLift, { signal });
+    document.addEventListener('focusin', onFocusIn, { signal });
+    document.addEventListener('selectionchange', onSelection, { signal });
+    window.addEventListener('pointermove', onWindowMove, {
+      passive: true,
+      signal,
+    });
+    window.addEventListener('scroll', onScroll, { passive: true, signal });
+    window.addEventListener('resize', wake, { signal });
     wake();
 
     return () => {
       actions.current = null;
+      listeners.abort();
       cancelAnimationFrame(raf);
       window.clearInterval(idleTimer);
       window.clearTimeout(settleTimer);
       window.clearTimeout(petTimer);
+      window.clearTimeout(holdTimer);
+      window.clearTimeout(selTimer);
       timers.forEach((id) => window.clearTimeout(id));
       if (s.bubble) {
         window.clearTimeout(s.bubble.timer);
         s.bubble.el.remove();
       }
-      wrap.removeEventListener('kess-lift', onLift);
-      kessEl?.removeEventListener('pointerenter', petStart);
-      kessEl?.removeEventListener('pointerleave', petEnd);
-      window.clearTimeout(holdTimer);
-      window.clearTimeout(selTimer);
-      cancelAnimationFrame(chargeRaf);
-      kessEl?.removeEventListener('pointerdown', onDown);
-      kessEl?.removeEventListener('pointermove', onPtrMove);
-      kessEl?.removeEventListener('pointerup', onUp);
-      kessEl?.removeEventListener('pointercancel', onUp);
-      kessEl?.removeEventListener('dblclick', onDblClick);
-      kessEl?.removeEventListener('keydown', onKeyNav);
-      wrap.removeEventListener('click', onClickCapture, true);
-      document.removeEventListener('focusin', onFocusIn);
-      document.removeEventListener('selectionchange', onSelection);
-      window.removeEventListener('pointermove', onWindowMove);
       mutations.disconnect();
       resize.disconnect();
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', wake);
     };
   }, [enabled, layer, flash]);
 
@@ -1316,14 +1394,7 @@ function KessCompanion() {
     const id = window.setTimeout(() => {
       const a = actions.current;
       if (!a) return;
-      let first = false;
-      try {
-        first = !sessionStorage.getItem(HELLO_KEY);
-        sessionStorage.setItem(HELLO_KEY, '1');
-      } catch {
-        // sem sessionStorage: não cumprimenta de novo nesta página
-      }
-      if (first) {
+      if (firstInSession(HELLO_KEY)) {
         a.wave();
         a.say(greeting());
         flash('feliz', 1800);
@@ -1494,17 +1565,8 @@ function KessCompanion() {
     const now = performance.now();
     pokes.current = [...pokes.current.filter((t) => now - t < 1600), now];
     const count = pokes.current.length;
-    if (count === 1) {
-      let first = false;
-      try {
-        first = !sessionStorage.getItem(HINT_KEY);
-        sessionStorage.setItem(HINT_KEY, '1');
-      } catch {
-        // sem sessionStorage: a dica pode aparecer de novo
-      }
-      if (first)
-        window.setTimeout(() => actions.current?.say(pick(lines.hint)), 900);
-    }
+    if (count === 1 && firstInSession(HINT_KEY))
+      window.setTimeout(() => actions.current?.say(pick(lines.hint)), 900);
     if (count >= 6) {
       pokes.current = [];
       flash('tonto', 2600);

@@ -60,6 +60,7 @@ React 19 + TypeScript + Vite 7 + Tailwind v4 + Catppuccin. Gerenciador: **pnpm**
   (carrega um pulão; carga cheia salta para outro card), arrastar (fica pendurado e, solto, flutua até a
   borda abaixo; arremesso rápido chega tonto), duplo clique (pirueta), setas com o foco nele (anda ← →,
   ↑ troca de card), mouse girando em volta (tonto), foco do teclado e texto selecionado (ele olha).
+  No colo ele reage: chacoalhado fica tonto, parado no ar fica tímido, lá no alto se assusta.
 
 ## SEO e acessibilidade
 

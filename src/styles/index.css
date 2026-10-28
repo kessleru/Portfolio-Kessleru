@@ -654,7 +654,7 @@ body {
     cursor: grab;
   }
 
-  .kess-body[data-mode='drag'] kess-mascot {
+  .kess-body:is([data-mode='charge'], [data-mode='drag']) kess-mascot {
     cursor: grabbing;
   }
 }

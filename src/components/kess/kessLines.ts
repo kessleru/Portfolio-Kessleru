@@ -26,10 +26,16 @@ export const lines = {
   theme: ['ficou bom', 'gostei desse tema'],
   accent: ['combinou comigo'],
   footer: ['obrigado por ler até aqui'],
-  // no colo: pego, solto devagar ou arremessado
+  // no colo: pego, chacoalhado, parado no ar, lá no alto, solto devagar ou arremessado
   grab: ['opa!', 'pra onde a gente vai?'],
+  shaken: ['me põe no chão!', 'devagar!'],
+  held: ['pode me soltar quando quiser'],
+  high: ['que alto!'],
   dropped: ['obrigado pela carona'],
   thrown: ['que viagem!', 'tô tonto'],
+  // pulão com carga cheia e piruetas demais
+  charged: ['lá vou eu!'],
+  spun: ['chega de pirueta'],
   dizzy: ['tô ficando tonto'],
   select: ['quer copiar? é só Ctrl+C'],
   hint: ['dá para me segurar e me arrastar'],
