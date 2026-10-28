@@ -24,9 +24,9 @@ export const pages: PageMeta[] = [
   {
     path: '/',
     name: 'Início',
-    title: 'Dev Full Stack Júnior em Ituiutaba-MG · Otávio Kessler Ustra',
+    title: 'Dev Full Stack Júnior · Otávio Kessler Ustra',
     description:
-      'Otávio Kessler Ustra (kessleru), programador Full Stack júnior em Ituiutaba-MG: front-end com React e TypeScript, back-end com Node.js, Express e APIs REST.',
+      'Otávio Kessler Ustra (kessleru), programador Full Stack júnior: front-end com React e TypeScript, back-end com Node.js, Express e APIs REST.',
   },
   {
     path: '/projects',
@@ -40,14 +40,14 @@ export const pages: PageMeta[] = [
     name: 'Formação',
     title: 'Formação e certificados · Otávio Kessler Ustra',
     description:
-      'Formação de Otávio Kessler Ustra: Ciência da Computação no IFTM Ituiutaba, PET Computação, estágio na SAE e certificados em JavaScript, React, Node.js e mais.',
+      'Formação de Otávio Kessler Ustra: Ciência da Computação no IFTM, PET Computação, estágio na SAE e certificados em JavaScript, React, Node.js e mais.',
   },
   {
     path: '/contact',
     name: 'Contato',
     title: 'Contato · Otávio Kessler Ustra, Dev Full Stack Júnior',
     description:
-      'Fale com Otávio Kessler Ustra, desenvolvedor Full Stack júnior em Ituiutaba-MG, sobre vagas, estágios e projetos de front-end e back-end.',
+      'Fale com Otávio Kessler Ustra, desenvolvedor Full Stack júnior, sobre vagas, estágios e projetos de front-end e back-end.',
     // Volta para o índice quando a página de contato tiver conteúdo.
     noindex: true,
   },
@@ -80,7 +80,7 @@ const person = {
   image: 'https://avatars.githubusercontent.com/u/90390195?s=460',
   jobTitle: 'Desenvolvedor Full Stack Júnior',
   description:
-    'Desenvolvedor Full Stack júnior e estudante de Ciência da Computação no IFTM, em Ituiutaba-MG. Trabalha com front-end (React, TypeScript) e back-end (Node.js, Express).',
+    'Desenvolvedor Full Stack júnior e estudante de Ciência da Computação no IFTM. Trabalha com front-end (React, TypeScript) e back-end (Node.js, Express).',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Ituiutaba',
@@ -206,7 +206,7 @@ export function headTags(page: PageMeta) {
   const title = escapeHtml(page.title);
   const description = escapeHtml(page.description);
   const imageAlt = escapeHtml(
-    'Otávio Kessler Ustra, Desenvolvedor Full Stack Júnior em Ituiutaba-MG'
+    'Otávio Kessler Ustra, Desenvolvedor Full Stack Júnior'
   );
   const isHome = page.path === '/';
 
