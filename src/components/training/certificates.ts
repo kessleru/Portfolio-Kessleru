@@ -1,5 +1,11 @@
 import type { ComponentType } from 'react';
-import { HandHelping, Presentation, Users } from 'lucide-react';
+import {
+  GraduationCap,
+  HandHelping,
+  Presentation,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import {
   SiClaude,
   SiCss3,
@@ -25,6 +31,8 @@ export type Certificate = {
   issuer: 'Origamid' | 'Anthropic' | 'IFTM';
   date: string;
   credential?: string;
+  /** Link de verificação quando ele não sai do código (o IFTM usa um hash à parte). */
+  url?: string;
   skills: string[];
   icon: Icon;
   color: string;
@@ -33,9 +41,10 @@ export type Certificate = {
 
 export const issuers = ['Origamid', 'Anthropic', 'IFTM'] as const;
 
-/** Página para conferir o certificado no site de quem emitiu. O IFTM não tem uma página pública de verificação. */
+/** Página para conferir o certificado no site de quem emitiu. */
 export function verifyUrl(certificate: Certificate) {
-  const { issuer, credential } = certificate;
+  const { issuer, credential, url } = certificate;
+  if (url) return url;
   if (!credential) return undefined;
   if (issuer === 'Origamid')
     return `https://www.origamid.com/certificate/${credential}`;
@@ -44,7 +53,8 @@ export function verifyUrl(certificate: Certificate) {
   return undefined;
 }
 
-// Do LinkedIn, conferidos nos sites da Origamid e da Anthropic. Os certificados do IFTM foram todos emitidos em nov/2025.
+// Do LinkedIn, conferidos nos sites da Origamid, da Anthropic e do IFTM. Os do IFTM que estão no LinkedIn têm a data de lá (nov/2025);
+// os outros vêm do sistema de certificados do IFTM, sem código nem link.
 // O Front/Back End & UX/UI Design (51f018a0) é a formação de Front End que a Origamid atualizou: um certificado só.
 export const certificates: Certificate[] = [
   {
@@ -178,11 +188,57 @@ export const certificates: Certificate[] = [
     color: 'var(--ctp-peach)',
   },
   {
+    id: 'coxinha-2026',
+    name: 'Comissão Organizadora da Maratona Coxinha++ 2026',
+    issuer: 'IFTM',
+    date: 'out/2026',
+    skills: ['Eventos', 'Trabalho em equipe'],
+    icon: Trophy,
+    color: 'var(--ctp-peach)',
+  },
+  {
+    id: 'interpet-3',
+    name: 'Participante do III InterPET IFTM',
+    issuer: 'IFTM',
+    date: 'abr/2026',
+    skills: ['Eventos'],
+    icon: Users,
+    color: 'var(--ctp-mauve)',
+  },
+  {
+    id: 'mostra-ensino-5',
+    name: 'Apresentação na V Mostra de Projetos de Ensino',
+    issuer: 'IFTM',
+    date: 'fev/2026',
+    skills: ['Palestras', 'Comunicação'],
+    icon: Presentation,
+    color: 'var(--ctp-teal)',
+  },
+  {
+    id: 'coxinha-2025',
+    name: 'Colaborador na Comissão Organizadora do Coxinha++',
+    issuer: 'IFTM',
+    date: 'dez/2025',
+    skills: ['Eventos', 'Trabalho em equipe'],
+    icon: Trophy,
+    color: 'var(--ctp-yellow)',
+  },
+  {
+    id: 'placa-formatura',
+    name: 'Colaborador na Placa de Formatura Digital dos Egressos de Informática',
+    issuer: 'IFTM',
+    date: 'dez/2025',
+    skills: ['Trabalho em equipe'],
+    icon: GraduationCap,
+    color: 'var(--ctp-flamingo)',
+  },
+  {
     id: 'snct22-monitor',
     name: 'Monitor na 22ª Semana Nacional de Ciência e Tecnologia',
     issuer: 'IFTM',
     date: 'nov/2025',
     credential: '1376',
+    url: 'https://iftm.edu.br/autenticacao/?hashCert=2f353dc7&validateCert=',
     skills: ['Comunicação', 'Trabalho em equipe'],
     icon: HandHelping,
     color: 'var(--ctp-green)',
@@ -193,6 +249,7 @@ export const certificates: Certificate[] = [
     issuer: 'IFTM',
     date: 'nov/2025',
     credential: '1005',
+    url: 'https://iftm.edu.br/autenticacao/?hashCert=2a91dac8&validateCert=',
     skills: ['Docker', 'Palestras', 'Comunicação'],
     icon: SiDocker,
     color: 'var(--ctp-blue)',
@@ -203,6 +260,7 @@ export const certificates: Certificate[] = [
     issuer: 'IFTM',
     date: 'nov/2025',
     credential: '937',
+    url: 'https://iftm.edu.br/autenticacao/?hashCert=2f88e09e&validateCert=',
     skills: ['Kubernetes'],
     icon: SiKubernetes,
     color: 'var(--ctp-sapphire)',
@@ -213,6 +271,7 @@ export const certificates: Certificate[] = [
     issuer: 'IFTM',
     date: 'nov/2025',
     credential: '52',
+    url: 'https://iftm.edu.br/autenticacao/?hashCert=230935d9&validateCert=',
     skills: ['Eventos'],
     icon: Users,
     color: 'var(--ctp-lavender)',
@@ -223,6 +282,7 @@ export const certificates: Certificate[] = [
     issuer: 'IFTM',
     date: 'nov/2025',
     credential: '27556b30',
+    url: 'https://iftm.edu.br/autenticacao/?hashCert=27556b30&validateCert=',
     skills: ['Python', 'Streamlit'],
     icon: SiStreamlit,
     color: 'var(--ctp-red)',
@@ -233,6 +293,7 @@ export const certificates: Certificate[] = [
     issuer: 'IFTM',
     date: 'nov/2025',
     credential: '2244db69',
+    url: 'https://iftm.edu.br/autenticacao/?hashCert=2244db69&validateCert=',
     skills: ['Godot'],
     icon: SiGodotengine,
     color: 'var(--ctp-sky)',
@@ -243,6 +304,7 @@ export const certificates: Certificate[] = [
     issuer: 'IFTM',
     date: 'nov/2025',
     credential: '285',
+    url: 'https://iftm.edu.br/autenticacao/?hashCert=261fd2b1&validateCert=',
     skills: ['Eventos'],
     icon: Presentation,
     color: 'var(--ctp-yellow)',
