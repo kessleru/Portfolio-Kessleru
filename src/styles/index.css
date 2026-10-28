@@ -643,6 +643,22 @@ body {
   right: 10px;
 }
 
+/* dá para pegar o Kess: mãozinha com o mouse; a pirueta do duplo clique gira em volta do corpo */
+.kess-body kess-mascot {
+  transform-origin: 50% 58%;
+  touch-action: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kess-body kess-mascot {
+    cursor: grab;
+  }
+
+  .kess-body[data-mode='drag'] kess-mascot {
+    cursor: grabbing;
+  }
+}
+
 /* foco do teclado no Kess: contorno arredondado, colado nele */
 .kess-body kess-mascot:focus-visible {
   outline-offset: -10px;

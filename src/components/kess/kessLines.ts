@@ -26,6 +26,13 @@ export const lines = {
   theme: ['ficou bom', 'gostei desse tema'],
   accent: ['combinou comigo'],
   footer: ['obrigado por ler até aqui'],
+  // no colo: pego, solto devagar ou arremessado
+  grab: ['opa!', 'pra onde a gente vai?'],
+  dropped: ['obrigado pela carona'],
+  thrown: ['que viagem!', 'tô tonto'],
+  dizzy: ['tô ficando tonto'],
+  select: ['quer copiar? é só Ctrl+C'],
+  hint: ['dá para me segurar e me arrastar'],
   // de vez em quando, parado: dicas do próprio site
   idle: [
     'dá para trocar o tema no Theme.tsx',

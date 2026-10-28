@@ -56,6 +56,10 @@ React 19 + TypeScript + Vite 7 + Tailwind v4 + Catppuccin. Gerenciador: **pnpm**
   - `data-kess-mood="animado"` (ou outra emoção) em elementos interativos para ele reagir no hover.
 - Ele não pode se mover enquanto a página rola (só depois de `SETTLE_MS`). Mudou o comportamento?
   Teste rolando rápido para cima e para baixo, sobretudo no início.
+- Interações (todas no `KessCompanion`): clique (pula; seguidos: apaixonado, depois tonto), segurar parado
+  (carrega um pulão; carga cheia salta para outro card), arrastar (fica pendurado e, solto, flutua até a
+  borda abaixo; arremesso rápido chega tonto), duplo clique (pirueta), setas com o foco nele (anda ← →,
+  ↑ troca de card), mouse girando em volta (tonto), foco do teclado e texto selecionado (ele olha).
 
 ## SEO e acessibilidade
 
