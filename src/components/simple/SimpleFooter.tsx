@@ -91,8 +91,9 @@ function tableValues() {
 }
 
 /**
- * Rodapé da versão simples: uma faixa curta (frase, redes, copyright e voltar ao topo) e, embaixo,
- * uma gravura na largura da coluna do conteúdo, que se dissolve no fundo. No claro a gravura cinza ganha um
+ * Rodapé da versão simples: uma faixa curta (frase, redes, copyright e voltar ao topo) e uma gravura
+ * que se dissolve no fundo: no celular embaixo do texto, na largura da coluna; no PC presa no canto
+ * de baixo à direita da tela. No claro a gravura cinza ganha um
  * mapa de cores (filtro SVG); no escuro ela vira máscara de um fundo lavanda bem suave.
  */
 function SimpleFooter() {
@@ -127,8 +128,10 @@ function SimpleFooter() {
 
   return (
     <footer className="gravura-footer">
-      <div className="gravura-footer__content mx-auto w-full max-w-[46rem] px-5 pt-8 sm:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+      <div className="gravura-footer__content mx-auto w-full max-w-[46rem] px-5 sm:px-8">
+        {/* o fio que separa o rodapé: na largura do conteúdo e suave */}
+        <div aria-hidden="true" className="h-px bg-ctp-surface-0 opacity-60" />
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pt-8">
           <div className="space-y-1">
             <p className="text-sm text-ctp-subtext-0">
               Desenvolvedor Full Stack júnior em Ituiutaba, MG.
@@ -167,7 +170,7 @@ function SimpleFooter() {
           </div>
         </div>
 
-        {/* a gravura ocupa a largura toda da coluna, logo abaixo do texto */}
+        {/* no celular a gravura ocupa a coluna, embaixo do texto; no PC vai para o canto da tela */}
         {light ? (
           <>
             <svg aria-hidden="true" width="0" height="0" className="absolute">

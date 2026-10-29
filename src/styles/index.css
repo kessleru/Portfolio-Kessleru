@@ -687,41 +687,22 @@ html[data-simple] #root:not([data-app]) {
   display: block;
 }
 
-/* Rodapé da versão simples: um fio suave na largura do conteúdo, uma faixa curta de texto e,
-   embaixo, uma gravura na largura da coluna que se dissolve no fundo (no topo e nas laterais).
-   Sem fundo próprio. */
-.gravura-footer__content {
-  position: relative;
-
-  /* o fio que separa o rodapé: só na largura do conteúdo (descontado o padding) e suave */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    inset-inline: 1.25rem;
-    height: 1px;
-    background: var(--ctp-surface-0);
-    opacity: 0.6;
-
-    @media (min-width: 640px) {
-      inset-inline: 2rem;
-    }
-  }
-}
-
+/* Rodapé da versão simples: um fio suave na largura do conteúdo, uma faixa curta de texto e uma
+   gravura que se dissolve no fundo. No celular ela fica embaixo do texto, na largura da coluna; no
+   PC, presa no canto de baixo à direita da tela, com altura limitada. Sem fundo próprio. */
 .gravura-footer__art {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 2000 / 753;
-  /* no celular a coluna é estreita: a gravura não fica mais baixa que isto e corta pela esquerda,
+  /* a coluna do celular é estreita: a gravura não fica mais baixa que isto e corta pela esquerda,
      mantendo o farol */
   min-height: 160px;
   margin-top: 1.5rem;
   object-fit: cover;
   object-position: 85% 100%;
   pointer-events: none;
-  /* some no fundo pela borda de cima (pouco: o farol chega quase lá) e pelas laterais */
+  /* some no fundo, bem de leve, pela borda de cima (o farol chega quase lá) e pelas laterais */
   mask-image:
     linear-gradient(to bottom, transparent 0, #000 4%),
     linear-gradient(to right, transparent 0, #000 5%, #000 96%, transparent);
@@ -751,6 +732,52 @@ img.gravura-footer__art {
     0 0,
     85% 100%;
   mask-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  /* a gravura fica atrás do texto (z-index -1 dentro do rodapé, que isola as camadas) */
+  .gravura-footer {
+    --gravura-h: clamp(180px, 18vw, 280px);
+    position: relative;
+    isolation: isolate;
+    min-height: var(--gravura-h);
+    overflow: clip;
+  }
+
+  .gravura-footer__art {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    width: calc(var(--gravura-h) * 2000 / 753);
+    max-width: none;
+    height: var(--gravura-h);
+    min-height: 0;
+    margin: 0;
+    /* aqui ela termina no meio da tela: some aos poucos pela esquerda */
+    mask-image:
+      linear-gradient(to bottom, transparent 0, #000 4%),
+      linear-gradient(to right, transparent 0, #000 16%);
+  }
+
+  .gravura-footer__art--dark {
+    mask-image:
+      linear-gradient(to bottom, transparent 0, #000 4%),
+      linear-gradient(to right, transparent 0, #000 16%),
+      var(--gravura-mascara);
+  }
+
+  /* o texto fica acima da gravura; a partir de 1280px desce um pouco sobre o céu dela, à esquerda
+     do farol, e o rodapé fica mais baixo */
+  .gravura-footer__content {
+    padding-bottom: calc(var(--gravura-h) + 8px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .gravura-footer__content {
+    padding-bottom: calc(var(--gravura-h) * 0.62);
+  }
 }
 
 .gravura-footer__button {
