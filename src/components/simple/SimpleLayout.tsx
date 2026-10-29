@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
-import { SiGithub, SiLinkedin } from 'react-icons/si';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import SimpleFooter from './SimpleFooter';
 
 const nav = [
   { label: 'Início', to: '/' },
@@ -62,29 +62,10 @@ function SimpleLayout({ children }: { children: ReactNode }) {
         >
           {children}
         </main>
-
-        <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-ctp-surface-0 py-8 text-sm text-ctp-subtext-0">
-          <span>© {new Date().getFullYear()} Otávio Kessler Ustra</span>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <a
-              href="https://github.com/kessleru"
-              target="_blank"
-              rel="me noreferrer"
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-ctp-text"
-            >
-              <SiGithub size={14} aria-hidden="true" /> GitHub
-            </a>
-            <a
-              href="https://www.linkedin.com/in/otavio-ustra-8b50bb364/"
-              target="_blank"
-              rel="me noreferrer"
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-ctp-text"
-            >
-              <SiLinkedin size={14} aria-hidden="true" /> LinkedIn
-            </a>
-          </div>
-        </footer>
       </div>
+
+      {/* fora da coluna: a gravura do rodapé ocupa a largura toda */}
+      <SimpleFooter />
     </div>
   );
 }
