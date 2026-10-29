@@ -92,8 +92,8 @@ function tableValues() {
 
 /**
  * Rodapé da versão simples: uma faixa curta (frase, redes, copyright e voltar ao topo) e uma gravura
- * que se dissolve no fundo: no celular embaixo do texto, na largura da coluna; no PC presa no canto
- * de baixo à direita da tela. No claro a gravura cinza ganha um
+ * que se dissolve no fundo: no celular embaixo do texto, na largura toda da tela; no PC presa no
+ * canto de baixo à direita da tela. No claro a gravura cinza ganha um
  * mapa de cores (filtro SVG); no escuro ela vira máscara de um fundo lavanda bem suave.
  */
 function SimpleFooter() {
@@ -169,57 +169,57 @@ function SimpleFooter() {
             </button>
           </div>
         </div>
-
-        {/* no celular a gravura ocupa a coluna, embaixo do texto; no PC vai para o canto da tela */}
-        {light ? (
-          <>
-            <svg aria-hidden="true" width="0" height="0" className="absolute">
-              <filter id="gravura-mapa" colorInterpolationFilters="sRGB">
-                <feColorMatrix
-                  type="matrix"
-                  values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"
-                />
-                <feComponentTransfer>
-                  <feFuncR
-                    type="table"
-                    ref={(el) => {
-                      funcs.current[0] = el;
-                    }}
-                  />
-                  <feFuncG
-                    type="table"
-                    ref={(el) => {
-                      funcs.current[1] = el;
-                    }}
-                  />
-                  <feFuncB
-                    type="table"
-                    ref={(el) => {
-                      funcs.current[2] = el;
-                    }}
-                  />
-                </feComponentTransfer>
-              </filter>
-            </svg>
-            <img
-              src={gravura}
-              alt=""
-              aria-hidden="true"
-              width={2000}
-              height={753}
-              loading="lazy"
-              decoding="async"
-              className="gravura-footer__art"
-            />
-          </>
-        ) : (
-          <div
-            aria-hidden="true"
-            className="gravura-footer__art gravura-footer__art--dark"
-            style={{ '--gravura-mascara': `url(${mascara})` } as CSSProperties}
-          />
-        )}
       </div>
+
+      {/* fora da coluna: no celular ocupa a largura toda da tela, embaixo do texto; no PC vai para o canto */}
+      {light ? (
+        <>
+          <svg aria-hidden="true" width="0" height="0" className="absolute">
+            <filter id="gravura-mapa" colorInterpolationFilters="sRGB">
+              <feColorMatrix
+                type="matrix"
+                values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"
+              />
+              <feComponentTransfer>
+                <feFuncR
+                  type="table"
+                  ref={(el) => {
+                    funcs.current[0] = el;
+                  }}
+                />
+                <feFuncG
+                  type="table"
+                  ref={(el) => {
+                    funcs.current[1] = el;
+                  }}
+                />
+                <feFuncB
+                  type="table"
+                  ref={(el) => {
+                    funcs.current[2] = el;
+                  }}
+                />
+              </feComponentTransfer>
+            </filter>
+          </svg>
+          <img
+            src={gravura}
+            alt=""
+            aria-hidden="true"
+            width={2000}
+            height={753}
+            loading="lazy"
+            decoding="async"
+            className="gravura-footer__art"
+          />
+        </>
+      ) : (
+        <div
+          aria-hidden="true"
+          className="gravura-footer__art gravura-footer__art--dark"
+          style={{ '--gravura-mascara': `url(${mascara})` } as CSSProperties}
+        />
+      )}
     </footer>
   );
 }

@@ -688,14 +688,14 @@ html[data-simple] #root:not([data-app]) {
 }
 
 /* Rodapé da versão simples: um fio suave na largura do conteúdo, uma faixa curta de texto e uma
-   gravura. No celular ela fica embaixo do texto, na largura da coluna e sem fade; no PC, presa no
+   gravura. No celular ela fica embaixo do texto, de ponta a ponta da tela e sem fade; no PC, presa no
    canto de baixo à direita da tela, com altura limitada, se dissolvendo no fundo. Sem fundo próprio. */
 .gravura-footer__art {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 2000 / 753;
-  /* a coluna do celular é estreita: a gravura não fica mais baixa que isto e corta pela esquerda,
+  /* o celular é estreito: a gravura não fica mais baixa que isto e corta pela esquerda,
      mantendo o farol */
   min-height: 160px;
   margin-top: 1.5rem;
