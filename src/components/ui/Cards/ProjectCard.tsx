@@ -60,7 +60,7 @@ function ProjectCard({
   // Versão simples: uma linha de lista, com a imagem pequena ao lado.
   if (simple) {
     return (
-      <article className="flex gap-5 border-b border-ctp-surface-0 py-7 first:pt-0">
+      <article className="flex gap-5 border-b border-ctp-surface-0 py-7 first:pt-0 last:border-b-0">
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold text-ctp-text">{title}</h2>
           <p className="mt-1.5 text-[15px] leading-relaxed text-pretty text-ctp-subtext-1">

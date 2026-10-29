@@ -687,14 +687,13 @@ html[data-simple] #root:not([data-app]) {
   display: block;
 }
 
-/* Rodapé da versão simples: um fio de largura toda (como o do header), uma faixa curta de texto
+/* Rodapé da versão simples: um fio suave na largura do conteúdo, uma faixa curta de texto
    e uma gravura presa no canto de baixo à direita, que se dissolve no fundo para cima e para a
    esquerda. Altura limitada: a gravura não cresce com a largura da tela. Sem fundo próprio. */
 .gravura-footer {
   --gravura-h: clamp(180px, 18vw, 280px);
   position: relative;
   min-height: var(--gravura-h);
-  border-top: 1px solid var(--ctp-surface-0);
   overflow: clip;
 }
 
@@ -739,6 +738,21 @@ img.gravura-footer__art {
 
   @media (min-width: 1280px) {
     padding-bottom: calc(var(--gravura-h) * 0.62);
+  }
+
+  /* o fio que separa o rodapé: só na largura do conteúdo (descontado o padding) e suave */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline: 1.25rem;
+    height: 1px;
+    background: var(--ctp-surface-0);
+    opacity: 0.6;
+
+    @media (min-width: 640px) {
+      inset-inline: 2rem;
+    }
   }
 }
 
