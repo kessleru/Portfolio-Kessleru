@@ -91,8 +91,8 @@ function tableValues() {
 }
 
 /**
- * Rodapé da versão simples: uma faixa curta (frase, redes, copyright e voltar ao topo) sobre uma
- * gravura presa no canto de baixo, que se dissolve no fundo. No claro a gravura cinza ganha um
+ * Rodapé da versão simples: uma faixa curta (frase, redes, copyright e voltar ao topo) e, embaixo,
+ * uma gravura na largura da coluna do conteúdo, que se dissolve no fundo. No claro a gravura cinza ganha um
  * mapa de cores (filtro SVG); no escuro ela vira máscara de um fundo lavanda bem suave.
  */
 function SimpleFooter() {
@@ -127,89 +127,95 @@ function SimpleFooter() {
 
   return (
     <footer className="gravura-footer">
-      {light ? (
-        <>
-          <svg aria-hidden="true" width="0" height="0" className="absolute">
-            <filter id="gravura-mapa" colorInterpolationFilters="sRGB">
-              <feColorMatrix
-                type="matrix"
-                values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"
-              />
-              <feComponentTransfer>
-                <feFuncR
-                  type="table"
-                  ref={(el) => {
-                    funcs.current[0] = el;
-                  }}
-                />
-                <feFuncG
-                  type="table"
-                  ref={(el) => {
-                    funcs.current[1] = el;
-                  }}
-                />
-                <feFuncB
-                  type="table"
-                  ref={(el) => {
-                    funcs.current[2] = el;
-                  }}
-                />
-              </feComponentTransfer>
-            </filter>
-          </svg>
-          <img
-            src={gravura}
-            alt=""
-            aria-hidden="true"
-            width={2000}
-            height={753}
-            loading="lazy"
-            decoding="async"
-            className="gravura-footer__art"
-          />
-        </>
-      ) : (
-        <div
-          aria-hidden="true"
-          className="gravura-footer__art gravura-footer__art--dark"
-          style={{ '--gravura-mascara': `url(${mascara})` } as CSSProperties}
-        />
-      )}
-
-      <div className="gravura-footer__content mx-auto flex w-full max-w-[46rem] flex-wrap items-center justify-between gap-x-6 gap-y-4 px-5 pt-8 sm:px-8">
-        <div className="space-y-1">
-          <p className="text-sm text-ctp-subtext-0">
-            Desenvolvedor Full Stack júnior em Ituiutaba, MG.
-          </p>
-          <p className="font-mono text-xs text-ctp-meta tabular-nums">
-            © {new Date().getFullYear()} Otávio Kessler Ustra
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {socials.map(({ label, href, Icon }) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="me noreferrer"
-              aria-label={label}
-              title={label}
-              className="gravura-footer__button"
+      <div className="gravura-footer__content mx-auto w-full max-w-[46rem] px-5 pt-8 sm:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+          <div className="space-y-1">
+            <p className="text-sm text-ctp-subtext-0">
+              Desenvolvedor Full Stack júnior em Ituiutaba, MG.
+            </p>
+            <p className="font-mono text-xs text-ctp-meta tabular-nums">
+              © {new Date().getFullYear()} Otávio Kessler Ustra
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {socials.map(({ label, href, Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="me noreferrer"
+                aria-label={label}
+                title={label}
+                className="gravura-footer__button"
+              >
+                <Icon size={16} aria-hidden="true" />
+              </a>
+            ))}
+            <span
+              aria-hidden="true"
+              className="mx-1 h-5 w-px bg-ctp-surface-0"
+            />
+            <button
+              type="button"
+              onClick={toTop}
+              aria-label="Voltar ao topo"
+              title="Voltar ao topo"
+              className="gravura-footer__button cursor-pointer"
             >
-              <Icon size={16} aria-hidden="true" />
-            </a>
-          ))}
-          <span aria-hidden="true" className="mx-1 h-5 w-px bg-ctp-surface-0" />
-          <button
-            type="button"
-            onClick={toTop}
-            aria-label="Voltar ao topo"
-            title="Voltar ao topo"
-            className="gravura-footer__button cursor-pointer"
-          >
-            <ArrowUp size={16} aria-hidden="true" />
-          </button>
+              <ArrowUp size={16} aria-hidden="true" />
+            </button>
+          </div>
         </div>
+
+        {/* a gravura ocupa a largura toda da coluna, logo abaixo do texto */}
+        {light ? (
+          <>
+            <svg aria-hidden="true" width="0" height="0" className="absolute">
+              <filter id="gravura-mapa" colorInterpolationFilters="sRGB">
+                <feColorMatrix
+                  type="matrix"
+                  values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"
+                />
+                <feComponentTransfer>
+                  <feFuncR
+                    type="table"
+                    ref={(el) => {
+                      funcs.current[0] = el;
+                    }}
+                  />
+                  <feFuncG
+                    type="table"
+                    ref={(el) => {
+                      funcs.current[1] = el;
+                    }}
+                  />
+                  <feFuncB
+                    type="table"
+                    ref={(el) => {
+                      funcs.current[2] = el;
+                    }}
+                  />
+                </feComponentTransfer>
+              </filter>
+            </svg>
+            <img
+              src={gravura}
+              alt=""
+              aria-hidden="true"
+              width={2000}
+              height={753}
+              loading="lazy"
+              decoding="async"
+              className="gravura-footer__art"
+            />
+          </>
+        ) : (
+          <div
+            aria-hidden="true"
+            className="gravura-footer__art gravura-footer__art--dark"
+            style={{ '--gravura-mascara': `url(${mascara})` } as CSSProperties}
+          />
+        )}
       </div>
     </footer>
   );

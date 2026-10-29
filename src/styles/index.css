@@ -687,58 +687,11 @@ html[data-simple] #root:not([data-app]) {
   display: block;
 }
 
-/* Rodapé da versão simples: um fio suave na largura do conteúdo, uma faixa curta de texto
-   e uma gravura presa no canto de baixo à direita, que se dissolve no fundo para cima e para a
-   esquerda. Altura limitada: a gravura não cresce com a largura da tela. Sem fundo próprio. */
-.gravura-footer {
-  --gravura-h: clamp(180px, 18vw, 280px);
-  position: relative;
-  min-height: var(--gravura-h);
-  overflow: clip;
-}
-
-.gravura-footer__art {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: calc(var(--gravura-h) * 2000 / 753);
-  max-width: none;
-  height: var(--gravura-h);
-  pointer-events: none;
-  /* some no fundo pela borda de cima (pouco: o farol chega quase lá) e pela da esquerda */
-  mask-image:
-    linear-gradient(to bottom, transparent 0, #000 4%),
-    linear-gradient(to right, transparent 0, #000 22%);
-  mask-composite: intersect;
-}
-
-/* claro: a gravura cinza ganha o mapa de cores (filtro SVG montado no SimpleFooter.tsx) */
-img.gravura-footer__art {
-  filter: url(#gravura-mapa);
-}
-
-/* escuro: a gravura vira máscara (traço opaco, papel transparente) de um fundo lavanda, bem suave
-   para não competir com o texto; não segue a cor de destaque, como o mapa azul do claro */
-.gravura-footer__art--dark {
-  background: var(--ctp-lavender);
-  opacity: 0.38;
-  mask-image:
-    linear-gradient(to bottom, transparent 0, #000 4%),
-    linear-gradient(to right, transparent 0, #000 22%), var(--gravura-mascara);
-  mask-size: 100% 100%;
-  mask-repeat: no-repeat;
-}
-
-/* o texto fica acima da gravura; a partir de 1280px ele desce um pouco sobre o céu dela, à
-   esquerda do farol, e o rodapé fica mais baixo */
+/* Rodapé da versão simples: um fio suave na largura do conteúdo, uma faixa curta de texto e,
+   embaixo, uma gravura na largura da coluna que se dissolve no fundo (no topo e nas laterais).
+   Sem fundo próprio. */
 .gravura-footer__content {
   position: relative;
-  z-index: 1;
-  padding-bottom: calc(var(--gravura-h) + 8px);
-
-  @media (min-width: 1280px) {
-    padding-bottom: calc(var(--gravura-h) * 0.62);
-  }
 
   /* o fio que separa o rodapé: só na largura do conteúdo (descontado o padding) e suave */
   &::before {
@@ -754,6 +707,50 @@ img.gravura-footer__art {
       inset-inline: 2rem;
     }
   }
+}
+
+.gravura-footer__art {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2000 / 753;
+  /* no celular a coluna é estreita: a gravura não fica mais baixa que isto e corta pela esquerda,
+     mantendo o farol */
+  min-height: 160px;
+  margin-top: 1.5rem;
+  object-fit: cover;
+  object-position: 85% 100%;
+  pointer-events: none;
+  /* some no fundo pela borda de cima (pouco: o farol chega quase lá) e pelas laterais */
+  mask-image:
+    linear-gradient(to bottom, transparent 0, #000 6%),
+    linear-gradient(to right, transparent 0, #000 10%, #000 92%, transparent);
+  mask-composite: intersect;
+}
+
+/* claro: a gravura cinza ganha o mapa de cores (filtro SVG montado no SimpleFooter.tsx) */
+img.gravura-footer__art {
+  filter: url(#gravura-mapa);
+}
+
+/* escuro: a gravura vira máscara (traço opaco, papel transparente) de um fundo lavanda, bem suave
+   para não competir com o texto; não segue a cor de destaque, como o mapa azul do claro */
+.gravura-footer__art--dark {
+  background: var(--ctp-lavender);
+  opacity: 0.38;
+  mask-image:
+    linear-gradient(to bottom, transparent 0, #000 6%),
+    linear-gradient(to right, transparent 0, #000 10%, #000 92%, transparent),
+    var(--gravura-mascara);
+  mask-size:
+    100% 100%,
+    100% 100%,
+    cover;
+  mask-position:
+    0 0,
+    0 0,
+    85% 100%;
+  mask-repeat: no-repeat;
 }
 
 .gravura-footer__button {
