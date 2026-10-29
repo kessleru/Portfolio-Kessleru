@@ -688,8 +688,8 @@ html[data-simple] #root:not([data-app]) {
 }
 
 /* Rodapé da versão simples: um fio suave na largura do conteúdo, uma faixa curta de texto e uma
-   gravura que se dissolve no fundo. No celular ela fica embaixo do texto, na largura da coluna; no
-   PC, presa no canto de baixo à direita da tela, com altura limitada. Sem fundo próprio. */
+   gravura. No celular ela fica embaixo do texto, na largura da coluna e sem fade; no PC, presa no
+   canto de baixo à direita da tela, com altura limitada, se dissolvendo no fundo. Sem fundo próprio. */
 .gravura-footer__art {
   display: block;
   width: 100%;
@@ -702,11 +702,6 @@ html[data-simple] #root:not([data-app]) {
   object-fit: cover;
   object-position: 85% 100%;
   pointer-events: none;
-  /* some no fundo, bem de leve, pela borda de cima (o farol chega quase lá) e pelas laterais */
-  mask-image:
-    linear-gradient(to bottom, transparent 0, #000 4%),
-    linear-gradient(to right, transparent 0, #000 5%, #000 96%, transparent);
-  mask-composite: intersect;
 }
 
 /* claro: a gravura cinza ganha o mapa de cores (filtro SVG montado no SimpleFooter.tsx) */
@@ -719,18 +714,9 @@ img.gravura-footer__art {
 .gravura-footer__art--dark {
   background: var(--ctp-lavender);
   opacity: 0.38;
-  mask-image:
-    linear-gradient(to bottom, transparent 0, #000 4%),
-    linear-gradient(to right, transparent 0, #000 5%, #000 96%, transparent),
-    var(--gravura-mascara);
-  mask-size:
-    100% 100%,
-    100% 100%,
-    cover;
-  mask-position:
-    0 0,
-    0 0,
-    85% 100%;
+  mask-image: var(--gravura-mascara);
+  mask-size: cover;
+  mask-position: 85% 100%;
   mask-repeat: no-repeat;
 }
 
@@ -754,10 +740,11 @@ img.gravura-footer__art {
     height: var(--gravura-h);
     min-height: 0;
     margin: 0;
-    /* aqui ela termina no meio da tela: some aos poucos pela esquerda */
+    /* aqui ela termina no meio da tela: some aos poucos pela esquerda (e de leve pelo topo) */
     mask-image:
       linear-gradient(to bottom, transparent 0, #000 4%),
       linear-gradient(to right, transparent 0, #000 16%);
+    mask-composite: intersect;
   }
 
   .gravura-footer__art--dark {
@@ -765,6 +752,14 @@ img.gravura-footer__art {
       linear-gradient(to bottom, transparent 0, #000 4%),
       linear-gradient(to right, transparent 0, #000 16%),
       var(--gravura-mascara);
+    mask-size:
+      100% 100%,
+      100% 100%,
+      cover;
+    mask-position:
+      0 0,
+      0 0,
+      85% 100%;
   }
 
   /* o texto fica acima da gravura; a partir de 1280px desce um pouco sobre o céu dela, à esquerda
