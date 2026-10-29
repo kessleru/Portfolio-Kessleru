@@ -36,7 +36,8 @@ React 19 + TypeScript + Vite 7 + Tailwind v4 + Catppuccin. Gerenciador: **pnpm**
   ~65 caracteres por linha. A mono fica para títulos, rótulos, datas e código.
 - Nada se mexe sozinho sem parar enquanto a pessoa lê (sem marquee/carrossel automático).
 - Toda página também precisa funcionar na versão simples (`src/components/simple`, `useSimple()`):
-  uma coluna, sem cards, sem Kess, sem animação.
+  uma coluna, sem cards, sem Kess, sem animação. No celular ela é o padrão até a pessoa escolher uma
+  versão (regra `SMALL_SCREEN` de `kessPreference.ts`, repetida no script do `index.html`).
 - Todo bloco é um `<Card fileName="Nome.tsx">`; a aba aparece no hover/foco (com mouse) e some no toque (celular).
 
 ## Animação

@@ -1,9 +1,10 @@
 import type { KessMood } from '@/lib/kess/kess';
 import type { Emote } from './kessEmotes';
 
-// No celular (tela estreita, ou de toque deitada) o Kess não aparece e nem é baixado.
-// A mesma regra está no index.css (.kess-only), para o lugar dele não sobrar vazio.
-const SMALL_SCREEN =
+// No celular (tela estreita, ou de toque deitada) o Kess não aparece e nem é baixado, e o site
+// abre na versão simples (simpleMode.ts). A mesma regra está no index.css (.kess-only), para o
+// lugar dele não sobrar vazio, e no index.html, que marca a versão simples antes da primeira pintura.
+export const SMALL_SCREEN =
   '(max-width: 767px), (pointer: coarse) and (max-height: 520px)';
 
 export function kessFitsScreen() {
