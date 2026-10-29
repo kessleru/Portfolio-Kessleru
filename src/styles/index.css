@@ -687,39 +687,33 @@ html[data-simple] #root:not([data-app]) {
   display: block;
 }
 
-/* Rodapé da versão simples: uma gravura que ocupa a largura toda no fim da página, com o texto
-   por cima do céu vazio dela. Sem fundo próprio (usa o da página) e sem separador. */
+/* Rodapé da versão simples: um fio de largura toda (como o do header), uma faixa curta de texto
+   e uma gravura presa no canto de baixo à direita, que se dissolve no fundo para cima e para a
+   esquerda. Altura limitada: a gravura não cresce com a largura da tela. Sem fundo próprio. */
 .gravura-footer {
-  --gravura-h: max(320px, calc(100vw * 753 / 2000));
-  /* mapa de cores do claro, do traço mais escuro ao papel: azul-marinho, azul, azul claro,
-     areia e o próprio fundo da página (o branco do papel some nele) */
-  --gravura-1: color-mix(in oklab, var(--ctp-blue) 20%, var(--ctp-text));
-  --gravura-2: color-mix(in oklab, var(--ctp-blue) 40%, var(--ctp-overlay-2));
-  --gravura-3: color-mix(in oklab, var(--ctp-lavender) 35%, var(--ctp-surface-1));
-  --gravura-4: color-mix(in oklab, var(--ctp-yellow) 25%, var(--ctp-base));
-  --gravura-5: var(--ctp-base);
+  --gravura-h: clamp(180px, 18vw, 280px);
   position: relative;
   min-height: var(--gravura-h);
-  margin-top: 5rem;
+  border-top: 1px solid var(--ctp-surface-0);
   overflow: clip;
-
-  @media (min-width: 640px) {
-    margin-top: 4rem;
-  }
 }
 
 .gravura-footer__art {
   position: absolute;
-  inset: auto 0 0 0;
-  width: 100%;
+  right: 0;
+  bottom: 0;
+  width: calc(var(--gravura-h) * 2000 / 753);
+  max-width: none;
   height: var(--gravura-h);
-  object-fit: cover;
-  object-position: 85% 100%;
   pointer-events: none;
-  /* dissolve a borda de cima no fundo */
-  mask-image: linear-gradient(to bottom, transparent 0, #000 3%);
+  /* some no fundo pela borda de cima (pouco: o farol chega quase lá) e pela da esquerda */
+  mask-image:
+    linear-gradient(to bottom, transparent 0, #000 4%),
+    linear-gradient(to right, transparent 0, #000 22%);
+  mask-composite: intersect;
 }
 
+/* claro: a gravura cinza ganha o mapa de cores (filtro SVG montado no SimpleFooter.tsx) */
 img.gravura-footer__art {
   filter: url(#gravura-mapa);
 }
@@ -730,30 +724,21 @@ img.gravura-footer__art {
   background: var(--ctp-lavender);
   opacity: 0.38;
   mask-image:
-    linear-gradient(to bottom, transparent 0, #000 3%), var(--gravura-mascara);
-  mask-size:
-    100% 100%,
-    cover;
-  mask-position:
-    0 0,
-    85% 100%;
+    linear-gradient(to bottom, transparent 0, #000 4%),
+    linear-gradient(to right, transparent 0, #000 22%), var(--gravura-mascara);
+  mask-size: 100% 100%;
   mask-repeat: no-repeat;
-  mask-composite: intersect;
 }
 
-/* O texto fica no céu: abaixo de 1280px todo acima do farol; a partir daí, na metade de cima da
-   gravura, num bloco estreito que termina antes das casas e do farol (a ~62% e ~70% da largura). */
+/* o texto fica acima da gravura; a partir de 1280px ele desce um pouco sobre o céu dela, à
+   esquerda do farol, e o rodapé fica mais baixo */
 .gravura-footer__content {
   position: relative;
   z-index: 1;
-  padding-bottom: var(--gravura-h);
+  padding-bottom: calc(var(--gravura-h) + 8px);
 
   @media (min-width: 1280px) {
-    padding-bottom: calc(var(--gravura-h) * 0.56);
-  }
-
-  & > * {
-    max-width: 28rem;
+    padding-bottom: calc(var(--gravura-h) * 0.62);
   }
 }
 

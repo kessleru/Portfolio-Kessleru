@@ -14,49 +14,96 @@ const socials = [
   },
 ];
 
-// Mapa de cores da gravura, do traço mais escuro ao papel (que vira o fundo da página).
-// As cores vêm de --gravura-1…5 no index.css, misturadas a partir dos tokens do Catppuccin.
-const STOPS = [1, 2, 3, 4, 5].map((n) => `--gravura-${n}`);
+// Mapa de cores da gravura no claro, do traço mais escuro ao papel: azul-marinho, azul, azul claro,
+// areia e o próprio fundo da página (o branco do papel some nele). Cada parada mistura dois tokens.
+const STOPS: [string, number, string][] = [
+  ['blue', 0.2, 'text'],
+  ['blue', 0.4, 'overlay-2'],
+  ['lavender', 0.35, 'surface-1'],
+  ['yellow', 0.25, 'base'],
+  ['base', 1, 'base'],
+];
 
-/** Lê cada parada já resolvida pelo navegador e monta os tableValues do filtro (R, G e B). */
-function tableValues(probe: HTMLElement, ctx: CanvasRenderingContext2D) {
-  const channels: number[][] = [[], [], []];
-  for (const name of STOPS) {
-    probe.style.color = `var(${name})`;
-    // o canvas converte qualquer cor (oklab, color-mix já resolvido) em sRGB
-    ctx.clearRect(0, 0, 1, 1);
-    ctx.fillStyle = getComputedStyle(probe).color;
-    ctx.fillRect(0, 0, 1, 1);
-    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-    channels[0].push(r / 255);
-    channels[1].push(g / 255);
-    channels[2].push(b / 255);
-  }
-  return channels.map((c) => c.map((v) => v.toFixed(4)).join(' '));
+type Rgb = [number, number, number];
+
+const toLinear = (c: number) =>
+  c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+const toSrgb = (c: number) =>
+  c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
+
+function toOklab([r, g, b]: Rgb): Rgb {
+  const [lr, lg, lb] = [r, g, b].map(toLinear);
+  const l = Math.cbrt(
+    0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb
+  );
+  const m = Math.cbrt(
+    0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb
+  );
+  const s = Math.cbrt(
+    0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb
+  );
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+}
+
+function fromOklab([L, a, b]: Rgb): Rgb {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ].map((c) => Math.min(1, Math.max(0, toSrgb(c)))) as Rgb;
+}
+
+/** Um token do tema (#rrggbb no index.css) em RGB de 0 a 1. */
+function token(name: string): Rgb | null {
+  const hex = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--ctp-${name}`)
+    .trim();
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return null;
+  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as Rgb;
 }
 
 /**
- * Rodapé da versão simples: logo, frase, redes, copyright e voltar ao topo, por cima do céu
- * de uma gravura que ocupa a largura toda no fim da página. No claro a gravura cinza ganha um
+ * Os tableValues do filtro (R, G e B), misturando os tokens em OKLab aqui mesmo: sem depender
+ * de color-mix, que navegadores mais antigos não têm (lá a gravura saía com as cores puras).
+ */
+function tableValues() {
+  const stops: Rgb[] = [];
+  for (const [a, amount, b] of STOPS) {
+    const ca = token(a);
+    const cb = token(b);
+    if (!ca || !cb) return null;
+    const la = toOklab(ca);
+    const lb = toOklab(cb);
+    stops.push(
+      fromOklab(
+        [0, 1, 2].map((i) => la[i] * amount + lb[i] * (1 - amount)) as Rgb
+      )
+    );
+  }
+  return [0, 1, 2].map((c) => stops.map((s) => s[c].toFixed(4)).join(' '));
+}
+
+/**
+ * Rodapé da versão simples: uma faixa curta (frase, redes, copyright e voltar ao topo) sobre uma
+ * gravura presa no canto de baixo, que se dissolve no fundo. No claro a gravura cinza ganha um
  * mapa de cores (filtro SVG); no escuro ela vira máscara de um fundo lavanda bem suave.
  */
 function SimpleFooter() {
   const { theme } = useTheme();
   const light = theme === 'latte';
-  const footerRef = useRef<HTMLElement>(null);
   const funcs = useRef<(SVGElement | null)[]>([]);
 
   useEffect(() => {
-    const footer = footerRef.current;
-    const ctx = document
-      .createElement('canvas')
-      .getContext('2d', { willReadFrequently: true });
-    if (!light || !footer || !ctx) return;
-    const probe = document.createElement('span');
-    probe.hidden = true;
-    footer.appendChild(probe);
+    if (!light) return;
     const paint = () => {
-      tableValues(probe, ctx).forEach((values, i) =>
+      tableValues()?.forEach((values, i) =>
         funcs.current[i]?.setAttribute('tableValues', values)
       );
     };
@@ -67,10 +114,7 @@ function SimpleFooter() {
       attributes: true,
       attributeFilter: ['data-theme', 'style'],
     });
-    return () => {
-      watch.disconnect();
-      probe.remove();
-    };
+    return () => watch.disconnect();
   }, [light]);
 
   const toTop = () => {
@@ -82,7 +126,7 @@ function SimpleFooter() {
   };
 
   return (
-    <footer ref={footerRef} className="gravura-footer">
+    <footer className="gravura-footer">
       {light ? (
         <>
           <svg aria-hidden="true" width="0" height="0" className="absolute">
@@ -132,34 +176,30 @@ function SimpleFooter() {
         />
       )}
 
-      <div className="gravura-footer__content mx-auto w-full max-w-[46rem] px-5 sm:px-8">
-        <p className="font-mono text-sm font-semibold text-ctp-text">
-          portfolio<span className="text-ctp-accent">/kessleru</span>
-        </p>
-        <p className="prose-text mt-3">
-          Desenvolvedor Full Stack júnior em Ituiutaba, MG. O código dos
-          projetos está aberto no GitHub.
-        </p>
-        <ul className="mt-6 flex gap-2">
-          {socials.map(({ label, href, Icon }) => (
-            <li key={label}>
-              <a
-                href={href}
-                target="_blank"
-                rel="me noreferrer"
-                aria-label={label}
-                title={label}
-                className="gravura-footer__button"
-              >
-                <Icon size={17} aria-hidden="true" />
-              </a>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-10 flex items-center justify-between gap-4 border-t border-ctp-surface-0 pt-5">
-          <span className="text-sm text-ctp-subtext-0">
+      <div className="gravura-footer__content mx-auto flex w-full max-w-[46rem] flex-wrap items-center justify-between gap-x-6 gap-y-4 px-5 pt-8 sm:px-8">
+        <div className="space-y-1">
+          <p className="text-sm text-ctp-subtext-0">
+            Desenvolvedor Full Stack júnior em Ituiutaba, MG.
+          </p>
+          <p className="font-mono text-xs text-ctp-meta tabular-nums">
             © {new Date().getFullYear()} Otávio Kessler Ustra
-          </span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {socials.map(({ label, href, Icon }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="me noreferrer"
+              aria-label={label}
+              title={label}
+              className="gravura-footer__button"
+            >
+              <Icon size={16} aria-hidden="true" />
+            </a>
+          ))}
+          <span aria-hidden="true" className="mx-1 h-5 w-px bg-ctp-surface-0" />
           <button
             type="button"
             onClick={toTop}
@@ -167,7 +207,7 @@ function SimpleFooter() {
             title="Voltar ao topo"
             className="gravura-footer__button cursor-pointer"
           >
-            <ArrowUp size={17} aria-hidden="true" />
+            <ArrowUp size={16} aria-hidden="true" />
           </button>
         </div>
       </div>
