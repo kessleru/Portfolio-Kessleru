@@ -25,12 +25,11 @@
   }
 }
 
-/* Texto corrido: fonte do sistema (sem serifa) no lugar da mono, que cansa em parágrafos longos;
-   16–17px, altura de linha 1,7, no máximo ~65 caracteres por linha e um tom acima do subtext-0. */
+/* Texto corrido: Roboto (sem serifa, a fonte de leitura do design system) no lugar da mono, que
+   cansa em parágrafos longos; 16–17px, altura de linha 1,7, no máximo ~65 caracteres por linha e um
+   tom acima do subtext-0. */
 @utility prose-text {
-  font-family:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1rem;
   line-height: 1.7;
   max-width: 65ch;
@@ -80,6 +79,11 @@
   --color-ctp-overlay-2: var(--ctp-overlay-2);
   /* metadados pequenos (datas, contagens, rótulos): o tom que passa 4,5:1 em cada tema */
   --color-ctp-meta: var(--ctp-meta);
+  /* font-sans (leitura: parágrafos, versão simples) é a Roboto do design system; enquanto ela
+     baixa, a fonte do sistema */
+  --font-sans:
+    Roboto, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue',
+    Arial, sans-serif;
   /* font-mono (datas, rótulos, nomes de branch) usa a mesma mono do resto do site */
   --font-mono:
     'JetBrains Mono', ui-monospace, Menlo, 'DejaVu Sans Mono', monospace;

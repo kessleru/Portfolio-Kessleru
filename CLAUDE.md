@@ -32,7 +32,7 @@ React 19 + TypeScript + Vite 7 + Tailwind v4 + Catppuccin. Gerenciador: **pnpm**
 - Texto pequeno e metadados (datas, contagens, rótulos) em `text-ctp-meta`, que passa 4,5:1 nos 4 temas.
   Não usar `overlay-0`/`overlay-1` em texto.
 - Números que mudam ou se alinham: `tabular-nums`.
-- Texto corrido (parágrafos) usa `prose-text`: fonte do sistema sem serifa, 16–17px, altura de linha 1,7,
+- Texto corrido (parágrafos) usa `prose-text`: Roboto (Google Fonts), 16–17px, altura de linha 1,7,
   ~65 caracteres por linha. A mono fica para títulos, rótulos, datas e código.
 - Nada se mexe sozinho sem parar enquanto a pessoa lê (sem marquee/carrossel automático).
 - Toda página também precisa funcionar na versão simples (`src/components/simple`, `useSimple()`):
