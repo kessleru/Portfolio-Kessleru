@@ -61,7 +61,7 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
                   type="button"
                   aria-pressed={active}
                   onClick={() => setTheme(item.value)}
-                  className={`key w-full px-2 text-xs whitespace-nowrap sm:px-3 ${
+                  className={`key w-full text-xs whitespace-nowrap [--key-px:8px] sm:[--key-px:12px] ${
                     active ? 'accent-chip' : ''
                   }`}
                 >

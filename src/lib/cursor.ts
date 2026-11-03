@@ -1,45 +1,66 @@
 /**
- * Cursor de seta no estilo Figma: a ponta arredondada na cor de destaque, com contorno claro
- * e uma sombra curta. É um cursor nativo (SVG), então não atrasa nem pesa: o navegador desenha.
- * Como o arquivo não lê variáveis CSS, as cores são lidas do tema e o SVG é refeito a cada troca.
+ * Cursor de seta no estilo Figma: bem arredondado, na cor de destaque, com contorno branco
+ * e uma sombra curta. O branco é literal, como no Figma, e não muda com o tema.
+ *
+ * Do jeito que os guias recomendam (MDN): PNG de 32×32 com versão 2× para telas retina
+ * via image-set(), ponto de clique na ponta e um cursor do sistema de reserva. O desenho é
+ * um SVG, rasterizado aqui em PNG (o Safari não aceita SVG em cursor), e refeito quando o
+ * destaque muda. É um cursor nativo: não atrasa, porque quem desenha é o sistema.
  */
-const PATH =
-  'M3.4 2.7 20.6 9.6c.9.4.9 1.2 0 1.5l-7 2.4-2.5 7c-.3.9-1.1.9-1.5 0L2.7 3.4c-.2-.5.2-.9.7-.7Z';
+const SIZE = 32;
+const HOTSPOT = '4 3';
 
-function arrow(fill: string, stroke: string) {
-  return `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><filter id='s' x='-30%' y='-30%' width='160%' height='160%'><feDropShadow dx='0' dy='1' stdDeviation='0.9' flood-opacity='0.35'/></filter><path filter='url(#s)' d='${PATH}' fill='${fill}' stroke='${stroke}' stroke-width='1.6' stroke-linejoin='round'/></svg>`;
+// Triângulo com a traseira côncava e curva. Os cantos saem redondos do traço com
+// stroke-linejoin round: o contorno branco é o mesmo caminho com traço mais grosso por baixo.
+const PATH = 'M7 6 25.5 13.2 18.6 15.6Q15.9 16.5 15 19.2L12.8 26Z';
+
+function arrow(fill: string) {
+  return `<svg xmlns='http://www.w3.org/2000/svg' width='${SIZE}' height='${SIZE}' viewBox='0 0 ${SIZE} ${SIZE}'><filter id='s' x='-30%' y='-30%' width='160%' height='160%'><feDropShadow dx='0' dy='1.2' stdDeviation='1.1' flood-color='black' flood-opacity='0.3'/></filter><g filter='url(#s)' stroke-linejoin='round' stroke-linecap='round'><path d='${PATH}' fill='white' stroke='white' stroke-width='8'/><path d='${PATH}' fill='${fill}' stroke='${fill}' stroke-width='3.6'/></g></svg>`;
 }
 
-function luminance(color: string) {
-  const hex = color.replace('#', '');
-  if (!/^[0-9a-f]{6}$/i.test(hex)) return 0;
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+async function rasterize(svg: string, scale: number) {
+  const img = new Image();
+  img.src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  await img.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = SIZE * scale;
+  canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/png');
+}
+
+/** Qual forma de image-set() o navegador entende no cursor (o Safari antigo só a com prefixo). */
+function imageSetName() {
+  const test = (fn: string) =>
+    CSS.supports('cursor', `${fn}(url("a.png") 1x) 0 0, auto`);
+  if (test('image-set')) return 'image-set';
+  if (test('-webkit-image-set')) return '-webkit-image-set';
+  return null;
 }
 
 let painted = '';
 
-/** Pinta o cursor com as cores atuais do tema (só refaz o SVG quando elas mudam). */
-function paint() {
+/** Pinta o cursor com o destaque atual (só refaz quando ele muda). */
+async function paint() {
   const root = document.documentElement;
-  const css = getComputedStyle(root);
-  const fill = css.getPropertyValue('--ctp-accent').trim();
-  const base = css.getPropertyValue('--ctp-base').trim();
-  const text = css.getPropertyValue('--ctp-text').trim();
-  if (!fill || !base || !text) return;
+  const fill = getComputedStyle(root).getPropertyValue('--ctp-accent').trim();
+  if (!fill || fill === painted) return;
+  painted = fill;
 
-  // contorno sempre claro, como no Figma: no Latte é o base; nos temas escuros, o text
-  const stroke = luminance(base) > luminance(text) ? base : text;
-  const key = `${fill}|${stroke}`;
-  if (key === painted) return;
-  painted = key;
+  try {
+    const svg = arrow(fill);
+    const [x1, x2] = await Promise.all([rasterize(svg, 1), rasterize(svg, 2)]);
+    if (painted !== fill) return; // o destaque mudou de novo no meio do caminho
 
-  const svg = encodeURIComponent(arrow(fill, stroke));
-  root.style.setProperty(
-    '--cursor-arrow',
-    `url("data:image/svg+xml,${svg}") 3 3, auto`
-  );
-  root.setAttribute('data-cursor', '');
+    const set = imageSetName();
+    const image = set
+      ? `${set}(url("${x1}") 1x, url("${x2}") 2x)`
+      : `url("${x1}")`;
+    root.style.setProperty('--cursor-arrow', `${image} ${HOTSPOT}, auto`);
+    root.setAttribute('data-cursor', '');
+  } catch {
+    // sem canvas ou sem decodificar a imagem: fica o cursor do sistema
+    painted = '';
+  }
 }
 
 /**
@@ -51,7 +72,7 @@ export function startCursor() {
   if (!window.matchMedia('(pointer: fine)').matches) return;
 
   paint();
-  new MutationObserver(paint).observe(document.documentElement, {
+  new MutationObserver(() => void paint()).observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['data-theme', 'data-simple', 'style'],
   });
