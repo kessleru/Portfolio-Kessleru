@@ -16,8 +16,35 @@ type ThemeSwitcherProps = {
   className?: string;
 };
 
+/** "sapphire" → "Sapphire": os nomes do Catppuccin, como aparecem na paleta oficial. */
+function accentName(color: string) {
+  return color.charAt(0).toUpperCase() + color.slice(1);
+}
+
 function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
   const { theme, setTheme, accent, setAccent } = useTheme();
+
+  // Setas andam pela paleta (dando a volta nas pontas); Home e End vão para a primeira e a última cor.
+  function handleSwatchKeys(event: React.KeyboardEvent<HTMLDivElement>) {
+    const index = PALETTE_COLORS.indexOf(accent);
+    const last = PALETTE_COLORS.length - 1;
+    const moves: Record<string, number> = {
+      ArrowRight: index + 1,
+      ArrowDown: index + 1,
+      ArrowLeft: index - 1,
+      ArrowUp: index - 1,
+      Home: 0,
+      End: last,
+    };
+    if (!(event.key in moves)) return;
+
+    event.preventDefault();
+    const next = PALETTE_COLORS[(moves[event.key] + last + 1) % (last + 1)];
+    setAccent(next);
+    event.currentTarget
+      .querySelector<HTMLButtonElement>(`[data-color="${next}"]`)
+      ?.focus();
+  }
 
   return (
     <Card fileName="Theme.tsx" className={`w-full ${className}`}>
@@ -47,26 +74,42 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
         </div>
 
         <div>
-          <p className="mb-2 text-sm font-semibold">Destaque</p>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <p id="accent-label" className="text-sm font-semibold">
+              Destaque
+            </p>
+            <p className="text-xs text-ctp-meta" aria-hidden="true">
+              {accentName(accent)}
+            </p>
+          </div>
+          {/* Um grupo de rádios: Tab entra no selecionado e as setas trocam de cor, como num seletor nativo. */}
+          <div
+            role="radiogroup"
+            aria-labelledby="accent-label"
+            className="swatches"
+            onKeyDown={handleSwatchKeys}
+          >
             {PALETTE_COLORS.map((item) => {
-              const colorVar = `--ctp-${item}`;
               const active = item === accent;
 
               return (
                 <button
                   key={item}
                   type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-label={accentName(item)}
+                  title={accentName(item)}
+                  tabIndex={active ? 0 : -1}
+                  data-color={item}
                   onClick={() => setAccent(item)}
-                  aria-label={item}
-                  aria-pressed={active}
-                  className={`size-7 cursor-pointer rounded-full border-2 transition-[scale] duration-150 hover:scale-110 ${
-                    active
-                      ? 'border-ctp-mantle ring-2 ring-ctp-text/80'
-                      : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: `var(${colorVar})` }}
-                />
+                  className="swatch"
+                  style={
+                    { '--swatch': `var(--ctp-${item})` } as React.CSSProperties
+                  }
+                >
+                  <span className="swatch__fill" aria-hidden="true" />
+                </button>
               );
             })}
           </div>

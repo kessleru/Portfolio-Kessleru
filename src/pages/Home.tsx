@@ -61,7 +61,7 @@ function Home() {
 
         <SkillsLoop />
 
-        <section className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+        <section className="grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           <ThemeSwitcher />
           <CommitHeatmapCard />
         </section>

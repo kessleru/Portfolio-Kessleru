@@ -885,3 +885,176 @@ img.gravura-footer__art {
 :is([data-theme='latte'], [data-theme='frappe']) .accent-chip {
   color: var(--ctp-text);
 }
+
+/* ---------- Commits.tsx: mapa de contribuições sem rolagem ----------
+   A grade acompanha a largura do card: colunas em fr e quadrado por aspect-ratio, sem tamanho fixo.
+   Card largo: o ano numa faixa só. Card estreito: duas faixas de meio ano, uma embaixo da outra.
+   As duas faixas dividem as mesmas colunas (subgrid), então os quadrados têm sempre o mesmo tamanho. */
+.heatmap {
+  container-type: inline-size;
+}
+
+.heatmap__grid {
+  --heatmap-gap: 3px;
+  display: grid;
+  grid-template-columns: repeat(var(--half), minmax(0, 1fr));
+  column-gap: var(--heatmap-gap);
+  row-gap: 14px;
+}
+
+.heatmap__band {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  grid-template-rows: auto repeat(7, auto);
+  row-gap: var(--heatmap-gap);
+}
+
+/* o nome do mês não alarga a coluna: transborda para a direita, por cima das semanas seguintes */
+.heatmap__month {
+  grid-row: 1;
+  width: 0;
+  padding-bottom: 3px;
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ctp-meta);
+}
+
+@container (min-width: 36rem) {
+  .heatmap__grid {
+    grid-template-columns: repeat(var(--weeks), minmax(0, 1fr));
+  }
+
+  .heatmap__band:first-child {
+    grid-column: 1 / span var(--half);
+  }
+
+  .heatmap__band:last-child {
+    grid-column: calc(var(--half) + 1) / -1;
+    grid-row: 1;
+  }
+
+  .heatmap__month--wrap {
+    display: none;
+  }
+}
+
+@container not (min-width: 36rem) {
+  .heatmap__month--row {
+    display: none;
+  }
+}
+
+.heatmap__day {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 22%;
+  background: var(--ctp-surface-0);
+}
+
+.heatmap__day[data-level='1'] {
+  background: color-mix(in srgb, var(--ctp-accent) 30%, var(--ctp-surface-0));
+}
+
+.heatmap__day[data-level='2'] {
+  background: color-mix(in srgb, var(--ctp-accent) 52%, var(--ctp-surface-0));
+}
+
+.heatmap__day[data-level='3'] {
+  background: color-mix(in srgb, var(--ctp-accent) 76%, var(--ctp-surface-0));
+}
+
+.heatmap__day[data-level='4'] {
+  background: var(--ctp-accent);
+}
+
+.heatmap__day[data-future] {
+  background: transparent;
+}
+
+.heatmap__day--key {
+  width: 11px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .heatmap__day[data-d]:hover {
+    outline: 1px solid var(--ctp-text);
+    outline-offset: 1px;
+  }
+}
+
+/* ---------- Theme.tsx: seletor de destaque ----------
+   Bolinhas de 32px. A escolhida encolhe e ganha um anel na própria cor, com um respiro do fundo
+   entre os dois (sem ícone dentro). Só transform e opacity animam. */
+.swatches {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: repeat(7, 2rem);
+  gap: 10px 12px;
+}
+
+@container (min-width: 37.75rem) {
+  .swatches {
+    grid-template-columns: repeat(14, 2rem);
+  }
+}
+
+.swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full, 9999px);
+  cursor: pointer;
+}
+
+.swatch__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--swatch);
+  transition: scale 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.swatch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid var(--swatch);
+  opacity: 0;
+  scale: 1.15;
+  transition:
+    opacity 160ms ease-out,
+    scale 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.swatch[aria-checked='true'] .swatch__fill {
+  scale: 0.68;
+}
+
+.swatch[aria-checked='true']::after {
+  opacity: 1;
+  scale: 1;
+}
+
+/* o anel faz o papel do contorno de foco; o foco do teclado ganha só um contorno de texto por fora */
+.swatch:focus-visible {
+  outline: 2px solid var(--ctp-text);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .swatch[aria-checked='false']:hover .swatch__fill {
+    scale: 1.1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swatch__fill,
+  .swatch::after {
+    transition-duration: 80ms;
+  }
+}

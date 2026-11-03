@@ -24,6 +24,9 @@ type CachedContributions = {
   fetchedAt: number;
 };
 
+/** Um quadradinho da grade. `future` marca os dias que ainda não chegaram na última semana. */
+type Day = Contribution & { future?: boolean };
+
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 let contributionsCache: CachedContributions | null = null;
 let inFlightRequest: Promise<CachedContributions> | null = null;
@@ -79,53 +82,84 @@ async function fetchContributions(
   }
 }
 
-function getIntensity(count: number, maxCount: number) {
-  if (count <= 0) return 0;
-  if (maxCount <= 1) return 4;
+// Nomes fixos (e não toLocaleDateString) para o HTML do build sair igual em qualquer máquina.
+const MONTHS = [
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez',
+];
 
-  const ratio = count / maxCount;
+/** Semanas vazias do tamanho de um ano, para o card não mudar de altura quando os dados chegam. */
+const PLACEHOLDER_WEEKS = 53;
 
-  if (ratio <= 0.25) return 1;
-  if (ratio <= 0.5) return 2;
-  if (ratio <= 0.75) return 3;
-
-  return 4;
+function toKey(date: Date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
-function formatDate(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString('pt-BR', {
-    day: '2-digit',
+function parseKey(key: string) {
+  return new Date(`${key}T00:00:00`);
+}
+
+function plural(count: number) {
+  if (count === 0) return 'nenhuma contribuição';
+  return count === 1 ? '1 contribuição' : `${count} contribuições`;
+}
+
+function formatDay(key: string) {
+  return parseKey(key).toLocaleDateString('pt-BR', {
+    weekday: 'short',
+    day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
 }
 
-function buildWeeks(contributions: Contribution[]) {
+function formatShort(key: string) {
+  const date = parseKey(key);
+  return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
+}
+
+function buildWeeks(contributions: Contribution[]): Day[][] {
   const sorted = [...contributions].sort((a, b) =>
     a.date.localeCompare(b.date)
   );
 
-  if (sorted.length === 0) return [] as Contribution[][];
+  if (sorted.length === 0) {
+    return Array.from({ length: PLACEHOLDER_WEEKS }, (_, w) =>
+      Array.from({ length: 7 }, (_, d) => ({
+        date: `vazio-${w}-${d}`,
+        count: 0,
+      }))
+    );
+  }
 
-  const firstDate = new Date(`${sorted[0].date}T00:00:00`);
-  const startDate = new Date(firstDate);
-  startDate.setDate(firstDate.getDate() - firstDate.getDay());
+  const firstDate = parseKey(sorted[0].date);
+  const cursor = new Date(firstDate);
+  cursor.setDate(firstDate.getDate() - firstDate.getDay());
 
   const map = new Map(sorted.map((item) => [item.date, item]));
-  const weeks: Contribution[][] = [];
-  const cursor = new Date(startDate);
-  const lastDate = new Date(`${sorted[sorted.length - 1].date}T00:00:00`);
+  const lastKey = sorted[sorted.length - 1].date;
+  const lastDate = parseKey(lastKey);
+  const weeks: Day[][] = [];
 
   while (cursor <= lastDate) {
-    const week: Contribution[] = [];
+    const week: Day[] = [];
 
     for (let day = 0; day < 7; day += 1) {
-      const yyyy = cursor.getFullYear();
-      const mm = String(cursor.getMonth() + 1).padStart(2, '0');
-      const dd = String(cursor.getDate()).padStart(2, '0');
-      const dateKey = `${yyyy}-${mm}-${dd}`;
-
-      week.push(map.get(dateKey) ?? { date: dateKey, count: 0 });
+      const key = toKey(cursor);
+      week.push(map.get(key) ?? { date: key, count: 0, future: key > lastKey });
       cursor.setDate(cursor.getDate() + 1);
     }
 
@@ -134,6 +168,94 @@ function buildWeeks(contributions: Contribution[]) {
 
   return weeks;
 }
+
+/**
+ * Níveis como no GitHub: pelos quartis dos dias com contribuição, e não pelo dia recorde.
+ * Com a escala pelo máximo, um único dia muito acima dos outros deixava o ano inteiro no tom mais claro.
+ */
+function buildLevels(contributions: Contribution[]) {
+  const active = contributions
+    .map((item) => item.count)
+    .filter((count) => count > 0)
+    .sort((a, b) => a - b);
+
+  if (active.length === 0) return () => 0;
+
+  const at = (p: number) =>
+    active[Math.min(active.length - 1, Math.floor(p * active.length))];
+  const q1 = at(0.25);
+  const q2 = at(0.5);
+  const q3 = at(0.75);
+
+  return (count: number) => {
+    if (count <= 0) return 0;
+    if (count <= q1) return 1;
+    if (count <= q2) return 2;
+    if (count <= q3) return 3;
+    return 4;
+  };
+}
+
+function buildStats(contributions: Contribution[]) {
+  const sorted = [...contributions].sort((a, b) =>
+    a.date.localeCompare(b.date)
+  );
+
+  let longest = 0;
+  let run = 0;
+  let best: Contribution | null = null;
+
+  for (const item of sorted) {
+    run = item.count > 0 ? run + 1 : 0;
+    longest = Math.max(longest, run);
+    if (!best || item.count > best.count) best = item;
+  }
+
+  return { longest, best: best && best.count > 0 ? best : null };
+}
+
+type MonthLabel = {
+  week: number;
+  name: string;
+  /** Só aparece quando a grade quebra em duas faixas (abre a segunda faixa). */
+  wrapOnly?: boolean;
+  /** Só aparece com o ano numa faixa: no fim da primeira faixa ele repetiria o começo da segunda. */
+  rowOnly?: boolean;
+};
+
+/** Um rótulo onde o mês começa; perto demais do próximo (menos de 3 semanas), ele sai. */
+function buildMonthLabels(weeks: Day[][], half: number): MonthLabel[] {
+  if (weeks[0]?.[0]?.date.startsWith('vazio')) return [];
+
+  const monthOf = (w: number) => parseKey(weeks[w][0].date).getMonth();
+  const starts: number[] = [];
+
+  for (let w = 0; w < weeks.length; w += 1) {
+    if (w === 0 || monthOf(w) !== monthOf(w - 1)) starts.push(w);
+  }
+
+  const labels: MonthLabel[] = starts
+    .filter((w, i) => {
+      const next = starts[i + 1];
+      // o último também sai se estiver colado na borda direita (não cabe o nome)
+      return next === undefined ? weeks.length - w >= 3 : next - w >= 3;
+    })
+    .map((w) => ({
+      week: w,
+      name: MONTHS[monthOf(w)],
+      rowOnly: w < half && w >= half - 2,
+    }));
+
+  // A segunda faixa ganha o nome do mês logo no começo, se nenhum rótulo cair ali.
+  const hasNearStart = labels.some((l) => l.week >= half && l.week < half + 3);
+  if (!hasNearStart && half < weeks.length) {
+    labels.push({ week: half, name: MONTHS[monthOf(half)], wrapOnly: true });
+  }
+
+  return labels;
+}
+
+type Hovered = { date: string; count: number } | null;
 
 function CommitHeatmapCard({
   username = 'kessleru',
@@ -147,6 +269,7 @@ function CommitHeatmapCard({
   const [total, setTotal] = useState(() => cachedInitial?.total ?? 0);
   const [loading, setLoading] = useState(() => !cachedInitial);
   const [error, setError] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<Hovered>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -190,25 +313,105 @@ function CommitHeatmapCard({
   }, [username]);
 
   const weeks = useMemo(() => buildWeeks(data), [data]);
-  const maxCount = useMemo(
-    () => data.reduce((max, item) => Math.max(max, item.count), 0),
-    [data]
-  );
+  const stats = useMemo(() => buildStats(data), [data]);
+
+  // A grade é a parte pesada (uns 370 quadrados): fica memorizada, e passar o mouse só troca a legenda.
+  const grid = useMemo(() => {
+    const levelOf = buildLevels(data);
+    const half = Math.ceil(weeks.length / 2);
+    const labels = buildMonthLabels(weeks, half);
+    const bands = [weeks.slice(0, half), weeks.slice(half)];
+
+    return (
+      <div
+        className="heatmap__grid"
+        style={
+          {
+            '--weeks': weeks.length,
+            '--half': half,
+          } as React.CSSProperties
+        }
+      >
+        {bands.map((band, b) => {
+          const offset = b * half;
+          return (
+            <div key={b} className="heatmap__band">
+              {labels
+                .filter(
+                  (l) => l.week >= offset && l.week < offset + band.length
+                )
+                .map((l) => (
+                  <span
+                    key={`m-${l.week}`}
+                    className={`heatmap__month${l.wrapOnly ? ' heatmap__month--wrap' : ''}${l.rowOnly ? ' heatmap__month--row' : ''}`}
+                    style={{ gridColumn: l.week - offset + 1 }}
+                  >
+                    {l.name}
+                  </span>
+                ))}
+              {band.map((week, w) =>
+                week.map((day, d) => {
+                  const real = !day.future && !loading;
+                  return (
+                    <span
+                      key={day.date}
+                      className="heatmap__day"
+                      data-level={day.future ? undefined : levelOf(day.count)}
+                      data-future={day.future ? '' : undefined}
+                      data-d={real ? day.date : undefined}
+                      data-c={real ? day.count : undefined}
+                      title={
+                        real
+                          ? `${formatDay(day.date)}: ${plural(day.count)}`
+                          : undefined
+                      }
+                      style={{ gridColumn: w + 1, gridRow: d + 2 }}
+                    />
+                  );
+                })
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }, [data, weeks, loading]);
+
+  function handlePointerOver(event: React.PointerEvent<HTMLDivElement>) {
+    const cell = (event.target as HTMLElement).closest<HTMLElement>('[data-d]');
+    if (!cell?.dataset.d) return;
+    setHovered({ date: cell.dataset.d, count: Number(cell.dataset.c) });
+  }
+
+  const summary = loading
+    ? 'Carregando contribuições…'
+    : `${total} contribuições no último ano`;
+
+  // Duas partes que não se partem por dentro: no celular a segunda desce inteira.
+  let readout: string[] = [];
+  if (hovered) {
+    readout = [formatDay(hovered.date), plural(hovered.count)];
+  } else if (!loading && stats.best) {
+    readout = [
+      `Maior sequência: ${stats.longest} ${stats.longest === 1 ? 'dia' : 'dias'}`,
+      `Melhor dia: ${stats.best.count} em ${formatShort(stats.best.date)}`,
+    ];
+  }
 
   return (
     <Card fileName="Commits.tsx" className={className}>
-      <div className="space-y-4">
+      <div className="flex h-full flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs sm:text-sm font-semibold">
-            {loading
-              ? 'Carregando contribuições…'
-              : `${total} contribuições no último ano`}
+          <p className="text-xs font-semibold tabular-nums sm:text-sm">
+            {summary}
           </p>
           <a
             href={`https://github.com/${username}`}
             target="_blank"
             rel="noreferrer"
-            className="text-xs sm:text-sm text-ctp-subtext-0 hover:text-ctp-accent"
+            data-kess-mood="animado"
+            data-kess-say="os repositórios estão lá"
+            className="text-xs text-ctp-subtext-0 transition-colors hover:text-ctp-accent sm:text-sm"
           >
             @{username}
           </a>
@@ -217,57 +420,42 @@ function CommitHeatmapCard({
         {error ? (
           <p className="text-sm text-ctp-red">{error}</p>
         ) : (
-          <div className="overflow-x-auto pb-1">
-            <div className="inline-grid auto-cols-max grid-flow-col gap-1 min-w-max">
-              {weeks.map((week, weekIndex) => (
-                <div
-                  key={`week-${weekIndex}`}
-                  className="grid grid-rows-7 gap-1"
-                >
-                  {week.map((day) => {
-                    const intensity = getIntensity(day.count, maxCount);
-
-                    return (
-                      <span
-                        key={day.date}
-                        title={`${formatDate(day.date)}: ${day.count} commits`}
-                        className="h-3 w-3 rounded-[3px]"
-                        style={
-                          intensity === 0
-                            ? { backgroundColor: 'var(--ctp-surface-0)' }
-                            : {
-                                backgroundColor: 'var(--ctp-accent)',
-                                opacity: 0.25 + intensity * 0.17,
-                              }
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+          <div
+            className="heatmap"
+            role="img"
+            aria-label={
+              loading
+                ? 'Mapa de contribuições carregando'
+                : `Mapa de contribuições no GitHub: ${total} no último ano`
+            }
+            onPointerOver={handlePointerOver}
+            onPointerLeave={() => setHovered(null)}
+          >
+            {grid}
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-2 text-xs text-ctp-subtext-0">
-          <span>Menos</span>
-          <div className="flex items-center gap-1">
-            {[0, 1, 2, 3, 4].map((intensity) => (
-              <span
-                key={intensity}
-                className="h-3 w-3 rounded-[3px]"
-                style={
-                  intensity === 0
-                    ? { backgroundColor: 'var(--ctp-surface-0)' }
-                    : {
-                        backgroundColor: 'var(--ctp-accent)',
-                        opacity: 0.25 + intensity * 0.17,
-                      }
-                }
-              />
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs text-ctp-meta">
+          <p className="flex min-h-4 flex-wrap gap-x-3 tabular-nums">
+            {readout.map((part, i) => (
+              <span key={i} className="whitespace-nowrap">
+                {part}
+              </span>
             ))}
+          </p>
+          <div className="flex items-center gap-2" aria-hidden="true">
+            <span>Menos</span>
+            <div className="flex items-center gap-1">
+              {[0, 1, 2, 3, 4].map((level) => (
+                <span
+                  key={level}
+                  className="heatmap__day heatmap__day--key"
+                  data-level={level}
+                />
+              ))}
+            </div>
+            <span>Mais</span>
           </div>
-          <span>Mais</span>
         </div>
       </div>
     </Card>
