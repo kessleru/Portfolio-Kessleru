@@ -88,7 +88,7 @@ function Header() {
       <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5">
         <div className='text-sm sm:text-base tracking-wide relative after:content-[""] after:ml-0.5 after:inline-block after:w-2 after:h-4 after:bg-ctp-accent after:top-1 after:absolute after:cursor-blink *:mr-px'>
           <Link to="/">
-            <span className="text-ctp-accent font-medium hover:text-ctp-subtext-0">
+            <span className="nav-pill text-ctp-accent font-medium hover:text-ctp-subtext-0">
               ~
             </span>
           </Link>
@@ -135,7 +135,7 @@ function Header() {
             <span key={item.to} className="flex items-center">
               <Link
                 to={item.to}
-                className="relative text-sm lg:text-base cursor-pointer hover:text-ctp-accent"
+                className="nav-pill relative text-sm lg:text-base cursor-pointer hover:text-ctp-accent"
               >
                 {item.label}
               </Link>

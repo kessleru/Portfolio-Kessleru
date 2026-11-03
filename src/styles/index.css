@@ -817,20 +817,80 @@ img.gravura-footer__art {
   opacity: 1;
 }
 
-/* ---------- Latte: acento e cores puras nunca são cor de texto pequeno (decisão 2026-11-02) ----------
-   No Latte só mauve e red passam 4,5:1 como texto; as outras 12 cores de destaque não.
-   Regra: o texto vira ctp-text e o acento fica na borda, no fundo tingido, no sublinhado ou no ícone.
-   Ícones (svg) e controles só de ícone (com aria-label) ficam como estão. */
-[data-theme='latte'] :is(.text-ctp-accent, .text-ctp-rosewater, .text-ctp-flamingo, .text-ctp-pink, .text-ctp-mauve, .text-ctp-red, .text-ctp-maroon, .text-ctp-peach, .text-ctp-yellow, .text-ctp-green, .text-ctp-teal, .text-ctp-sky, .text-ctp-sapphire, .text-ctp-blue, .text-ctp-lavender):not(svg, [aria-label]) {
-  color: var(--ctp-text);
+/* ---------- Latte: cor de texto em acento com contraste (decisões 2026-11-02 e 2026-11-03) ----------
+   No Latte só mauve e red passam 4,5:1 como texto. Em vez de apagar a cor, cada uma ganha uma
+   versão "tinta" (--ctp-<cor>-ink): a cor misturada ao ctp-text só o necessário para passar 4,5:1
+   no base e no mantle (as porcentagens foram calculadas para cada cor). O destaque escolhido vira
+   --ctp-accent-ink no ThemeProvider. Ícones (svg) e controles só de ícone (com aria-label) ficam
+   com a cor pura. */
+[data-theme='latte'] {
+  --ctp-accent-ink: var(--ctp-green-ink);
+  --ctp-rosewater-ink: color-mix(in srgb, var(--ctp-rosewater) 31%, var(--ctp-text));
+  --ctp-flamingo-ink: color-mix(in srgb, var(--ctp-flamingo) 36%, var(--ctp-text));
+  --ctp-pink-ink: color-mix(in srgb, var(--ctp-pink) 31%, var(--ctp-text));
+  --ctp-mauve-ink: color-mix(in srgb, var(--ctp-mauve) 94%, var(--ctp-text));
+  --ctp-red-ink: color-mix(in srgb, var(--ctp-red) 96%, var(--ctp-text));
+  --ctp-maroon-ink: color-mix(in srgb, var(--ctp-maroon) 59%, var(--ctp-text));
+  --ctp-peach-ink: color-mix(in srgb, var(--ctp-peach) 41%, var(--ctp-text));
+  --ctp-yellow-ink: color-mix(in srgb, var(--ctp-yellow) 32%, var(--ctp-text));
+  --ctp-green-ink: color-mix(in srgb, var(--ctp-green) 42%, var(--ctp-text));
+  --ctp-teal-ink: color-mix(in srgb, var(--ctp-teal) 48%, var(--ctp-text));
+  --ctp-sky-ink: color-mix(in srgb, var(--ctp-sky) 34%, var(--ctp-text));
+  --ctp-sapphire-ink: color-mix(in srgb, var(--ctp-sapphire) 38%, var(--ctp-text));
+  --ctp-blue-ink: color-mix(in srgb, var(--ctp-blue) 77%, var(--ctp-text));
+  --ctp-lavender-ink: color-mix(in srgb, var(--ctp-lavender) 37%, var(--ctp-text));
+}
+[data-theme='latte'] .text-ctp-accent:not(svg, [aria-label]) {
+  color: var(--ctp-accent-ink);
+}
+[data-theme='latte'] .text-ctp-rosewater:not(svg, [aria-label]) {
+  color: var(--ctp-rosewater-ink);
+}
+[data-theme='latte'] .text-ctp-flamingo:not(svg, [aria-label]) {
+  color: var(--ctp-flamingo-ink);
+}
+[data-theme='latte'] .text-ctp-pink:not(svg, [aria-label]) {
+  color: var(--ctp-pink-ink);
+}
+[data-theme='latte'] .text-ctp-mauve:not(svg, [aria-label]) {
+  color: var(--ctp-mauve-ink);
+}
+[data-theme='latte'] .text-ctp-red:not(svg, [aria-label]) {
+  color: var(--ctp-red-ink);
+}
+[data-theme='latte'] .text-ctp-maroon:not(svg, [aria-label]) {
+  color: var(--ctp-maroon-ink);
+}
+[data-theme='latte'] .text-ctp-peach:not(svg, [aria-label]) {
+  color: var(--ctp-peach-ink);
+}
+[data-theme='latte'] .text-ctp-yellow:not(svg, [aria-label]) {
+  color: var(--ctp-yellow-ink);
+}
+[data-theme='latte'] .text-ctp-green:not(svg, [aria-label]) {
+  color: var(--ctp-green-ink);
+}
+[data-theme='latte'] .text-ctp-teal:not(svg, [aria-label]) {
+  color: var(--ctp-teal-ink);
+}
+[data-theme='latte'] .text-ctp-sky:not(svg, [aria-label]) {
+  color: var(--ctp-sky-ink);
+}
+[data-theme='latte'] .text-ctp-sapphire:not(svg, [aria-label]) {
+  color: var(--ctp-sapphire-ink);
+}
+[data-theme='latte'] .text-ctp-blue:not(svg, [aria-label]) {
+  color: var(--ctp-blue-ink);
+}
+[data-theme='latte'] .text-ctp-lavender:not(svg, [aria-label]) {
+  color: var(--ctp-lavender-ink);
 }
 [data-theme='latte'] .text-ctp-accent > svg {
   color: var(--ctp-accent);
 }
-/* links e botões de texto em acento ficam sem sublinhado: o texto vira ctp-text e o ícone mantém o acento */
 @media (hover: hover) and (pointer: fine) {
   [data-theme='latte'] .hover\:text-ctp-accent:hover:not(svg, [aria-label], :disabled) {
-    color: var(--ctp-text);
+    color: var(--ctp-accent-ink);
   }
 }
 /* nome da branch: a cor da branch vira sublinhado (a cor inline é do JS, por isso !important) */
@@ -875,8 +935,11 @@ img.gravura-footer__art {
 }
 /* acento sobre surface-0 ou sobre fundo tingido de acento (chips ativos, Baixar CV, Voltar para início): no Frappé
    mauve, peach, red e blue ficam abaixo de 4,5:1 em algum estado; o texto vira ctp-text e o acento fica na borda e no fundo */
-:is([data-theme='latte'], [data-theme='frappe']) .accent-chip {
+[data-theme='frappe'] .accent-chip {
   color: var(--ctp-text);
+}
+[data-theme='latte'] .accent-chip {
+  color: var(--ctp-accent-ink);
 }
 
 /* ---------- Commits.tsx: mapa de contribuições sem rolagem ----------
@@ -1349,5 +1412,22 @@ img.gravura-footer__art {
 
   .beach__eq[data-on] i {
     scale: 1 0.7;
+  }
+}
+
+/* ---------- links do menu e o ~ do caminho: sinal de clicável no hover ----------
+   Um fundo leve tingido com o destaque aparece atrás do link (só com mouse). */
+.nav-pill {
+  border-radius: var(--radius-sm, 6px);
+  padding: 2px 6px;
+  margin: -2px -6px;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-pill:hover {
+    background: color-mix(in srgb, var(--ctp-accent) 14%, transparent);
   }
 }

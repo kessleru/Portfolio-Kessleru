@@ -10,7 +10,7 @@ function Home() {
   return (
     <>
       <div className="space-y-14 sm:space-y-16">
-        <section className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:items-stretch">
+        <section className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:items-center">
           <div className="space-y-6">
             <div className="flex items-center gap-3 sm:gap-4">
               <KessSpot className="-my-2" />

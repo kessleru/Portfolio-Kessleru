@@ -78,6 +78,11 @@ function applyTheme(theme: ThemeName, accent: AccentName) {
 
   root.setAttribute('data-theme', theme);
   root.style.setProperty('--ctp-accent', `var(--ctp-${accent})`);
+  // no Latte cada cor tem uma versão escurecida para texto (index.css); nos escuros é a própria cor
+  root.style.setProperty(
+    '--ctp-accent-ink',
+    `var(--ctp-${accent}-ink, var(--ctp-${accent}))`
+  );
 }
 
 type ThemeProviderProps = {
