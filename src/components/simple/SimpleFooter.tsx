@@ -1,3 +1,4 @@
+import { scrollToTop } from '@/lib/smooth';
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { SiGithub, SiLinkedin } from 'react-icons/si';
@@ -119,10 +120,7 @@ function SimpleFooter() {
   }, [light]);
 
   const toTop = () => {
-    const reduce = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    scrollToTop();
     document.getElementById('conteudo')?.focus({ preventScroll: true });
   };
 

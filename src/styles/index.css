@@ -827,17 +827,10 @@ img.gravura-footer__art {
 [data-theme='latte'] .text-ctp-accent > svg {
   color: var(--ctp-accent);
 }
-/* links e botões de texto em acento: sublinhado de 2px no lugar da cor */
-[data-theme='latte'] :is(a, button).text-ctp-accent:not([class*='border'], [class*='bg-ctp-accent'], [aria-label]),
-[data-theme='latte'] :is(header a, footer, h1) .text-ctp-accent {
-  text-decoration: underline 2px var(--ctp-accent);
-  text-underline-offset: 3px;
-}
+/* links e botões de texto em acento ficam sem sublinhado: o texto vira ctp-text e o ícone mantém o acento */
 @media (hover: hover) and (pointer: fine) {
   [data-theme='latte'] .hover\:text-ctp-accent:hover:not(svg, [aria-label], :disabled) {
     color: var(--ctp-text);
-    text-decoration: underline 2px var(--ctp-accent);
-    text-underline-offset: 3px;
   }
 }
 /* nome da branch: a cor da branch vira sublinhado (a cor inline é do JS, por isso !important) */
@@ -987,14 +980,19 @@ img.gravura-footer__art {
 /* ---------- Theme.tsx: seletor de destaque ----------
    Bolinhas de 32px. A escolhida encolhe e ganha um anel na própria cor, com um respiro do fundo
    entre os dois (sem ícone dentro). Só transform e opacity animam. */
-.swatches {
+/* as bolinhas vão de uma borda à outra, alinhadas com os botões de tema logo acima */
+.swatches-box {
   container-type: inline-size;
-  display: grid;
-  grid-template-columns: repeat(7, 2rem);
-  gap: 10px 12px;
 }
 
-@container (min-width: 37.75rem) {
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(7, 2rem);
+  justify-content: space-between;
+  gap: 10px 8px;
+}
+
+@container (min-width: 34.5rem) {
   .swatches {
     grid-template-columns: repeat(14, 2rem);
   }
@@ -1056,5 +1054,179 @@ img.gravura-footer__art {
   .swatch__fill,
   .swatch::after {
     transition-duration: 80ms;
+  }
+}
+
+/* ---------- Botão de tecla (key) ----------
+   O botão é uma tecla: a face (::before) fica por cima da lateral (::after), que aparece embaixo.
+   Ao pressionar, o botão inteiro desce e a lateral sobe o mesmo tanto: a face afunda e a lateral
+   some, como uma keycap. Só translate anima; a descida é rápida e a volta, um pouco mais lenta.
+   Botões de alternância (aria-pressed) ficam afundados enquanto estão ligados.
+   Variantes: key--accent (principal) e key--flat (versão simples: lateral menor, sem brilho). */
+.key {
+  --key-depth: 4px;
+  --key-face: var(--ctp-surface-0);
+  --key-face-hover: var(--ctp-surface-1);
+  /* a lateral escura precisa se separar do base: o crust puro some no fundo dos temas escuros */
+  --key-edge-dark: color-mix(in srgb, var(--ctp-crust) 55%, black);
+  --key-edge: var(--key-edge-dark);
+  --key-rim: color-mix(in srgb, var(--ctp-text) 9%, transparent);
+  --key-shine: color-mix(in srgb, var(--ctp-text) 12%, transparent);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px calc(8px + var(--key-depth));
+  border-radius: var(--radius-lg, 10px);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--ctp-subtext-1);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    translate 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    color 150ms ease;
+}
+
+.key::before,
+.key::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: inherit;
+}
+
+/* face */
+.key::before {
+  z-index: -1;
+  top: 0;
+  bottom: var(--key-depth);
+  background: var(--key-face);
+  border: 1px solid var(--key-rim);
+  box-shadow: inset 0 1px 0 var(--key-shine);
+  transition: background-color 150ms ease;
+}
+
+/* lateral */
+.key::after {
+  z-index: -2;
+  top: var(--key-depth);
+  bottom: 0;
+  background: var(--key-edge);
+  transition: translate 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* afundada: o clique, a tecla Espaço e as alternâncias ligadas */
+.key:is(:active, [aria-pressed='true']):not(:disabled) {
+  translate: 0 calc(var(--key-depth) - 1px);
+  scale: none;
+}
+
+.key:is(:active, [aria-pressed='true']):not(:disabled)::after {
+  translate: 0 calc(1px - var(--key-depth));
+}
+
+.key:active:not(:disabled),
+.key:active:not(:disabled)::after {
+  transition-duration: 60ms;
+}
+
+.key[aria-pressed='true'] {
+  cursor: default;
+}
+
+.key:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .key:not(:disabled, [aria-pressed='true']):hover {
+    color: var(--ctp-text);
+  }
+
+  .key:not(:disabled, [aria-pressed='true']):hover::before {
+    background: var(--key-face-hover);
+  }
+}
+
+/* principal e alternância ligada: face tingida com o destaque */
+.key:is(.key--accent, [aria-pressed='true']) {
+  --key-face: color-mix(in srgb, var(--ctp-accent) 16%, var(--ctp-surface-0));
+  --key-face-hover: color-mix(in srgb, var(--ctp-accent) 26%, var(--ctp-surface-0));
+  --key-edge: color-mix(in srgb, var(--ctp-accent) 34%, var(--key-edge-dark));
+  --key-rim: color-mix(in srgb, var(--ctp-accent) 45%, transparent);
+  --key-shine: color-mix(in srgb, var(--ctp-accent) 30%, transparent);
+  color: var(--ctp-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .key.key--accent:not(:disabled):hover {
+    color: var(--ctp-accent);
+  }
+}
+
+/* Latte: tecla clara sobre o card, lateral cinza (o crust do Latte é mais claro que o surface) */
+[data-theme='latte'] .key {
+  --key-face: var(--ctp-base);
+  --key-face-hover: color-mix(in srgb, var(--ctp-surface-0) 45%, var(--ctp-base));
+  --key-edge: var(--ctp-surface-1);
+  --key-rim: var(--ctp-surface-1);
+  --key-shine: transparent;
+}
+
+[data-theme='latte'] .key:is(.key--accent, [aria-pressed='true']) {
+  --key-face: color-mix(in srgb, var(--ctp-accent) 12%, var(--ctp-base));
+  --key-face-hover: color-mix(in srgb, var(--ctp-accent) 20%, var(--ctp-base));
+  --key-edge: color-mix(in srgb, var(--ctp-accent) 45%, var(--ctp-surface-1));
+  --key-rim: color-mix(in srgb, var(--ctp-accent) 55%, transparent);
+}
+
+/* versão simples: mesma tecla, mais rasa e sem brilho, sobre o fundo da página */
+.key.key--flat {
+  --key-depth: 3px;
+  --key-face: var(--ctp-base);
+  --key-face-hover: var(--ctp-mantle);
+  --key-edge: var(--ctp-surface-1);
+  --key-rim: var(--ctp-surface-1);
+  --key-shine: transparent;
+}
+
+.key.key--flat.key--accent {
+  --key-face: color-mix(in srgb, var(--ctp-accent) 10%, var(--ctp-base));
+  --key-face-hover: color-mix(in srgb, var(--ctp-accent) 18%, var(--ctp-base));
+  --key-edge: color-mix(in srgb, var(--ctp-accent) 40%, var(--ctp-surface-1));
+  --key-rim: color-mix(in srgb, var(--ctp-accent) 50%, transparent);
+}
+
+/* ---------- Cursor de seta estilo Figma (src/lib/cursor.ts) ----------
+   Só com mouse. Tudo herda a seta, inclusive links e botões, como no Figma;
+   campos de texto mantêm a barra de digitar e o Kess, a mãozinha de pegar. */
+@media (hover: hover) and (pointer: fine) {
+  html[data-cursor],
+  html[data-cursor] *,
+  html[data-cursor] *::before,
+  html[data-cursor] *::after {
+    cursor: var(--cursor-arrow);
+  }
+
+  html[data-cursor] :is(input:not([type='checkbox'], [type='radio'], [type='range']), textarea, [contenteditable='true']) {
+    cursor: text;
+  }
+
+  html[data-cursor] :disabled {
+    cursor: not-allowed;
+  }
+
+  html[data-cursor] .kess-body kess-mascot {
+    cursor: grab;
+  }
+
+  html[data-cursor] .kess-body:is([data-mode='charge'], [data-mode='drag']) kess-mascot {
+    cursor: grabbing;
   }
 }

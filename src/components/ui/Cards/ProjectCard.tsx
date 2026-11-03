@@ -116,7 +116,7 @@ function ProjectCard({
           href={repoUrl}
           target="_blank"
           rel="noreferrer"
-          className="text-ctp-accent hover:underline underline-offset-4"
+          className="text-ctp-accent"
         >
           <div className="relative overflow-hidden rounded-md border border-ctp-crust/30">
             {(!isImageLoaded || hasImageError) && (
@@ -193,7 +193,7 @@ function ProjectCard({
                   href={repoUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-ctp-accent hover:underline underline-offset-4 max-sm:underline"
+                  className="text-ctp-accent transition-colors hover:text-ctp-text"
                 >
                   Repositório
                 </a>
@@ -203,7 +203,7 @@ function ProjectCard({
                   href={liveUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-ctp-accent hover:underline underline-offset-4 max-sm:underline"
+                  className="text-ctp-accent transition-colors hover:text-ctp-text"
                 >
                   Demo
                 </a>

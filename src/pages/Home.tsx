@@ -40,7 +40,7 @@ function Home() {
                 href="/curriculo-otavio-kessler-ustra.pdf"
                 download
                 data-kess-mood="animado"
-                className="accent-chip inline-flex items-center gap-2 rounded-lg border-2 border-ctp-accent/60 bg-ctp-accent/10 px-4 py-2 text-sm font-medium text-ctp-accent transition-colors hover:bg-ctp-accent/20"
+                className="key key--accent accent-chip"
               >
                 <Download size={16} aria-hidden="true" />
                 Baixar CV
@@ -49,7 +49,7 @@ function Home() {
               <button
                 type="button"
                 onClick={() => setSimple(true)}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-ctp-surface-1 px-4 py-2 text-sm font-medium text-ctp-subtext-1 transition-colors hover:border-ctp-accent/60 hover:text-ctp-accent"
+                className="key"
               >
                 <BookOpen size={16} aria-hidden="true" />
                 Versão simples

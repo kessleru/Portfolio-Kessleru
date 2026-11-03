@@ -59,11 +59,10 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
                 <button
                   key={item.value}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => setTheme(item.value)}
-                  className={`rounded-md border px-2 sm:px-3 py-1.5 text-xs whitespace-nowrap cursor-pointer transition-colors ${
-                    active
-                      ? 'accent-chip border-ctp-accent text-ctp-accent bg-ctp-surface-0'
-                      : 'border-ctp-overlay-0 text-ctp-subtext-0 hover:text-ctp-text'
+                  className={`key w-full px-2 text-xs whitespace-nowrap sm:px-3 ${
+                    active ? 'accent-chip' : ''
                   }`}
                 >
                   {item.label}
@@ -73,7 +72,7 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
           </div>
         </div>
 
-        <div>
+        <div className="swatches-box">
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <p id="accent-label" className="text-sm font-semibold">
               Destaque

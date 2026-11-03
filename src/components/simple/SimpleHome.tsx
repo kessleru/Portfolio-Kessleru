@@ -60,7 +60,7 @@ function SimpleHome() {
           <a
             href="/curriculo-otavio-kessler-ustra.pdf"
             download
-            className="accent-chip inline-flex items-center gap-2 rounded-lg border border-ctp-accent/50 bg-ctp-accent/10 px-4 py-2 text-sm font-medium text-ctp-accent transition-colors hover:bg-ctp-accent/20"
+            className="key key--flat key--accent accent-chip"
           >
             <Download size={15} aria-hidden="true" />
             Baixar CV
@@ -68,7 +68,7 @@ function SimpleHome() {
           <button
             type="button"
             onClick={() => setSimple(false)}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-ctp-surface-1 px-4 py-2 text-sm font-medium text-ctp-subtext-1 transition-colors hover:border-ctp-accent/50 hover:text-ctp-accent"
+            className="key key--flat"
           >
             <LayoutGrid size={15} aria-hidden="true" />
             Versão completa

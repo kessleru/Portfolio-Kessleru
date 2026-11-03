@@ -22,10 +22,7 @@ function NotFound() {
         </p>
 
         <div className="mt-2 flex items-center gap-3">
-          <Link
-            to="/"
-            className="accent-chip rounded-lg border-2 border-ctp-accent/70 px-4 py-2 text-sm font-medium text-ctp-accent transition-colors hover:bg-ctp-accent/10"
-          >
+          <Link to="/" className="key key--accent accent-chip">
             Voltar para início
           </Link>
 

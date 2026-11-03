@@ -1,3 +1,4 @@
+import { scrollToTop } from '@/lib/smooth';
 import { useSyncExternalStore } from 'react';
 import { SMALL_SCREEN } from '@/components/kess/kessPreference';
 
@@ -28,7 +29,7 @@ export function setSimple(on: boolean) {
   }
   document.documentElement.toggleAttribute('data-simple', on);
   window.dispatchEvent(new Event(EVENT));
-  window.scrollTo(0, 0);
+  scrollToTop({ immediate: true });
 }
 
 function subscribe(callback: () => void) {
