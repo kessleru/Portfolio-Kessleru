@@ -8,59 +8,123 @@ const BASE = '/diorama/';
 const ALT =
   'Animação em caracteres de uma praia vista de cima: um casal sentado numa canga listrada, ele de camisa branca e ela de vestido amarelo, olhando as ondas chegarem, com coqueiros e a restinga florida atrás.';
 
-/** Ondas e vento em loop, gaivotas de vez em quando. Só começa depois de um clique (regra dos navegadores). */
+type Sound = {
+  ctx: AudioContext;
+  master: GainNode;
+  waves: AudioBuffer;
+  wind: AudioBuffer;
+  gulls: AudioBuffer;
+};
+
+let soundPromise: Promise<Sound> | null = null;
+
+/** Carrega os três sons uma vez só, depois do primeiro clique (os navegadores exigem um gesto). */
+function loadSound() {
+  soundPromise ??= (async () => {
+    const ctx = new AudioContext();
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    const get = async (name: string) => {
+      const res = await fetch(`${BASE}som/${name}.mp3`);
+      return ctx.decodeAudioData(await res.arrayBuffer());
+    };
+    const [waves, wind, gulls] = await Promise.all([
+      get('ondas'),
+      get('vento'),
+      get('gaivotas'),
+    ]);
+    return { ctx, master, waves, wind, gulls };
+  })();
+  return soundPromise;
+}
+
+/** Onde o som começa e termina de fato (o MP3 pode trazer um respiro de silêncio nas pontas). */
+function edges(buffer: AudioBuffer) {
+  const data = buffer.getChannelData(0);
+  let a = 0;
+  let b = data.length - 1;
+  while (a < b && Math.abs(data[a]) < 1e-4) a++;
+  while (b > a && Math.abs(data[b]) < 1e-4) b--;
+  return [a / buffer.sampleRate, b / buffer.sampleRate] as const;
+}
+
+/**
+ * Ondas e vento em loop pelo Web Audio (a emenda do loop sai exata, sem o estalo do <audio>),
+ * gaivotas de vez em quando, cada vez de um lado e num tom um pouco diferente.
+ * O volume entra e sai devagar; com a aba escondida, tudo para.
+ */
 function useBeachSound() {
   const [on, setOn] = useState(false);
-  const ref = useRef<{
-    waves: HTMLAudioElement;
-    wind: HTMLAudioElement;
-    gulls: HTMLAudioElement;
-    timer: number;
-  } | null>(null);
 
   useEffect(() => {
     if (!on) return;
-    if (!ref.current) {
-      const make = (name: string, loop: boolean, volume: number) => {
-        const a = new Audio(`${BASE}som/${name}.mp3`);
-        a.loop = loop;
-        a.volume = volume;
-        a.preload = 'auto';
-        return a;
-      };
-      ref.current = {
-        waves: make('ondas', true, 0.7),
-        wind: make('vento', true, 0.45),
-        gulls: make('gaivotas', false, 0.35),
-        timer: 0,
-      };
-    }
-    const s = ref.current;
-    const gull = () => {
-      s.gulls.currentTime = 0;
-      void s.gulls.play().catch(() => {});
-      s.timer = window.setTimeout(gull, 12000 + Math.random() * 14000);
+    let alive = true;
+    let timer = 0;
+    const sources: AudioScheduledSourceNode[] = [];
+    let sound: Sound | null = null;
+
+    const loop = (s: Sound, buffer: AudioBuffer, volume: number) => {
+      const src = s.ctx.createBufferSource();
+      const gain = s.ctx.createGain();
+      const [a, b] = edges(buffer);
+      src.buffer = buffer;
+      src.loop = true;
+      src.loopStart = a;
+      src.loopEnd = b;
+      gain.gain.value = volume;
+      src.connect(gain).connect(s.master);
+      src.start(0, a);
+      sources.push(src);
     };
-    void s.waves.play().catch(() => setOn(false));
-    void s.wind.play().catch(() => {});
-    s.timer = window.setTimeout(gull, 4000 + Math.random() * 4000);
-    // com a aba escondida o som para; volta quando a pessoa retorna
+    const gull = () => {
+      if (!alive || !sound) return;
+      const s = sound;
+      const src = s.ctx.createBufferSource();
+      const pan = s.ctx.createStereoPanner();
+      const gain = s.ctx.createGain();
+      src.buffer = s.gulls;
+      src.playbackRate.value = 0.94 + Math.random() * 0.12;
+      pan.pan.value = Math.random() * 1.2 - 0.6;
+      gain.gain.value = 0.4;
+      src.connect(gain).connect(pan).connect(s.master);
+      src.start();
+      timer = window.setTimeout(gull, 11000 + Math.random() * 15000);
+    };
+
+    loadSound()
+      .then(async (s) => {
+        if (!alive) return;
+        sound = s;
+        await s.ctx.resume();
+        loop(s, s.waves, 0.85);
+        loop(s, s.wind, 0.55);
+        const now = s.ctx.currentTime;
+        s.master.gain.cancelScheduledValues(now);
+        s.master.gain.setValueAtTime(s.master.gain.value, now);
+        s.master.gain.linearRampToValueAtTime(1, now + 1.4);
+        timer = window.setTimeout(gull, 3500 + Math.random() * 4000);
+      })
+      .catch(() => setOn(false));
+
     const onVisibility = () => {
-      if (document.hidden) {
-        s.waves.pause();
-        s.wind.pause();
-      } else {
-        void s.waves.play().catch(() => {});
-        void s.wind.play().catch(() => {});
-      }
+      if (!sound) return;
+      if (document.hidden) void sound.ctx.suspend();
+      else void sound.ctx.resume();
     };
     document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
+      alive = false;
+      window.clearTimeout(timer);
       document.removeEventListener('visibilitychange', onVisibility);
-      window.clearTimeout(s.timer);
-      s.waves.pause();
-      s.wind.pause();
-      s.gulls.pause();
+      const s = sound;
+      if (!s) return;
+      const now = s.ctx.currentTime;
+      s.master.gain.cancelScheduledValues(now);
+      s.master.gain.setValueAtTime(s.master.gain.value, now);
+      s.master.gain.linearRampToValueAtTime(0, now + 0.35);
+      for (const src of sources) src.stop(now + 0.4);
     };
   }, [on]);
 
