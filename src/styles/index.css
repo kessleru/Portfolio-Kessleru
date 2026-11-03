@@ -1228,7 +1228,7 @@ img.gravura-footer__art {
     --key-shine: transparent;
   }
 
-  .key.key--flat.key--accent {
+  .key.key--flat:is(.key--accent, [aria-pressed='true']) {
     --key-face: color-mix(in srgb, var(--ctp-accent) 10%, var(--ctp-base));
     --key-face-hover: color-mix(in srgb, var(--ctp-accent) 18%, var(--ctp-base));
     --key-edge: color-mix(in srgb, var(--ctp-accent) 40%, var(--ctp-surface-1));
