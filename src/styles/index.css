@@ -708,16 +708,16 @@ html[data-simple] #root:not([data-app]) {
   pointer-events: none;
 }
 
-/* claro: a gravura cinza ganha o mapa de cores (filtro SVG montado no SimpleFooter.tsx) */
+/* claro: a gravura ganha um mapa de cinzas leves (filtro SVG montado no SimpleFooter.tsx) */
 img.gravura-footer__art {
   filter: url(#gravura-mapa);
 }
 
-/* escuro: a gravura vira máscara (traço opaco, papel transparente) de um fundo lavanda, bem suave
-   para não competir com o texto; não segue a cor de destaque, como o mapa azul do claro */
+/* escuro: a gravura vira máscara (traço opaco, papel transparente) de um fundo cinza claro, bem
+   suave para não competir com o texto; preto e branco, como o mapa de cinzas do claro */
 .gravura-footer__art--dark {
-  background: var(--ctp-lavender);
-  opacity: 0.38;
+  background: var(--ctp-subtext-0);
+  opacity: 0.28;
   mask-image: var(--gravura-mascara);
   mask-size: cover;
   mask-position: 85% 100%;

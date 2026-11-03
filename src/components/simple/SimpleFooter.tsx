@@ -14,13 +14,13 @@ const socials = [
   },
 ];
 
-// Mapa de cores da gravura no claro, do traço mais escuro ao papel: azul-marinho, azul, azul claro,
-// areia e o próprio fundo da página (o branco do papel some nele). Cada parada mistura dois tokens.
+// Mapa de cores da gravura no claro, do traço mais escuro ao papel: tons de cinza leves (os neutros
+// do tema puxados para o fundo) e o próprio fundo da página (o branco do papel some nele).
 const STOPS: [string, number, string][] = [
-  ['blue', 0.2, 'text'],
-  ['blue', 0.4, 'overlay-2'],
-  ['lavender', 0.35, 'surface-1'],
-  ['yellow', 0.25, 'base'],
+  ['text', 0.55, 'base'],
+  ['overlay-2', 0.6, 'base'],
+  ['surface-2', 0.7, 'base'],
+  ['surface-0', 0.6, 'base'],
   ['base', 1, 'base'],
 ];
 
@@ -94,7 +94,7 @@ function tableValues() {
  * Rodapé da versão simples: uma faixa curta (frase, redes, copyright e voltar ao topo) e uma gravura
  * que se dissolve no fundo: no celular embaixo do texto, na largura toda da tela; no PC presa no
  * canto de baixo à direita da tela. No claro a gravura cinza ganha um
- * mapa de cores (filtro SVG); no escuro ela vira máscara de um fundo lavanda bem suave.
+ * mapa de cinzas leves (filtro SVG); no escuro ela vira máscara de um fundo cinza bem suave.
  */
 function SimpleFooter() {
   const { theme } = useTheme();
