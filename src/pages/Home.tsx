@@ -1,4 +1,4 @@
-import ProfileCard from '@/components/ui/ProfileCard';
+import BeachCard from '@/components/beach/BeachCard';
 import SkillsLoop from '@/components/ui/SkillsLoop';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 import CommitHeatmapCard from '@/components/ui/CommitHeatmapCard';
@@ -15,7 +15,6 @@ function Home() {
             <div className="flex items-center gap-3 sm:gap-4">
               <KessSpot className="-my-2" />
               <div className="flex flex-wrap items-center gap-2 text-2xl font-bold sm:text-3xl">
-                <span className="text-ctp-accent max-sm:hidden">&gt;</span>
                 <h1>
                   Olá! Sou o <span className="text-ctp-accent">Kessleru.</span>
                 </h1>
@@ -56,7 +55,7 @@ function Home() {
               </button>
             </div>
           </div>
-          <ProfileCard />
+          <BeachCard />
         </section>
 
         <SkillsLoop />

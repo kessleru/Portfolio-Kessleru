@@ -1059,36 +1059,18 @@ img.gravura-footer__art {
 
 @layer components {
   /* ---------- Botão de tecla (key) ----------
-     O botão é uma tecla: a face (::before) fica por cima da lateral (::after), que aparece embaixo.
-     Ao pressionar, o botão inteiro desce e a lateral sobe o mesmo tanto: a face afunda e a lateral
-     some, como uma keycap. Só translate anima; a descida é rápida e a volta, um pouco mais lenta.
-     Botões de alternância (aria-pressed) ficam afundados enquanto estão ligados.
-     Variantes: key--accent (principal) e key--flat (versão simples: lateral menor, sem brilho).
+     Uma regra para toda tecla, em todos os temas: face lisa, borda de 1px e, embaixo, a lateral
+     na mesma cor da borda (como uma keycap vista de frente). Só as cores mudam entre neutra e
+     destaque. Ao pressionar, o botão desce e a lateral sobe o mesmo tanto: a face afunda.
+     Só translate anima; a descida é rápida e a volta, um pouco mais lenta. Alternâncias ligadas
+     (aria-pressed) ficam afundadas. key--flat é a versão simples: lateral menor, face no fundo.
      Fica na camada components para as utilidades do Tailwind (tamanho de fonte, raio, largura)
      poderem ajustar a tecla; o respiro interno muda por --key-px e --key-py, sem perder a lateral. */
   .key {
     --key-depth: 4px;
-    /* temas escuros: face clara em degradê (luz de cima), lateral num tom entre a face e o
-       fundo e uma sombra curta que assenta a tecla. Com a lateral quase preta, ela sumia no
-       fundo escuro e a tecla parecia chapada. */
-    --key-face: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--ctp-surface-2) 55%, var(--ctp-surface-1)),
-      var(--ctp-surface-1)
-    );
-    --key-face-hover: linear-gradient(
-      to bottom,
-      var(--ctp-surface-2),
-      color-mix(in srgb, var(--ctp-surface-2) 40%, var(--ctp-surface-1))
-    );
-    --key-edge: linear-gradient(
-      to bottom,
-      var(--ctp-surface-0),
-      color-mix(in srgb, var(--ctp-surface-0) 60%, var(--ctp-crust))
-    );
-    --key-rim: color-mix(in srgb, var(--ctp-text) 10%, transparent);
-    --key-shine: color-mix(in srgb, var(--ctp-text) 22%, transparent);
-    --key-drop: 0 2px 4px color-mix(in srgb, var(--ctp-crust) 70%, transparent);
+    --key-face: var(--ctp-surface-0);
+    --key-face-hover: color-mix(in srgb, var(--ctp-surface-1) 45%, var(--ctp-surface-0));
+    --key-line: var(--ctp-surface-1);
     position: relative;
     isolation: isolate;
     display: inline-flex;
@@ -1124,8 +1106,8 @@ img.gravura-footer__art {
     top: 0;
     bottom: var(--key-depth);
     background: var(--key-face);
-    border: 1px solid var(--key-rim);
-    box-shadow: inset 0 1px 0 var(--key-shine);
+    border: 1px solid var(--key-line);
+    transition: background-color 150ms ease;
   }
 
   /* lateral */
@@ -1133,8 +1115,7 @@ img.gravura-footer__art {
     z-index: -2;
     top: var(--key-depth);
     bottom: 0;
-    background: var(--key-edge);
-    box-shadow: var(--key-drop);
+    background: var(--key-line);
     transition: translate 160ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
@@ -1172,25 +1153,11 @@ img.gravura-footer__art {
     }
   }
 
-  /* principal e alternância ligada: face tingida com o destaque */
+  /* destaque e alternância ligada: as mesmas peças tingidas com o acento */
   .key:is(.key--accent, [aria-pressed='true']) {
-    --key-face: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--ctp-accent) 30%, var(--ctp-surface-1)),
-      color-mix(in srgb, var(--ctp-accent) 20%, var(--ctp-surface-1))
-    );
-    --key-face-hover: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--ctp-accent) 40%, var(--ctp-surface-1)),
-      color-mix(in srgb, var(--ctp-accent) 28%, var(--ctp-surface-1))
-    );
-    --key-edge: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--ctp-accent) 34%, var(--ctp-surface-0)),
-      color-mix(in srgb, var(--ctp-accent) 22%, var(--ctp-crust))
-    );
-    --key-rim: color-mix(in srgb, var(--ctp-accent) 45%, transparent);
-    --key-shine: color-mix(in srgb, var(--ctp-accent) 45%, transparent);
+    --key-face: color-mix(in srgb, var(--ctp-accent) 14%, var(--ctp-surface-0));
+    --key-face-hover: color-mix(in srgb, var(--ctp-accent) 22%, var(--ctp-surface-0));
+    --key-line: color-mix(in srgb, var(--ctp-accent) 50%, var(--ctp-surface-1));
     color: var(--ctp-accent);
   }
 
@@ -1200,66 +1167,187 @@ img.gravura-footer__art {
     }
   }
 
-  /* Latte: tecla clara sobre o card, lateral cinza (o crust do Latte é mais claro que o surface) */
+  /* tema claro: face clara sobre o card */
   [data-theme='latte'] .key {
-    --key-drop: none;
     --key-face: var(--ctp-base);
     --key-face-hover: color-mix(in srgb, var(--ctp-surface-0) 45%, var(--ctp-base));
-    --key-edge: var(--ctp-surface-1);
-    --key-rim: var(--ctp-surface-1);
-    --key-shine: transparent;
+    --key-line: var(--ctp-surface-1);
   }
 
   [data-theme='latte'] .key:is(.key--accent, [aria-pressed='true']) {
     --key-face: color-mix(in srgb, var(--ctp-accent) 12%, var(--ctp-base));
     --key-face-hover: color-mix(in srgb, var(--ctp-accent) 20%, var(--ctp-base));
-    --key-edge: color-mix(in srgb, var(--ctp-accent) 45%, var(--ctp-surface-1));
-    --key-rim: color-mix(in srgb, var(--ctp-accent) 55%, transparent);
+    --key-line: color-mix(in srgb, var(--ctp-accent) 50%, var(--ctp-surface-1));
   }
 
-  /* versão simples: mesma tecla, mais rasa e sem brilho, sobre o fundo da página */
+  /* versão simples: a mesma tecla, mais rasa, com a face no fundo da página */
   .key.key--flat {
     --key-depth: 3px;
-    --key-drop: none;
     --key-face: var(--ctp-base);
     --key-face-hover: var(--ctp-mantle);
-    --key-edge: var(--ctp-surface-1);
-    --key-rim: var(--ctp-surface-1);
-    --key-shine: transparent;
+    --key-line: var(--ctp-surface-1);
   }
 
   .key.key--flat:is(.key--accent, [aria-pressed='true']) {
     --key-face: color-mix(in srgb, var(--ctp-accent) 10%, var(--ctp-base));
     --key-face-hover: color-mix(in srgb, var(--ctp-accent) 18%, var(--ctp-base));
-    --key-edge: color-mix(in srgb, var(--ctp-accent) 40%, var(--ctp-surface-1));
-    --key-rim: color-mix(in srgb, var(--ctp-accent) 50%, transparent);
+    --key-line: color-mix(in srgb, var(--ctp-accent) 45%, var(--ctp-surface-1));
   }
 }
 
-/* ---------- Cursor de seta estilo Figma (src/lib/cursor.ts) ----------
-   Só com mouse. Tudo herda a seta, inclusive links e botões, como no Figma;
-   campos de texto mantêm a barra de digitar e o Kess, a mãozinha de pegar. */
+/* ---------- Praia.tsx: a praia em ASCII ----------
+   Um "visualizador" no estilo do editor: caminho e estado em cima, o vídeo no meio e uma barra
+   de player com teclas embaixo. O vídeo inteiro é um botão: clicar liga e desliga o som. */
+.beach {
+  display: grid;
+  gap: var(--space-3, 12px);
+}
+
+.beach__bar,
+.beach__player {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ctp-meta);
+}
+
+.beach__bar {
+  justify-content: space-between;
+}
+
+.beach__path {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.beach__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.beach__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--ctp-overlay-0);
+}
+
+.beach__status[data-state='ao vivo'] .beach__dot {
+  background: var(--ctp-red);
+  animation: beach-live 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+
+@keyframes beach-live {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ctp-red) 55%, transparent); }
+  100% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--ctp-red) 0%, transparent); }
+}
+
+.beach__art {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--radius-md, 8px);
+  background: var(--ctp-crust);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ctp-text) 8%, transparent);
+  cursor: pointer;
+}
+
+.beach__art:active {
+  scale: none;
+}
+
+.beach__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.beach__hint {
+  position: absolute;
+  left: var(--space-2, 8px);
+  bottom: var(--space-2, 8px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid color-mix(in srgb, var(--ctp-text) 14%, transparent);
+  background: color-mix(in srgb, var(--ctp-crust) 72%, transparent);
+  backdrop-filter: blur(6px);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--ctp-text);
+  transition:
+    opacity 150ms ease-out,
+    translate 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+[data-theme='latte'] .beach__hint {
+  background: color-mix(in srgb, var(--ctp-base) 82%, transparent);
+  border-color: var(--ctp-surface-1);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  html[data-cursor],
-  html[data-cursor] *,
-  html[data-cursor] *::before,
-  html[data-cursor] *::after {
-    cursor: var(--cursor-arrow);
+  .beach__art:not(:hover, :focus-visible) .beach__hint {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+.beach__player .key {
+  height: auto;
+}
+
+/* equalizador: cinco barrinhas que dançam enquanto o som toca */
+.beach__eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.beach__eq i {
+  width: 2px;
+  height: 100%;
+  border-radius: 1px;
+  background: currentColor;
+  transform-origin: bottom;
+  scale: 1 0.25;
+  transition: scale 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.beach__eq[data-on] i {
+  animation: beach-eq 900ms cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
+}
+
+.beach__eq[data-on] i:nth-child(2) { animation-delay: -300ms; animation-duration: 700ms; }
+.beach__eq[data-on] i:nth-child(3) { animation-delay: -600ms; animation-duration: 1100ms; }
+.beach__eq[data-on] i:nth-child(4) { animation-delay: -150ms; animation-duration: 800ms; }
+.beach__eq[data-on] i:nth-child(5) { animation-delay: -450ms; animation-duration: 1000ms; }
+
+@keyframes beach-eq {
+  0% { scale: 1 0.25; }
+  100% { scale: 1 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beach__status[data-state='ao vivo'] .beach__dot,
+  .beach__eq[data-on] i {
+    animation: none;
   }
 
-  html[data-cursor] :is(input:not([type='checkbox'], [type='radio'], [type='range']), textarea, [contenteditable='true']) {
-    cursor: text;
-  }
-
-  html[data-cursor] :disabled {
-    cursor: not-allowed;
-  }
-
-  html[data-cursor] .kess-body kess-mascot {
-    cursor: grab;
-  }
-
-  html[data-cursor] .kess-body:is([data-mode='charge'], [data-mode='drag']) kess-mascot {
-    cursor: grabbing;
+  .beach__eq[data-on] i {
+    scale: 1 0.7;
   }
 }
