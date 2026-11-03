@@ -194,6 +194,7 @@ function GitTimeline({
               y={LANE_Y[branch.name] + 4}
               fontSize={13}
               fontWeight={600}
+              className="branch-label"
               fill={branch.color}
             >
               {branch.name}

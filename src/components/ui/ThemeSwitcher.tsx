@@ -35,7 +35,7 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
                   onClick={() => setTheme(item.value)}
                   className={`rounded-md border px-2 sm:px-3 py-1.5 text-xs whitespace-nowrap cursor-pointer transition-colors ${
                     active
-                      ? 'border-ctp-accent text-ctp-accent bg-ctp-surface-0'
+                      ? 'accent-chip border-ctp-accent text-ctp-accent bg-ctp-surface-0'
                       : 'border-ctp-overlay-0 text-ctp-subtext-0 hover:text-ctp-text'
                   }`}
                 >

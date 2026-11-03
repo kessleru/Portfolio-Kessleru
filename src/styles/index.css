@@ -816,3 +816,72 @@ img.gravura-footer__art {
 .nav-link:hover::after {
   opacity: 1;
 }
+
+/* ---------- Latte: acento e cores puras nunca são cor de texto pequeno (decisão 2026-11-02) ----------
+   No Latte só mauve e red passam 4,5:1 como texto; as outras 12 cores de destaque não.
+   Regra: o texto vira ctp-text e o acento fica na borda, no fundo tingido, no sublinhado ou no ícone.
+   Ícones (svg) e controles só de ícone (com aria-label) ficam como estão. */
+[data-theme='latte'] :is(.text-ctp-accent, .text-ctp-rosewater, .text-ctp-flamingo, .text-ctp-pink, .text-ctp-mauve, .text-ctp-red, .text-ctp-maroon, .text-ctp-peach, .text-ctp-yellow, .text-ctp-green, .text-ctp-teal, .text-ctp-sky, .text-ctp-sapphire, .text-ctp-blue, .text-ctp-lavender):not(svg, [aria-label]) {
+  color: var(--ctp-text);
+}
+[data-theme='latte'] .text-ctp-accent > svg {
+  color: var(--ctp-accent);
+}
+/* links e botões de texto em acento: sublinhado de 2px no lugar da cor */
+[data-theme='latte'] :is(a, button).text-ctp-accent:not([class*='border'], [class*='bg-ctp-accent'], [aria-label]),
+[data-theme='latte'] :is(header a, footer, h1) .text-ctp-accent {
+  text-decoration: underline 2px var(--ctp-accent);
+  text-underline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-theme='latte'] .hover\:text-ctp-accent:hover:not(svg, [aria-label], :disabled) {
+    color: var(--ctp-text);
+    text-decoration: underline 2px var(--ctp-accent);
+    text-underline-offset: 3px;
+  }
+}
+/* nome da branch: a cor da branch vira sublinhado (a cor inline é do JS, por isso !important) */
+[data-theme='latte'] .branch-name {
+  color: var(--ctp-text) !important;
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+[data-theme='latte'] .branch-label {
+  fill: var(--ctp-text);
+}
+/* código de exemplo: a cor da sintaxe entra misturada ao ctp-text (35%), para seguir legível e passar 4,5:1 */
+[data-theme='latte'] code .text-ctp-mauve:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-mauve) 35%, var(--ctp-text));
+}
+[data-theme='latte'] code .text-ctp-green:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-green) 35%, var(--ctp-text));
+}
+[data-theme='latte'] code .text-ctp-peach:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-peach) 35%, var(--ctp-text));
+}
+[data-theme='latte'] code .text-ctp-lavender:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-lavender) 35%, var(--ctp-text));
+}
+[data-theme='latte'] code .text-ctp-sky:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-sky) 35%, var(--ctp-text));
+}
+[data-theme='latte'] code .text-ctp-yellow:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-yellow) 35%, var(--ctp-text));
+}
+[data-theme='latte'] code .text-ctp-pink:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-pink) 35%, var(--ctp-text));
+}
+[data-theme='latte'] code .text-ctp-sapphire:not(svg, [aria-label]) {
+  color: color-mix(in srgb, var(--ctp-sapphire) 35%, var(--ctp-text));
+}
+
+/* overlay-2 em texto só nos temas escuros; no Frappé a pontuação sobre a linha ativa do código fica em 4,2:1 */
+:is([data-theme='latte'], [data-theme='frappe']) code .text-ctp-overlay-2 {
+  color: var(--ctp-subtext-0);
+}
+/* acento sobre surface-0 ou sobre fundo tingido de acento (chips ativos, Baixar CV, Voltar para início): no Frappé
+   mauve, peach, red e blue ficam abaixo de 4,5:1 em algum estado; o texto vira ctp-text e o acento fica na borda e no fundo */
+:is([data-theme='latte'], [data-theme='frappe']) .accent-chip {
+  color: var(--ctp-text);
+}

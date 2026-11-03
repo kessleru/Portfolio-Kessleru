@@ -142,10 +142,8 @@ function Header() {
               {index !== items.length - 1 && (
                 <span
                   aria-hidden="true"
-                  className="ml-2 text-ctp-overlay-0 select-none pointer-events-none"
-                >
-                  |
-                </span>
+                  className="ml-2 h-4 w-px bg-ctp-overlay-0 pointer-events-none"
+                />
               )}
             </span>
           ))}

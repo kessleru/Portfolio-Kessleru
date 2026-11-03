@@ -29,14 +29,22 @@ function BranchList({ branches, focus, onFocus }: BranchListProps) {
                 focus !== null && !active && 'opacity-50'
               )}
             >
-              <span className="font-semibold" style={{ color: branch.color }}>
+              <span
+                className="branch-name font-semibold"
+                style={{ color: branch.color, textDecorationColor: branch.color }}
+              >
                 {branch.name}
               </span>
               <span className="min-w-0">
                 <span className="text-ctp-text">{branch.role}</span>
                 <span className="text-ctp-subtext-0"> · {branch.place}</span>
               </span>
-              <span className="col-start-2 text-ctp-meta tabular-nums sm:col-start-auto sm:text-right">
+              <span
+                className={cn(
+                  'col-start-2 tabular-nums sm:col-start-auto sm:text-right',
+                  active ? 'text-ctp-subtext-1' : 'text-ctp-meta'
+                )}
+              >
                 {branch.period}
               </span>
             </button>

@@ -165,7 +165,7 @@ function ProfileCard() {
                 aria-hidden="true"
                 className={cn(
                   'w-[5ch] shrink-0 pr-[2ch] text-right tabular-nums transition-colors duration-200 select-none',
-                  isActive ? 'text-ctp-text' : 'text-ctp-overlay-0'
+                  isActive ? 'text-ctp-text' : 'text-ctp-meta'
                 )}
               >
                 {row + 1}

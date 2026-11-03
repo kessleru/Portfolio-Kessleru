@@ -19,8 +19,8 @@ function BranchName({ name }: { name: string }) {
   return (
     <span
       data-kess-mood="curioso"
-      className="font-mono text-[0.92em] font-semibold"
-      style={{ color }}
+      className="branch-name font-mono text-[0.92em] font-semibold"
+      style={{ color, textDecorationColor: color }}
     >
       {name}
     </span>

@@ -26,7 +26,10 @@ function CommitDetails({
         className="min-w-0 flex-1 animate-in duration-300 fade-in slide-in-from-left-2"
       >
         <p className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">
-          <span className="font-semibold" style={{ color: branch?.color }}>
+          <span
+            className="branch-name font-semibold"
+            style={{ color: branch?.color, textDecorationColor: branch?.color }}
+          >
             {commit.branch}
           </span>
           {commit.date && (

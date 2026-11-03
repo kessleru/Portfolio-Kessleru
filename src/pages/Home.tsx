@@ -40,7 +40,7 @@ function Home() {
                 href="/curriculo-otavio-kessler-ustra.pdf"
                 download
                 data-kess-mood="animado"
-                className="inline-flex items-center gap-2 rounded-lg border-2 border-ctp-accent/60 bg-ctp-accent/10 px-4 py-2 text-sm font-medium text-ctp-accent transition-colors hover:bg-ctp-accent/20"
+                className="accent-chip inline-flex items-center gap-2 rounded-lg border-2 border-ctp-accent/60 bg-ctp-accent/10 px-4 py-2 text-sm font-medium text-ctp-accent transition-colors hover:bg-ctp-accent/20"
               >
                 <Download size={16} aria-hidden="true" />
                 Baixar CV

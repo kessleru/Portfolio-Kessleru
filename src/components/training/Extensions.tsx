@@ -39,7 +39,7 @@ const chipClass = (active: boolean) =>
   cn(
     'flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs whitespace-nowrap transition-colors',
     active
-      ? 'border-ctp-accent bg-ctp-surface-0 text-ctp-accent'
+      ? 'accent-chip border-ctp-accent bg-ctp-surface-0 text-ctp-accent'
       : 'border-ctp-overlay-0/50 text-ctp-subtext-0 hover:border-ctp-subtext-0 hover:text-ctp-text'
   );
 
@@ -290,7 +290,12 @@ function Extensions() {
               className={chipClass(skill === name)}
             >
               {name}
-              <span className="text-[10px] text-ctp-meta tabular-nums">
+              <span
+                className={cn(
+                  'text-[10px] tabular-nums',
+                  skill === name ? 'text-ctp-subtext-1' : 'text-ctp-meta'
+                )}
+              >
                 {count}
               </span>
             </button>
@@ -335,7 +340,7 @@ function Extensions() {
                   )}
                 />
                 {section.title}
-                <span className="rounded bg-ctp-surface-0 px-1.5 text-[10px] text-ctp-subtext-0">
+                <span className="rounded bg-ctp-surface-0 px-1.5 text-[10px] text-ctp-subtext-1">
                   {section.items.length}
                 </span>
               </button>

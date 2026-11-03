@@ -60,7 +60,7 @@ function SimpleHome() {
           <a
             href="/curriculo-otavio-kessler-ustra.pdf"
             download
-            className="inline-flex items-center gap-2 rounded-lg border border-ctp-accent/50 bg-ctp-accent/10 px-4 py-2 text-sm font-medium text-ctp-accent transition-colors hover:bg-ctp-accent/20"
+            className="accent-chip inline-flex items-center gap-2 rounded-lg border border-ctp-accent/50 bg-ctp-accent/10 px-4 py-2 text-sm font-medium text-ctp-accent transition-colors hover:bg-ctp-accent/20"
           >
             <Download size={15} aria-hidden="true" />
             Baixar CV
