@@ -1,14 +1,16 @@
 // O que o Kess fala: pouco, curto e útil. Nada de fala só para encher.
+import { greetings, periodOf } from '@/lib/period';
 
 const pick = <T>(list: readonly T[]) =>
   list[Math.floor(Math.random() * list.length)];
 
-/** Primeira frase da visita, pela hora. */
+/** Primeira frase da visita, pelo mesmo relógio da página inicial (src/lib/period.ts). */
 export function greeting(now = new Date()) {
-  const hour = now.getHours();
-  if (hour >= 5 && hour < 12) return 'bom dia!';
-  if (hour >= 12 && hour < 18) return 'boa tarde!';
-  return 'boa noite!';
+  const period = periodOf(now);
+  // de madrugada ele estranha a hora
+  if (period === 'madrugada')
+    return pick(['boa madrugada!', 'ainda acordado?']);
+  return `${greetings[period]}!`;
 }
 
 /** Ao chegar numa página (a partir da segunda da visita). */

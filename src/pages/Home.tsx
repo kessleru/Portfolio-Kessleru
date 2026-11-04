@@ -5,6 +5,7 @@ import CommitHeatmapCard from '@/components/ui/CommitHeatmapCard';
 import { BookOpen, Download } from 'lucide-react';
 import { setSimple } from '@/components/simple/simpleMode';
 import KessSpot from '@/components/kess/KessSpot';
+import FlipClock from '@/components/ui/FlipClock';
 
 function Home() {
   return (
@@ -54,6 +55,7 @@ function Home() {
                 Versão simples
               </button>
             </div>
+            <FlipClock />
           </div>
           <BeachCard />
         </section>

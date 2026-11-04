@@ -1431,3 +1431,162 @@ img.gravura-footer__art {
     background: color-mix(in srgb, var(--ctp-accent) 14%, transparent);
   }
 }
+
+/* ---------- relógio de flip (FlipClock.tsx) ----------
+   Uma caixinha com duas placas, como os relógios de flip de mesa: escura nos temas escuros e
+   creme no claro. Não segue a cor de destaque. Na virada do minuto, a metade de cima cai e a de
+   baixo desce (só transform); com menos movimento, o número só troca. */
+.flip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6, 24px);
+  flex-wrap: wrap;
+}
+
+.flip__box {
+  --flip-box: var(--ctp-crust);
+  --flip-edge: color-mix(in srgb, var(--ctp-text) 8%, transparent);
+  --flip-card: var(--ctp-surface-0);
+  --flip-card-low: color-mix(in srgb, var(--ctp-surface-0) 78%, var(--ctp-crust));
+  --flip-ink: var(--ctp-text);
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--flip-box);
+  box-shadow:
+    inset 0 0 0 1px var(--flip-edge),
+    0 10px 24px -12px color-mix(in srgb, var(--ctp-crust) 80%, transparent);
+}
+
+[data-theme='latte'] .flip__box {
+  --flip-box: color-mix(in srgb, var(--ctp-base) 55%, white);
+  --flip-edge: var(--ctp-surface-1);
+  --flip-card: color-mix(in srgb, var(--ctp-base) 22%, white);
+  --flip-card-low: color-mix(in srgb, var(--ctp-base) 70%, white);
+  --flip-ink: var(--ctp-text);
+  box-shadow:
+    inset 0 0 0 1px var(--flip-edge),
+    0 10px 24px -14px color-mix(in srgb, var(--ctp-text) 35%, transparent);
+}
+
+.flip__window {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--flip-box) 70%, black);
+  box-shadow: inset 0 2px 6px color-mix(in srgb, black 35%, transparent);
+}
+
+[data-theme='latte'] .flip__window {
+  background: var(--ctp-surface-0);
+  box-shadow: inset 0 2px 5px color-mix(in srgb, var(--ctp-text) 18%, transparent);
+}
+
+.flap {
+  position: relative;
+  display: block;
+  width: 84px;
+  height: 104px;
+  perspective: 320px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-weight: 200;
+  font-size: 64px;
+  line-height: 104px;
+  letter-spacing: -2px;
+  color: var(--flip-ink);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.flap__half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: var(--flip-card);
+  backface-visibility: hidden;
+}
+
+.flap__half--top {
+  top: 0;
+  border-radius: 6px 6px 0 0;
+  transform-origin: bottom;
+}
+
+.flap__half--bottom {
+  bottom: 0;
+  border-radius: 0 0 6px 6px;
+  background: var(--flip-card-low);
+  transform-origin: top;
+}
+
+/* a fenda no meio da placa e os pinos laterais */
+.flap::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: calc(50% - 1px);
+  height: 2px;
+  background: color-mix(in srgb, var(--flip-box) 75%, black);
+  z-index: 3;
+}
+
+.flap__digits {
+  position: absolute;
+  inset-inline: 0;
+  height: 104px;
+  text-align: center;
+}
+
+.flap__half--bottom .flap__digits {
+  top: -52px;
+}
+
+.flap__fall {
+  z-index: 2;
+  animation: flap-fall 300ms cubic-bezier(0.55, 0, 0.9, 0.5) forwards;
+}
+
+.flap__rise {
+  z-index: 2;
+  rotate: x 90deg;
+  animation: flap-rise 300ms cubic-bezier(0.23, 1, 0.32, 1) 300ms forwards;
+}
+
+@keyframes flap-fall {
+  to { rotate: x -90deg; }
+}
+
+@keyframes flap-rise {
+  to { rotate: x 0deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap__fall,
+  .flap__rise {
+    display: none;
+  }
+}
+
+.flip__caption {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.flip__greeting {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ctp-text);
+}
+
+.flip__date {
+  font-size: 13px;
+  color: var(--ctp-subtext-0);
+}
+
+.flip__hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ctp-meta);
+}
