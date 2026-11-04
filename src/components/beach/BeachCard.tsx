@@ -306,7 +306,11 @@ function BeachCard() {
             aria-pressed={paused}
             aria-label={paused ? 'Continuar o vídeo' : 'Pausar o vídeo'}
             title={paused ? 'Continuar' : 'Pausar'}
-            onClick={() => setPaused((v) => !v)}
+            onClick={() => {
+              // pausar a praia também silencia o som
+              if (!paused) setSound(false);
+              setPaused(!paused);
+            }}
           >
             {paused ? (
               <Play size={14} aria-hidden="true" />
