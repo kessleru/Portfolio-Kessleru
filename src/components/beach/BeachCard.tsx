@@ -97,8 +97,28 @@ function edges(buffer: AudioBuffer) {
  * gaivotas de vez em quando, cada vez de um lado e num tom um pouco diferente.
  * O volume entra e sai devagar; com a aba escondida, tudo para.
  */
-function useBeachSound(period: Period) {
+const VOLUME_KEY = 'praia-volume';
+
+function readVolume() {
+  try {
+    const v = Number(localStorage.getItem(VOLUME_KEY));
+    return Number.isFinite(v) && v > 0 && v <= 1 ? v : 0.7;
+  } catch {
+    return 0.7;
+  }
+}
+
+function useBeachSound(period: Period, volume: number) {
   const [on, setOn] = useState(false);
+  const volumeRef = useRef(volume);
+
+  // o controle de volume age na hora, sem reiniciar os sons
+  useEffect(() => {
+    volumeRef.current = volume;
+    void soundPromise?.then((s) => {
+      s.master.gain.setTargetAtTime(volume, s.ctx.currentTime, 0.05);
+    });
+  }, [volume]);
 
   useEffect(() => {
     if (!on) return;
@@ -151,7 +171,7 @@ function useBeachSound(period: Period) {
         const now = s.ctx.currentTime;
         s.master.gain.cancelScheduledValues(now);
         s.master.gain.setValueAtTime(s.master.gain.value, now);
-        s.master.gain.linearRampToValueAtTime(1, now + 1.4);
+        s.master.gain.linearRampToValueAtTime(volumeRef.current, now + 1.4);
         if (gulls) timer = window.setTimeout(gull, 3500 + Math.random() * 4000);
       })
       .catch(() => setOn(false));
@@ -191,7 +211,25 @@ function BeachCard() {
   const now = useNow();
   const period = now ? periodOf(now) : 'tarde';
   const clip = videoFor(period);
-  const [sound, setSound] = useBeachSound(period);
+  const [volume, setVolume] = useState(() =>
+    typeof window === 'undefined' ? 0.7 : readVolume()
+  );
+  const [sound, setSound] = useBeachSound(period, volume);
+  // o slider é o único controle do som: em 0 fica mudo, acima disso toca naquele volume
+  const changeVolume = (v: number) => {
+    if (v <= 0) {
+      setSound(false);
+      return;
+    }
+    setVolume(v);
+    setSound(true);
+    try {
+      localStorage.setItem(VOLUME_KEY, String(v));
+    } catch {
+      // sem localStorage: vale só para esta visita
+    }
+  };
+  const shown = sound ? volume : 0;
 
   // toca só enquanto está na tela e a pessoa não pausou
   useEffect(() => {
@@ -276,32 +314,30 @@ function BeachCard() {
               <Pause size={14} aria-hidden="true" />
             )}
           </button>
-          <button
-            type="button"
-            className="key text-xs [--key-depth:3px] [--key-px:10px] [--key-py:5px]"
-            aria-pressed={sound}
-            onClick={() => setSound((v) => !v)}
-          >
+          <label className="beach__volume" data-on={sound ? '' : undefined}>
             {sound ? (
               <Volume2 size={14} aria-hidden="true" />
             ) : (
               <VolumeX size={14} aria-hidden="true" />
             )}
-            <span
-              className="beach__eq"
-              data-on={sound ? '' : undefined}
-              aria-hidden="true"
-            >
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
+            <span className="sr-only">Volume do som da praia (0 é mudo)</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={shown}
+              onChange={(e) => changeVolume(Number(e.target.value))}
+              style={
+                {
+                  '--fill': `${Math.round(volume * 100)}%`,
+                } as React.CSSProperties
+              }
+            />
+            <span className="beach__volume-value" aria-hidden="true">
+              {Math.round(shown * 100)}
             </span>
-            <span className="sr-only">
-              {sound ? 'Desligar o som' : 'Ligar o som'}
-            </span>
-          </button>
+          </label>
         </div>
       </div>
     </Card>
