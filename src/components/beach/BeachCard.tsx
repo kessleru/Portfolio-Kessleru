@@ -36,7 +36,7 @@ const SOUNDS: Record<Period, { loops: [string, number][]; gulls: boolean }> = {
   noite: {
     loops: [
       ['ondas', 0.75],
-      ['fogueira', 0.6],
+      ['fogueira', 1],
       ['grilos', 0.4],
     ],
     gulls: false,
@@ -44,7 +44,7 @@ const SOUNDS: Record<Period, { loops: [string, number][]; gulls: boolean }> = {
   madrugada: {
     loops: [
       ['ondas', 0.6],
-      ['fogueira', 0.35],
+      ['fogueira', 0.6],
       ['grilos', 0.45],
     ],
     gulls: false,
