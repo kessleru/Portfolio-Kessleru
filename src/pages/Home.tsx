@@ -1,5 +1,4 @@
 import BeachCard from '@/components/beach/BeachCard';
-import SkillsLoop from '@/components/ui/SkillsLoop';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 import CommitHeatmapCard from '@/components/ui/CommitHeatmapCard';
 import { BookOpen, Download } from 'lucide-react';
@@ -59,8 +58,6 @@ function Home() {
           </div>
           <BeachCard />
         </section>
-
-        <SkillsLoop />
 
         <section className="grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           <ThemeSwitcher />

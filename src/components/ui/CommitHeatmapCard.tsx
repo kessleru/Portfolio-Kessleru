@@ -126,11 +126,6 @@ function formatDay(key: string) {
   });
 }
 
-function formatShort(key: string) {
-  const date = parseKey(key);
-  return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
-}
-
 function buildWeeks(contributions: Contribution[]): Day[][] {
   const sorted = [...contributions].sort((a, b) =>
     a.date.localeCompare(b.date)
@@ -194,24 +189,6 @@ function buildLevels(contributions: Contribution[]) {
     if (count <= q3) return 3;
     return 4;
   };
-}
-
-function buildStats(contributions: Contribution[]) {
-  const sorted = [...contributions].sort((a, b) =>
-    a.date.localeCompare(b.date)
-  );
-
-  let longest = 0;
-  let run = 0;
-  let best: Contribution | null = null;
-
-  for (const item of sorted) {
-    run = item.count > 0 ? run + 1 : 0;
-    longest = Math.max(longest, run);
-    if (!best || item.count > best.count) best = item;
-  }
-
-  return { longest, best: best && best.count > 0 ? best : null };
 }
 
 type MonthLabel = {
@@ -313,7 +290,6 @@ function CommitHeatmapCard({
   }, [username]);
 
   const weeks = useMemo(() => buildWeeks(data), [data]);
-  const stats = useMemo(() => buildStats(data), [data]);
 
   // A grade é a parte pesada (uns 370 quadrados): fica memorizada, e passar o mouse só troca a legenda.
   const grid = useMemo(() => {
@@ -391,11 +367,6 @@ function CommitHeatmapCard({
   let readout: string[] = [];
   if (hovered) {
     readout = [formatDay(hovered.date), plural(hovered.count)];
-  } else if (!loading && stats.best) {
-    readout = [
-      `Maior sequência: ${stats.longest} ${stats.longest === 1 ? 'dia' : 'dias'}`,
-      `Melhor dia: ${stats.best.count} em ${formatShort(stats.best.date)}`,
-    ];
   }
 
   return (

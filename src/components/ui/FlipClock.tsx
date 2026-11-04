@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { greetings, periodOf, useNow } from '@/lib/period';
 
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
 const FLIP_MS = 600;
 
 /**
@@ -72,9 +74,8 @@ function FlipClock() {
         </span>
       </div>
       <div className="flip__caption">
-        <p className="flip__greeting">{period ? greetings[period] : ' '}</p>
-        <p className="flip__date">{now ? DATE.format(now) : ' '}</p>
-        <p className="flip__hint">a praia ao lado acompanha a sua hora</p>
+        <p className="flip__greeting">{period ? cap(greetings[period]) : ' '}</p>
+        <p className="flip__date">{now ? cap(DATE.format(now)) : ' '}</p>
       </div>
     </div>
   );

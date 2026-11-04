@@ -1547,12 +1547,6 @@ img.gravura-footer__art {
   color: var(--ctp-subtext-0);
 }
 
-.flip__hint {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--ctp-meta);
-}
-
 /* controle de volume da praia: trilho fino em mono, com a parte cheia no destaque */
 .beach__volume {
   display: inline-flex;
