@@ -1588,7 +1588,7 @@ img.gravura-footer__art {
 }
 
 @media (max-width: 480px) {
-  .flip--sm .flip__date { display: none; }
+  .flip--sm .flip__caption { display: none; }
 }
 
 /* controle de volume da praia: trilho fino em mono, com a parte cheia no destaque */

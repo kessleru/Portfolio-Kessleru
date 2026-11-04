@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { Link, useLocation } from 'react-router-dom';
@@ -58,6 +58,7 @@ const pathnameLabelMap: Record<string, string> = {
 
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const location = useLocation();
 
   // Menu e navegação trocam por CSS (o HTML pré-renderizado já sai certo em qualquer tela);
@@ -103,6 +104,7 @@ function Header() {
         <div className="flex items-center gap-2 min-[650px]:hidden">
           <Socials />
           <button
+            ref={menuButton}
             className="cursor-pointer text-ctp-accent transition-colors duration-200"
             aria-label="Abrir menu"
             aria-expanded={isOpen}
@@ -112,7 +114,7 @@ function Header() {
               className={`transition-transform duration-300 ease-out ${isOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}
             />
           </button>
-          <Modal isOpen={isOpen}>
+          <Modal isOpen={isOpen} anchor={menuButton}>
             <div className="divide-y-2 divide-ctp-crust [&>*:not(:last-child)]:pb-2 [&>*:not(:first-child)]:pt-2">
               {navItems.map((item) => (
                 <Link
