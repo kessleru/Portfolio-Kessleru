@@ -9,7 +9,7 @@ import { periodOf, useNow, type Period } from '@/lib/period';
 // que só toca depois de um clique. O vídeo para fora da tela e quando a pessoa pede menos movimento.
 const BASE = '/diorama/';
 // Vídeos que já existem; um período sem o seu usa o vizinho mais parecido.
-const READY: Period[] = ['tarde', 'noite', 'manha'];
+const READY: Period[] = ['tarde', 'noite', 'manha', 'madrugada'];
 const FALLBACK: Record<Period, Period[]> = {
   madrugada: ['madrugada', 'noite', 'tarde'],
   manha: ['manha', 'tarde'],
