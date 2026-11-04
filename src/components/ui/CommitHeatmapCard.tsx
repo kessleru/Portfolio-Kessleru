@@ -1,3 +1,4 @@
+import { useLang, type Lang } from '@/lib/i18n';
 import { useEffect, useMemo, useState } from 'react';
 import Card from '@/components/ui/Cards/Card';
 
@@ -98,6 +99,21 @@ const MONTHS = [
   'dez',
 ];
 
+const MONTHS_EN = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 /** Semanas vazias do tamanho de um ano, para o card não mudar de altura quando os dados chegam. */
 const PLACEHOLDER_WEEKS = 53;
 
@@ -112,13 +128,19 @@ function parseKey(key: string) {
   return new Date(`${key}T00:00:00`);
 }
 
-function plural(count: number) {
+function plural(count: number, lang: Lang) {
+  if (lang === 'en')
+    return count === 0
+      ? 'no contributions'
+      : count === 1
+        ? '1 contribution'
+        : `${count} contributions`;
   if (count === 0) return 'nenhuma contribuição';
   return count === 1 ? '1 contribuição' : `${count} contribuições`;
 }
 
-function formatDay(key: string) {
-  return parseKey(key).toLocaleDateString('pt-BR', {
+function formatDay(key: string, lang: Lang) {
+  return parseKey(key).toLocaleDateString(lang === 'en' ? 'en-US' : 'pt-BR', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -276,7 +298,7 @@ function CommitHeatmapCard({
         setTotal(result.total);
       } catch {
         if (!mounted) return;
-        setError('Falha ao carregar contribuições do GitHub.');
+        setError('fail');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -289,6 +311,7 @@ function CommitHeatmapCard({
     };
   }, [username]);
 
+  const { t, lang } = useLang();
   const weeks = useMemo(() => buildWeeks(data), [data]);
 
   // A grade é a parte pesada (uns 370 quadrados): fica memorizada, e passar o mouse só troca a legenda.
@@ -322,7 +345,7 @@ function CommitHeatmapCard({
                     className={`heatmap__month${l.wrapOnly ? ' heatmap__month--wrap' : ''}${l.rowOnly ? ' heatmap__month--row' : ''}`}
                     style={{ gridColumn: l.week - offset + 1 }}
                   >
-                    {l.name}
+                    {lang === 'en' ? MONTHS_EN[MONTHS.indexOf(l.name)] : l.name}
                   </span>
                 ))}
               {band.map((week, w) =>
@@ -338,7 +361,7 @@ function CommitHeatmapCard({
                       data-c={real ? day.count : undefined}
                       title={
                         real
-                          ? `${formatDay(day.date)}: ${plural(day.count)}`
+                          ? `${formatDay(day.date, lang)}: ${plural(day.count, lang)}`
                           : undefined
                       }
                       style={{ gridColumn: w + 1, gridRow: d + 2 }}
@@ -351,7 +374,7 @@ function CommitHeatmapCard({
         })}
       </div>
     );
-  }, [data, weeks, loading]);
+  }, [data, weeks, loading, lang]);
 
   function handlePointerOver(event: React.PointerEvent<HTMLDivElement>) {
     const cell = (event.target as HTMLElement).closest<HTMLElement>('[data-d]');
@@ -360,13 +383,16 @@ function CommitHeatmapCard({
   }
 
   const summary = loading
-    ? 'Carregando contribuições…'
-    : `${total} contribuições no último ano`;
+    ? t('Carregando contribuições…', 'Loading contributions…')
+    : t(
+        `${total} contribuições no último ano`,
+        `${total} contributions in the last year`
+      );
 
   // Duas partes que não se partem por dentro: no celular a segunda desce inteira.
   let readout: string[] = [];
   if (hovered) {
-    readout = [formatDay(hovered.date), plural(hovered.count)];
+    readout = [formatDay(hovered.date, lang), plural(hovered.count, lang)];
   }
 
   return (
@@ -381,7 +407,7 @@ function CommitHeatmapCard({
             target="_blank"
             rel="noreferrer"
             data-kess-mood="animado"
-            data-kess-say="os repositórios estão lá"
+            data-kess-say={t('os repositórios estão lá', 'the repos are there')}
             className="text-xs text-ctp-subtext-0 transition-colors hover:text-ctp-accent sm:text-sm"
           >
             @{username}
@@ -389,15 +415,26 @@ function CommitHeatmapCard({
         </div>
 
         {error ? (
-          <p className="text-sm text-ctp-red">{error}</p>
+          <p className="text-sm text-ctp-red">
+            {t(
+              'Falha ao carregar contribuições do GitHub.',
+              'Could not load GitHub contributions.'
+            )}
+          </p>
         ) : (
           <div
             className="heatmap"
             role="img"
             aria-label={
               loading
-                ? 'Mapa de contribuições carregando'
-                : `Mapa de contribuições no GitHub: ${total} no último ano`
+                ? t(
+                    'Mapa de contribuições carregando',
+                    'Contribution map loading'
+                  )
+                : t(
+                    `Mapa de contribuições no GitHub: ${total} no último ano`,
+                    `GitHub contribution map: ${total} in the last year`
+                  )
             }
             onPointerOver={handlePointerOver}
             onPointerLeave={() => setHovered(null)}
@@ -415,7 +452,7 @@ function CommitHeatmapCard({
             ))}
           </p>
           <div className="flex items-center gap-2" aria-hidden="true">
-            <span>Menos</span>
+            <span>{t('Menos', 'Less')}</span>
             <div className="flex items-center gap-1">
               {[0, 1, 2, 3, 4].map((level) => (
                 <span
@@ -425,7 +462,7 @@ function CommitHeatmapCard({
                 />
               ))}
             </div>
-            <span>Mais</span>
+            <span>{t('Mais', 'More')}</span>
           </div>
         </div>
       </div>

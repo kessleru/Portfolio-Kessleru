@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import { useEffect, useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -32,6 +33,7 @@ function GitTimeline({
   selected,
   onSelect,
 }: GitTimelineProps) {
+  const { t } = useLang();
   const svgRef = useRef<SVGSVGElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inView = useInView(svgRef, { once: true, amount: 0.35 });
@@ -126,7 +128,10 @@ function GitTimeline({
         viewBox={`0 0 ${width} ${HEIGHT}`}
         className="block h-auto w-full min-w-[880px] select-none"
         role="group"
-        aria-label="Linha do tempo da formação em formato de grafo do git"
+        aria-label={t(
+          'Linha do tempo da formação em formato de grafo do git',
+          'Education timeline drawn as a git graph'
+        )}
       >
         {/* eixo dos anos */}
         <line
@@ -145,12 +150,7 @@ function GitTimeline({
               y2={AXIS_Y - 12}
               stroke="var(--ctp-surface-2)"
             />
-            <text
-              x={x + 6}
-              y={AXIS_Y}
-              fontSize={11}
-              fill="var(--ctp-meta)"
-            >
+            <text x={x + 6} y={AXIS_Y} fontSize={11} fill="var(--ctp-meta)">
               {year}
             </text>
           </g>
@@ -178,7 +178,7 @@ function GitTimeline({
             fontSize={11}
             fill="var(--ctp-meta)"
           >
-            hoje
+            {t('hoje', 'today')}
           </text>
         </motion.g>
 

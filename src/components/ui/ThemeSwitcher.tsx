@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import Card from '@/components/ui/Cards/Card';
 import {
   PALETTE_COLORS,
@@ -23,6 +24,7 @@ function accentName(color: string) {
 
 function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
   const { theme, setTheme, accent, setAccent } = useTheme();
+  const { t } = useLang();
 
   // Setas andam pela paleta (dando a volta nas pontas); Home e End vão para a primeira e a última cor.
   function handleSwatchKeys(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -50,7 +52,7 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
     <Card fileName="Theme.tsx" className={`w-full ${className}`}>
       <div className="space-y-4">
         <div>
-          <p className="mb-2 text-sm font-semibold">Tema</p>
+          <p className="mb-2 text-sm font-semibold">{t('Tema', 'Theme')}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {THEMES.map((item) => {
               const active = item.value === theme;
@@ -75,7 +77,7 @@ function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
         <div className="swatches-box">
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <p id="accent-label" className="text-sm font-semibold">
-              Destaque
+              {t('Destaque', 'Accent')}
             </p>
             <p className="text-xs text-ctp-meta" aria-hidden="true">
               {accentName(accent)}

@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import BeachCard from '@/components/beach/BeachCard';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 import CommitHeatmapCard from '@/components/ui/CommitHeatmapCard';
@@ -6,6 +7,7 @@ import { setSimple } from '@/components/simple/simpleMode';
 import KessSpot from '@/components/kess/KessSpot';
 
 function Home() {
+  const { t, lang } = useLang();
   return (
     <>
       <div className="space-y-14 sm:space-y-16">
@@ -15,23 +17,44 @@ function Home() {
               <KessSpot className="-my-2" />
               <div className="flex flex-wrap items-center gap-2 text-2xl font-bold sm:text-3xl">
                 <h1>
-                  Olá! Sou o <span className="text-ctp-accent">Kessleru.</span>
+                  {t('Olá! Sou o', "Hi! I'm")}{' '}
+                  <span className="text-ctp-accent">Kessleru.</span>
                 </h1>
               </div>
             </div>
             <div className="prose-text">
-              <p>
-                Sou Otávio Kessler Ustra, desenvolvedor{' '}
-                <strong data-kess-mood="curioso">Full Stack</strong> júnior em
-                Ituiutaba, MG, e estudante de Ciência da Computação no IFTM.
-                Trabalho no front-end e no back-end com o ecossistema{' '}
-                <strong data-kess-mood="curioso">JavaScript</strong>: React e
-                TypeScript nas interfaces, Node.js e Express nas APIs.
-              </p>
-              <p>
-                Aprendo melhor fazendo: a maior parte do que sei veio de
-                projetos próprios, que estão no meu GitHub.
-              </p>
+              {lang === 'en' ? (
+                <>
+                  <p>
+                    I'm Otávio Kessler Ustra, a junior{' '}
+                    <strong data-kess-mood="curioso">Full Stack</strong>{' '}
+                    developer from Ituiutaba, Brazil, and a Computer Science
+                    student at IFTM. I work on both front-end and back-end with
+                    the <strong data-kess-mood="curioso">JavaScript</strong>{' '}
+                    ecosystem: React and TypeScript for interfaces, Node.js and
+                    Express for APIs.
+                  </p>
+                  <p>
+                    I learn best by building: most of what I know came from my
+                    own projects, which are on my GitHub.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    Sou Otávio Kessler Ustra, desenvolvedor{' '}
+                    <strong data-kess-mood="curioso">Full Stack</strong> júnior
+                    em Ituiutaba, MG, e estudante de Ciência da Computação no
+                    IFTM. Trabalho no front-end e no back-end com o ecossistema{' '}
+                    <strong data-kess-mood="curioso">JavaScript</strong>: React
+                    e TypeScript nas interfaces, Node.js e Express nas APIs.
+                  </p>
+                  <p>
+                    Aprendo melhor fazendo: a maior parte do que sei veio de
+                    projetos próprios, que estão no meu GitHub.
+                  </p>
+                </>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <a
@@ -41,7 +64,7 @@ function Home() {
                 className="key key--accent accent-chip"
               >
                 <Download size={16} aria-hidden="true" />
-                Baixar CV
+                {t('Baixar CV', 'Download CV')}
               </a>
               {/* único caminho para a versão simples (o header só tem as páginas e as redes) */}
               <button
@@ -50,7 +73,7 @@ function Home() {
                 className="key"
               >
                 <BookOpen size={16} aria-hidden="true" />
-                Versão simples
+                {t('Versão simples', 'Simple version')}
               </button>
             </div>
           </div>

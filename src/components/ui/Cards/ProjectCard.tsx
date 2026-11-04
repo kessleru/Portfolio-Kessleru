@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import { useState } from 'react';
 import { Link, Tag } from 'lucide-react';
 import Card from '@/components/ui/Cards/Card';
@@ -56,6 +57,7 @@ function ProjectCard({
   });
 
   const simple = useSimple();
+  const { t } = useLang();
 
   // Versão simples: uma linha de lista, com a imagem pequena ao lado.
   if (simple) {
@@ -77,7 +79,7 @@ function ProjectCard({
                 rel="noreferrer"
                 className="text-ctp-text underline decoration-ctp-surface-2 underline-offset-4 transition-colors hover:decoration-ctp-accent"
               >
-                Repositório
+                {t('Repositório', 'Repository')}
               </a>
             )}
             {liveUrl && (
@@ -166,7 +168,7 @@ function ProjectCard({
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-ctp-subtext-0">
             <Tag className="h-4 w-4 text-ctp-accent" aria-hidden="true" />
-            <span>Stacks usadas</span>
+            <span>{t('Stacks usadas', 'Tech stack')}</span>
           </div>
 
           <ul className="flex flex-wrap gap-2">
@@ -195,7 +197,7 @@ function ProjectCard({
                   rel="noreferrer"
                   className="text-ctp-accent transition-colors hover:text-ctp-text"
                 >
-                  Repositório
+                  {t('Repositório', 'Repository')}
                 </a>
               )}
               {liveUrl && (

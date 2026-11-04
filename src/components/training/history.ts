@@ -242,3 +242,113 @@ export const commits: Commit[] = [
     planned: true,
   },
 ];
+
+// Inglês: mesmo grafo, só os textos trocam (o que não está aqui fica igual).
+const branchesEn: Record<string, Partial<Branch>> = {
+  main: { role: 'High school', period: '2011 → 2023' },
+  iftm: {
+    role: "Bachelor's in Computer Science",
+    period: 'Feb 2024 → Dec 2027',
+  },
+  pet: { role: 'Scholarship student', period: 'Mar 2025 → now' },
+  sae: {
+    role: 'Computing Solutions Intern',
+    place: 'Water and Sewage Authority · SAE',
+    period: 'Jul 2026 → now',
+  },
+};
+
+const commitsEn: Record<string, Partial<Commit>> = {
+  'ensino-medio': {
+    title: 'High school',
+    label: 'high school',
+    date: 'Dec 2023',
+    body: ['ESI Santa Teresa, from 2011 to 2023.'],
+  },
+  bacharelado: {
+    title: "Bachelor's in Computer Science",
+    label: 'start',
+    date: 'Feb 2024',
+    body: [
+      'Federal Institute of Triângulo Mineiro, Ituiutaba Campus.',
+      'Expected to finish: Dec 2027.',
+    ],
+  },
+  'periodo-2': { title: '2nd semester', label: '2nd' },
+  'periodo-3': { title: '3rd semester', label: '3rd' },
+  'pet-inicio': {
+    title: 'PET Computação scholarship',
+    date: 'Mar 2025',
+    body: ['Tutorial Education Program at IFTM Ituiutaba, part-time.'],
+  },
+  'pet-sites': {
+    title: "Websites and interfaces for the group's projects",
+    label: 'websites',
+  },
+  'periodo-4': { title: '4th semester', label: '4th' },
+  'pet-docker': {
+    title: 'Docker short course at the 22nd SNCT',
+    body: [
+      'Taught the Docker for Beginners short course and was a monitor at the 22nd National Science and Technology Week.',
+    ],
+  },
+  'pet-cicd': {
+    title: 'CI/CD for Beginners with GitHub Actions short course',
+    body: ['Instructor.'],
+  },
+  'periodo-5': { title: '5th semester', label: '5th' },
+  'sae-inicio': {
+    title: 'Internship at SAE begins',
+    label: 'internship',
+    date: 'Jul 2026',
+    body: [
+      'Computing Solutions Intern.',
+      'Water and Sewage Authority of Ituiutaba.',
+    ],
+  },
+  'periodo-6': {
+    title: '6th semester',
+    label: '6th',
+    body: ['Current Computer Science semester.'],
+  },
+  'sae-automacoes': {
+    title: 'Automations with spreadsheets and scripts',
+    label: 'automations',
+    body: ['Administrative routines for the Workplace Safety office.'],
+  },
+  'pet-coxinha': {
+    title: 'Organized both editions of Coxinha++',
+    body: [
+      "IFTM's programming contest.",
+      'Took part in Pizza++ and the SBC Programming Marathon.',
+    ],
+  },
+  'sae-relatorios': {
+    title: 'Reports, metrics and queries',
+    label: 'reports',
+    body: ['Building reports with data checks and standardization.'],
+  },
+  'pet-eventos': {
+    title: 'Helped run more than 8 campus events',
+    label: 'events',
+    body: ['InterPET, Careers Fair, Teaching Projects Showcase and SNCT.'],
+  },
+  'sae-smarapd': {
+    title: 'SmarAPD records and document scanning',
+    body: ['Updating data in the Health Management system.'],
+  },
+  formatura: {
+    title: 'Graduation in Computer Science',
+    label: 'graduation',
+    date: 'Dec 2027',
+    body: ['Expected graduation, when iftm merges back into main.'],
+  },
+};
+
+export const branchesFor = (lang: 'pt' | 'en'): Branch[] =>
+  lang === 'en'
+    ? branches.map((b) => ({ ...b, ...branchesEn[b.name] }))
+    : branches;
+
+export const commitsFor = (lang: 'pt' | 'en'): Commit[] =>
+  lang === 'en' ? commits.map((c) => ({ ...c, ...commitsEn[c.id] })) : commits;

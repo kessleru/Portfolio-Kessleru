@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import ProjectCard from '@/components/ui/Cards/ProjectCard';
 import animaisBanner from '@/assets/projects/animais.webp';
 import bikcraftBanner from '@/assets/projects/bikcraft.webp';
@@ -13,6 +14,8 @@ import wildbeastBanner from '@/assets/projects/wildbeast.webp';
 const projects = [
   {
     title: 'FinAPI Express',
+    descriptionEn:
+      'Financial API built with Express for creating accounts, deposits, withdrawals, statements and balance checks.',
     description:
       'API financeira com Express para criação de contas, depósitos, saques, extrato e consulta de saldo.',
     img: finapiBanner,
@@ -22,6 +25,8 @@ const projects = [
   },
   {
     title: 'Sky Atlas',
+    descriptionEn:
+      'Global weather dashboard with an interactive map, forecasts and air quality data.',
     description:
       'Dashboard meteorológico global com mapa interativo, previsão do tempo e dados de qualidade do ar.',
     img: skyatlasBanner,
@@ -32,6 +37,8 @@ const projects = [
   },
   {
     title: 'Dogs Rede Social',
+    descriptionEn:
+      'Social network for sharing dog photos, with JWT authentication, a feed, comments and a dashboard.',
     description:
       'Rede social para compartilhamento de fotos de cachorros com autenticação JWT, feed, comentários e dashboard.',
     img: dogsBanner,
@@ -42,6 +49,8 @@ const projects = [
   },
   {
     title: 'Forest Web',
+    descriptionEn:
+      'Landing page for renting houses and cabins in the woods, focused on SEO and visual experience.',
     description:
       'Landing page para aluguel de casas e chalés em florestas, com foco em SEO e experiência visual.',
     img: forestBanner,
@@ -52,6 +61,8 @@ const projects = [
   },
   {
     title: 'Hacker News React',
+    descriptionEn:
+      'React app that uses the Hacker News API to list stories with title, domain, author and relative time.',
     description:
       'App em React que consome a API do Hacker News para listar notícias com título, domínio, autor e tempo relativo.',
     img: hackernewsBanner,
@@ -62,6 +73,8 @@ const projects = [
   },
   {
     title: 'Animais Web',
+    descriptionEn:
+      'Interactive site about animals with tabs, accordion, modal, dropdown and data fetching in vanilla JavaScript.',
     description:
       'Site interativo sobre animais com tabs, accordion, modal, dropdown e fetch de dados em JavaScript vanilla.',
     img: animaisBanner,
@@ -72,6 +85,8 @@ const projects = [
   },
   {
     title: 'Todo List JS',
+    descriptionEn:
+      'Minimal to-do list with filters, LocalStorage persistence and a theme that changes with the time of day.',
     description:
       'Lista de tarefas minimalista com filtros, persistência em LocalStorage e tema dinâmico por horário.',
     img: todoBanner,
@@ -82,6 +97,8 @@ const projects = [
   },
   {
     title: 'Bikcraft Web',
+    descriptionEn:
+      'E-commerce for electric bikes built with vanilla JS, CSS Grid and a modular architecture. Mobile-first, accessible and tuned for performance.',
     description:
       'E-commerce de bicicletas elétricas com vanilla JS, CSS Grid e arquitetura modular. Mobile-first, acessível e otimizado para performance.',
     img: bikcraftBanner,
@@ -92,6 +109,8 @@ const projects = [
   },
   {
     title: 'The Odin Library',
+    descriptionEn:
+      'Book library in vanilla JS, based on The Odin Project assignment.',
     description:
       'Biblioteca de livros com vanilla JS, inspirado no projeto The Odin Project.',
     img: odinBanner,
@@ -102,6 +121,8 @@ const projects = [
   },
   {
     title: 'Wildbeast Web',
+    descriptionEn:
+      'Informational site about wild animals with a modern design, showing good web practices, responsive layout and an intuitive interface.',
     description:
       'Site informativo sobre animais selvagens com design moderno. O projeto demonstra boas práticas de desenvolvimento web, design responsivo e interface intuitiva.',
     img: wildbeastBanner,
@@ -113,16 +134,26 @@ const projects = [
 ];
 
 function Projects() {
+  const { t, lang } = useLang();
   return (
     <>
       <section>
         <div className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl font-bold mb-8">
           <span className="text-ctp-accent max-sm:hidden">&gt;</span>
-          <h1>Projetos</h1>
+          <h1>{t('Projetos', 'Projects')}</h1>
         </div>
         <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <ProjectCard key={project.title} {...project} />
+          {projects.map(({ descriptionEn, ...project }) => (
+            <ProjectCard
+              key={project.title}
+              {...project}
+              description={lang === 'en' ? descriptionEn : project.description}
+              imgAlt={
+                lang === 'en'
+                  ? `Banner for the ${project.title} project`
+                  : project.imgAlt
+              }
+            />
           ))}
         </div>
       </section>

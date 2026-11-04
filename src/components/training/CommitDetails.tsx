@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Branch, Commit } from './history';
 
@@ -17,6 +18,7 @@ function CommitDetails({
   onPrev,
   onNext,
 }: CommitDetailsProps) {
+  const { t } = useLang();
   const branch = branches.find((item) => item.name === commit.branch);
 
   return (
@@ -35,7 +37,9 @@ function CommitDetails({
           {commit.date && (
             <span className="text-ctp-meta tabular-nums">· {commit.date}</span>
           )}
-          {commit.planned && <span className="text-ctp-meta">· previsto</span>}
+          {commit.planned && (
+            <span className="text-ctp-meta">· {t('previsto', 'planned')}</span>
+          )}
         </p>
         <h3 className="text-sm font-semibold text-ctp-text sm:text-base">
           {commit.title}
@@ -55,7 +59,7 @@ function CommitDetails({
           onClick={onPrev}
           disabled={!onPrev}
           className={navButton}
-          aria-label="Anterior"
+          aria-label={t('Anterior', 'Previous')}
         >
           <ChevronLeft size={14} aria-hidden="true" />
         </button>
@@ -64,7 +68,7 @@ function CommitDetails({
           onClick={onNext}
           disabled={!onNext}
           className={navButton}
-          aria-label="Próximo"
+          aria-label={t('Próximo', 'Next')}
         >
           <ChevronRight size={14} aria-hidden="true" />
         </button>

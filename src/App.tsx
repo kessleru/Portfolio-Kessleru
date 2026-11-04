@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
@@ -33,6 +34,11 @@ function TrainingRoute() {
 // O roteador fica de fora: BrowserRouter no navegador (main.tsx), StaticRouter no build (entry-server.tsx).
 export default function App() {
   const simple = useSimple();
+  const { t, lang } = useLang();
+
+  useEffect(() => {
+    document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
+  }, [lang]);
 
   // Quem escolheu a versão simples não vê o HTML pré-renderizado (versão completa) piscar:
   // o index.html esconde o #root até o React desenhar a versão certa.
@@ -48,7 +54,7 @@ export default function App() {
         href="#conteudo"
         className="fixed top-3 left-3 z-50 -translate-y-16 rounded-lg bg-ctp-mantle px-4 py-2 text-sm text-ctp-accent shadow-lg transition-transform focus-visible:translate-y-0"
       >
-        Pular para o conteúdo
+        {t('Pular para o conteúdo', 'Skip to content')}
       </a>
       {simple ? (
         <SimpleLayout>

@@ -18,6 +18,13 @@ export const greetings: Record<Period, string> = {
   noite: 'boa noite',
 };
 
+export const greetingsEn: Record<Period, string> = {
+  madrugada: 'good night',
+  manha: 'good morning',
+  tarde: 'good afternoon',
+  noite: 'good evening',
+};
+
 /** A hora atual, atualizada na virada de cada minuto (no build não há relógio: null). */
 export function useNow() {
   const [now, setNow] = useState<Date | null>(() =>

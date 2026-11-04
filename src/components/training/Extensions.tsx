@@ -1,10 +1,14 @@
+import { useLang } from '@/lib/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Check, ChevronDown, Copy, ExternalLink, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   certificates,
+  dateLabel,
   issuers,
+  nameLabel,
+  skillLabel,
   verifyUrl,
   type Certificate,
 } from './certificates';
@@ -58,6 +62,7 @@ function ExtensionCard({
   onToggle,
   onSkill,
 }: ExtensionCardProps) {
+  const { t, lang } = useLang();
   const { icon: Icon, color } = certificate;
   const reduce = useReducedMotion();
   const [copied, setCopied] = useState(false);
@@ -114,10 +119,10 @@ function ExtensionCard({
         {/* mesma altura para todos: o nome ocupa o que precisa e a linha do emissor fica no pé */}
         <span className="flex min-w-0 flex-1 flex-col self-stretch">
           <span className="line-clamp-2 text-sm leading-5 font-semibold text-ctp-text">
-            {certificate.name}
+            {nameLabel(certificate.name, lang)}
           </span>
           <span className="mt-0.5 block truncate text-xs text-ctp-subtext-0">
-            {certificate.skills.join(' · ')}
+            {certificate.skills.map((s) => skillLabel(s, lang)).join(' · ')}
           </span>
           <span className="mt-auto flex items-center justify-between gap-2 pt-2 text-xs">
             <span className="min-w-0 truncate text-ctp-subtext-1">
@@ -125,7 +130,7 @@ function ExtensionCard({
               {!certificate.inProgress && (
                 <span className="text-ctp-meta tabular-nums">
                   {' '}
-                  · {certificate.date}
+                  · {dateLabel(certificate.date, lang)}
                 </span>
               )}
             </span>
@@ -173,11 +178,19 @@ function ExtensionCard({
               <div className="min-w-0 space-y-3">
                 <p className="text-ctp-subtext-0">
                   {certificate.inProgress
-                    ? `Curso em andamento na ${certificate.issuer}.`
-                    : `Emitido por ${certificate.issuer} em ${certificate.date}.`}
+                    ? t(
+                        `Curso em andamento na ${certificate.issuer}.`,
+                        `Course in progress at ${certificate.issuer}.`
+                      )
+                    : t(
+                        `Emitido por ${certificate.issuer} em ${certificate.date}.`,
+                        `Issued by ${certificate.issuer} in ${dateLabel(certificate.date, 'en')}.`
+                      )}
                 </p>
                 <div>
-                  <p className="mb-2 text-ctp-meta">Competências</p>
+                  <p className="mb-2 text-ctp-meta">
+                    {t('Competências', 'Skills')}
+                  </p>
                   <ul className="flex flex-wrap gap-2">
                     {certificate.skills.map((skill) => (
                       <li key={skill}>
@@ -186,7 +199,7 @@ function ExtensionCard({
                           onClick={() => onSkill(skill)}
                           className={chipClass(false)}
                         >
-                          {skill}
+                          {skillLabel(skill, lang)}
                         </button>
                       </li>
                     ))}
@@ -209,7 +222,9 @@ function ExtensionCard({
                       <Copy size={14} className="text-ctp-subtext-0" />
                     )}
                     <span className="sr-only">
-                      {copied ? 'copiado' : 'copiar código'}
+                      {copied
+                        ? t('copiado', 'copied')
+                        : t('copiar código', 'copy code')}
                     </span>
                   </button>
                   {verifyUrl(certificate) && (
@@ -220,7 +235,7 @@ function ExtensionCard({
                       data-kess-mood="curioso"
                       className="mt-2 flex items-center gap-1.5 text-ctp-accent underline-offset-4 hover:underline sm:justify-end"
                     >
-                      Ver certificado
+                      {t('Ver certificado', 'View certificate')}
                       <ExternalLink size={13} aria-hidden="true" />
                     </a>
                   )}
@@ -237,6 +252,7 @@ function ExtensionCard({
 // Os certificados como o painel de Extensões do VS Code: filtro por competência e seções por emissor.
 function Extensions() {
   const [skill, setSkill] = useState<string | null>(null);
+  const { t, lang } = useLang();
   const [open, setOpen] = useState<string | null>(null);
   const [showAllChips, setShowAllChips] = useState(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
@@ -277,7 +293,7 @@ function Extensions() {
             onClick={() => setSkill(null)}
             className={chipClass(skill === null)}
           >
-            Todas
+            {t('Todas', 'All')}
           </button>
         </li>
         {chips.map(([name, count]) => (
@@ -289,7 +305,7 @@ function Extensions() {
               data-kess-mood="curioso"
               className={chipClass(skill === name)}
             >
-              {name}
+              {skillLabel(name, lang)}
               <span
                 className={cn(
                   'text-[10px] tabular-nums',
@@ -309,8 +325,11 @@ function Extensions() {
               className="cursor-pointer px-1 py-1 text-xs text-ctp-accent hover:underline"
             >
               {showAllChips
-                ? 'mostrar menos'
-                : `+${allSkills.length - chips.length} competências`}
+                ? t('mostrar menos', 'show less')
+                : t(
+                    `+${allSkills.length - chips.length} competências`,
+                    `+${allSkills.length - chips.length} skills`
+                  )}
             </button>
           </motion.li>
         )}
@@ -318,7 +337,11 @@ function Extensions() {
 
       {/* a contagem só aparece quando ajuda: com um filtro ligado */}
       <p aria-live="polite" className="-mt-1 min-h-4 text-xs text-ctp-meta">
-        {skill && `${total} de ${certificates.length} com ${skill}`}
+        {skill &&
+          t(
+            `${total} de ${certificates.length} com ${skill}`,
+            `${total} of ${certificates.length} with ${skillLabel(skill, 'en')}`
+          )}
       </p>
 
       {visible.map(
@@ -339,7 +362,9 @@ function Extensions() {
                     collapsed.has(section.title) && '-rotate-90'
                   )}
                 />
-                {section.title}
+                {section.title === 'Em andamento'
+                  ? t('Em andamento', 'In progress')
+                  : section.title}
                 <span className="rounded bg-ctp-surface-0 px-1.5 text-[10px] text-ctp-subtext-1">
                   {section.items.length}
                 </span>

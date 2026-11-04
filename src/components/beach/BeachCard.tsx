@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import FlipClock from '@/components/ui/FlipClock';
 import { useEffect, useRef, useState } from 'react';
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
@@ -52,8 +53,17 @@ const SOUNDS: Record<Period, { loops: [string, number][]; gulls: boolean }> = {
   },
 };
 
-const ALT =
-  'Animação em caracteres de uma praia vista de cima: um casal sentado numa canga listrada, ele de camisa branca e ela de vestido amarelo, olhando as ondas chegarem, com coqueiros e a restinga florida atrás.';
+const ALT = {
+  pt: 'Animação em caracteres de uma praia vista de cima: um casal sentado numa canga listrada, ele de camisa branca e ela de vestido amarelo, olhando as ondas chegarem, com coqueiros e a restinga florida atrás.',
+  en: 'Character animation of a beach seen from above: a couple sitting on a striped sarong, him in a white shirt and her in a yellow dress, watching the waves come in, with palm trees and flowering shrubs behind them.',
+};
+
+const PERIOD_EN: Record<Period, string> = {
+  manha: 'morning',
+  tarde: 'afternoon',
+  noite: 'night',
+  madrugada: 'late-night',
+};
 
 type Sound = { ctx: AudioContext; master: GainNode };
 
@@ -211,6 +221,7 @@ function BeachCard() {
   );
   const now = useNow();
   const period = now ? periodOf(now) : 'tarde';
+  const { t, lang } = useLang();
   const clip = videoFor(period);
   const [volume, setVolume] = useState(() =>
     typeof window === 'undefined' ? 0.7 : readVolume()
@@ -251,19 +262,23 @@ function BeachCard() {
   }, [paused, clip]);
 
   return (
-    <Card fileName="Praia.tsx" className="w-full">
+    <Card fileName={t('Praia.tsx', 'Beach.tsx')} className="w-full">
       <div className="beach">
         <div className="beach__bar">
           <span className="beach__path">
             <span className="text-ctp-accent">~</span>/ascii/
-            <span className="text-ctp-text">praia-{period}.mp4</span>
+            <span className="text-ctp-text">
+              {lang === 'en'
+                ? `beach-${PERIOD_EN[period]}.mp4`
+                : `praia-${period}.mp4`}
+            </span>
           </span>
           <span
             className="beach__status"
             data-state={paused ? 'pausado' : 'ao vivo'}
           >
             <span className="beach__dot" aria-hidden="true" />
-            {paused ? 'pausado' : 'ao vivo'}
+            {paused ? t('pausado', 'paused') : t('ao vivo', 'live')}
           </span>
         </div>
 
@@ -271,9 +286,13 @@ function BeachCard() {
           type="button"
           className="beach__art"
           aria-pressed={sound}
-          aria-label={sound ? 'Desligar o som da praia' : 'Ouvir a praia'}
+          aria-label={
+            sound
+              ? t('Desligar o som da praia', 'Turn off the beach sound')
+              : t('Ouvir a praia', 'Listen to the beach')
+          }
           data-kess-mood="apaixonado"
-          data-kess-say="olha eles ali"
+          data-kess-say={t('olha eles ali', 'look at them there')}
           onClick={() => setSound((v) => !v)}
         >
           <video
@@ -294,18 +313,22 @@ function BeachCard() {
           {!sound && (
             <span className="beach__hint" aria-hidden="true">
               <Volume2 size={13} />
-              clique para ouvir
+              {t('clique para ouvir', 'click to listen')}
             </span>
           )}
         </button>
-        <p className="sr-only">{ALT}</p>
+        <p className="sr-only">{ALT[lang]}</p>
 
         <div className="beach__player">
           <button
             type="button"
             className="key text-xs [--key-depth:3px] [--key-px:9px] [--key-py:5px]"
             aria-pressed={paused}
-            aria-label={paused ? 'Continuar o vídeo' : 'Pausar o vídeo'}
+            aria-label={
+              paused
+                ? t('Continuar o vídeo', 'Play the video')
+                : t('Pausar o vídeo', 'Pause the video')
+            }
             title={paused ? 'Continuar' : 'Pausar'}
             onClick={() => {
               // pausar a praia também silencia o som
@@ -325,7 +348,12 @@ function BeachCard() {
             ) : (
               <VolumeX size={14} aria-hidden="true" />
             )}
-            <span className="sr-only">Volume do som da praia (0 é mudo)</span>
+            <span className="sr-only">
+              {t(
+                'Volume do som da praia (0 é mudo)',
+                'Beach sound volume (0 is mute)'
+              )}
+            </span>
             <input
               type="range"
               min={0}

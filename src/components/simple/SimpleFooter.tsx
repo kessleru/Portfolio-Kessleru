@@ -1,3 +1,4 @@
+import { useLang } from '@/lib/i18n';
 import { scrollToTop } from '@/lib/smooth';
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { ArrowUp } from 'lucide-react';
@@ -98,6 +99,7 @@ function tableValues() {
  * mapa de cinzas leves (filtro SVG); no escuro ela vira máscara de um fundo cinza bem suave.
  */
 function SimpleFooter() {
+  const { t } = useLang();
   const { theme } = useTheme();
   const light = theme === 'latte';
   const funcs = useRef<(SVGElement | null)[]>([]);
@@ -132,7 +134,10 @@ function SimpleFooter() {
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pt-8">
           <div className="space-y-1">
             <p className="text-sm text-ctp-subtext-0">
-              Desenvolvedor Full Stack júnior em Ituiutaba, MG.
+              {t(
+                'Desenvolvedor Full Stack júnior em Ituiutaba, MG.',
+                'Junior Full Stack developer from Ituiutaba, Brazil.'
+              )}
             </p>
             <p className="font-mono text-xs text-ctp-meta tabular-nums">
               © {new Date().getFullYear()} Otávio Kessler Ustra
@@ -159,8 +164,8 @@ function SimpleFooter() {
             <button
               type="button"
               onClick={toTop}
-              aria-label="Voltar ao topo"
-              title="Voltar ao topo"
+              aria-label={t('Voltar ao topo', 'Back to top')}
+              title={t('Voltar ao topo', 'Back to top')}
               className="gravura-footer__button cursor-pointer"
             >
               <ArrowUp size={16} aria-hidden="true" />

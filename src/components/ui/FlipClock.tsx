@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { greetings, periodOf, useNow } from '@/lib/period';
+import { greetings, greetingsEn, periodOf, useNow } from '@/lib/period';
+import { useLang } from '@/lib/i18n';
 
 const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
@@ -48,11 +49,12 @@ function Flap({ value }: { value: string }) {
   );
 }
 
-const DATE = new Intl.DateTimeFormat('pt-BR', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-});
+const dateFormat = (locale: string) =>
+  new Intl.DateTimeFormat(locale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 
 /** Relógio de flip na hora de quem visita. Ele decide o período do dia do Kess e da praia. */
 function FlipClock({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
@@ -60,13 +62,18 @@ function FlipClock({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
   const hh = now ? String(now.getHours()).padStart(2, '0') : '--';
   const mm = now ? String(now.getMinutes()).padStart(2, '0') : '--';
   const period = now ? periodOf(now) : null;
+  const { t, lang, locale } = useLang();
 
   return (
     <div className={size === 'sm' ? 'flip flip--sm' : 'flip'}>
       <div
         className="flip__box"
         role="img"
-        aria-label={now ? `Agora são ${hh}:${mm}` : 'Relógio'}
+        aria-label={
+          now
+            ? t(`Agora são ${hh}:${mm}`, `It is ${hh}:${mm}`)
+            : t('Relógio', 'Clock')
+        }
       >
         <span className="flip__window" aria-hidden="true">
           <Flap value={hh} />
@@ -74,8 +81,14 @@ function FlipClock({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
         </span>
       </div>
       <div className="flip__caption">
-        <p className="flip__greeting">{period ? cap(greetings[period]) : ' '}</p>
-        <p className="flip__date">{now ? cap(DATE.format(now)) : ' '}</p>
+        <p className="flip__greeting">
+          {period
+            ? cap((lang === 'en' ? greetingsEn : greetings)[period])
+            : ' '}
+        </p>
+        <p className="flip__date">
+          {now ? cap(dateFormat(locale).format(now)) : ' '}
+        </p>
       </div>
     </div>
   );

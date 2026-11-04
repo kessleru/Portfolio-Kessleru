@@ -3,12 +3,14 @@ import { Menu } from 'lucide-react';
 import Modal from '../ui/Modal';
 import { Link, useLocation } from 'react-router-dom';
 import { SiGithub, SiLinkedin } from 'react-icons/si';
+import LangToggle from '../ui/LangToggle';
+import { useLang } from '@/lib/i18n';
 
 const navItems = [
-  { label: 'Início', to: '/' },
-  { label: 'Projetos', to: '/projects' },
-  { label: 'Formação', to: '/training' },
-  { label: 'Contato', to: '/contact' },
+  { label: 'Início', en: 'Home', to: '/' },
+  { label: 'Projetos', en: 'Projects', to: '/projects' },
+  { label: 'Formação', en: 'Education', to: '/training' },
+  { label: 'Contato', en: 'Contact', to: '/contact' },
 ];
 
 const socials = [
@@ -17,20 +19,24 @@ const socials = [
     href: 'https://github.com/kessleru',
     Icon: SiGithub,
     say: 'os repositórios estão lá',
+    sayEn: 'the repos are there',
   },
   {
     label: 'LinkedIn',
     href: 'https://www.linkedin.com/in/otavio-ustra-8b50bb364/',
     Icon: SiLinkedin,
     say: 'vamos conversar?',
+    sayEn: "let's talk?",
   },
 ];
 
 /** GitHub e LinkedIn só com o ícone, no canto do header (em toda página). */
 function Socials() {
+  const { t } = useLang();
   return (
     <span className="flex items-center gap-1">
-      {socials.map(({ label, href, Icon, say }) => (
+      <LangToggle />
+      {socials.map(({ label, href, Icon, say, sayEn }) => (
         <a
           key={label}
           href={href}
@@ -39,7 +45,7 @@ function Socials() {
           aria-label={label}
           title={label}
           data-kess-mood="animado"
-          data-kess-say={say}
+          data-kess-say={t(say, sayEn)}
           className="grid size-8 place-items-center rounded-md text-ctp-meta transition-colors hover:text-ctp-accent"
         >
           <Icon size={17} aria-hidden="true" />
@@ -49,17 +55,18 @@ function Socials() {
   );
 }
 
-const pathnameLabelMap: Record<string, string> = {
-  '/': 'início',
-  '/projects': 'projetos',
-  '/training': 'formação',
-  '/contact': 'contato',
+const pathnameLabelMap: Record<string, [string, string]> = {
+  '/': ['início', 'home'],
+  '/projects': ['projetos', 'projects'],
+  '/training': ['formação', 'education'],
+  '/contact': ['contato', 'contact'],
 };
 
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const location = useLocation();
+  const { t } = useLang();
 
   // Menu e navegação trocam por CSS (o HTML pré-renderizado já sai certo em qualquer tela);
   // aqui só fecha o menu se a janela crescer com ele aberto.
@@ -96,8 +103,9 @@ function Header() {
 
           <span>/</span>
           <span>
-            {pathnameLabelMap[location.pathname] ??
-              location.pathname.substring(1)}
+            {pathnameLabelMap[location.pathname]
+              ? t(...pathnameLabelMap[location.pathname])
+              : location.pathname.substring(1)}
           </span>
           <span>/</span>
         </div>
@@ -106,7 +114,7 @@ function Header() {
           <button
             ref={menuButton}
             className="cursor-pointer text-ctp-accent transition-colors duration-200"
-            aria-label="Abrir menu"
+            aria-label={t('Abrir menu', 'Open menu')}
             aria-expanded={isOpen}
             onClick={() => setIsOpen((prev) => !prev)}
           >
@@ -123,7 +131,7 @@ function Header() {
                   className="block text-sm sm:text-base cursor-pointer hover:text-ctp-accent"
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.label}
+                  {t(item.label, item.en)}
                 </Link>
               ))}
             </div>
@@ -139,7 +147,7 @@ function Header() {
                 to={item.to}
                 className="nav-pill relative text-sm lg:text-base cursor-pointer hover:text-ctp-accent"
               >
-                {item.label}
+                {t(item.label, item.en)}
               </Link>
               {index !== items.length - 1 && (
                 <span

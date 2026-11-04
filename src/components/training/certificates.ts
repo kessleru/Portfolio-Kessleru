@@ -310,3 +310,73 @@ export const certificates: Certificate[] = [
     color: 'var(--ctp-yellow)',
   },
 ];
+
+// Inglês: nomes, datas e competências traduzidos na hora de mostrar (os filtros usam a versão em português).
+const namesEn: Record<string, string> = {
+  'Back-end com Node.js Puro': 'Back-end with Plain Node.js',
+  'React com TypeScript': 'React with TypeScript',
+  'TypeScript para Iniciantes': 'TypeScript for Beginners',
+  'Banco de Dados SQLite': 'SQLite Databases',
+  'UI Design para Iniciantes': 'UI Design for Beginners',
+  'React Completo': 'Complete React',
+  'JavaScript Completo ES6': 'Complete JavaScript ES6',
+  'HTML e CSS para Iniciantes': 'HTML and CSS for Beginners',
+  'Comissão Organizadora da Maratona Coxinha++ 2026':
+    'Organizing Committee of the Coxinha++ 2026 Contest',
+  'Participante do III InterPET IFTM': 'Participant at the 3rd InterPET IFTM',
+  'Apresentação na V Mostra de Projetos de Ensino':
+    'Presentation at the 5th Teaching Projects Showcase',
+  'Colaborador na Comissão Organizadora do Coxinha++':
+    'Collaborator on the Coxinha++ Organizing Committee',
+  'Colaborador na Placa de Formatura Digital dos Egressos de Informática':
+    'Collaborator on the Digital Graduation Plaque for IT Alumni',
+  'Monitor na 22ª Semana Nacional de Ciência e Tecnologia':
+    'Monitor at the 22nd National Science and Technology Week',
+  'Ministrante do Minicurso de Docker · SNCT 22':
+    'Docker Short Course Instructor · SNCT 22',
+  'Introdução ao Kubernetes · SNCT 22': 'Introduction to Kubernetes · SNCT 22',
+  'Participante do II InterPET IFTM · PET Computação':
+    'Participant at the 2nd InterPET IFTM · PET Computação',
+  'Criando Dashboards com Streamlit e Python · SNCT 21':
+    'Building Dashboards with Streamlit and Python · SNCT 21',
+  'Introdução ao Desenvolvimento de Jogos em Godot · SNCT 21':
+    'Introduction to Game Development with Godot · SNCT 21',
+  'Colaborador na Mostra de Profissões 2024':
+    'Collaborator at the 2024 Careers Fair',
+};
+
+const skillsEn: Record<string, string> = {
+  IA: 'AI',
+  Eventos: 'Events',
+  'Trabalho em equipe': 'Teamwork',
+  Palestras: 'Talks',
+  Comunicação: 'Communication',
+};
+
+const monthsEn: Record<string, string> = {
+  jan: 'Jan',
+  fev: 'Feb',
+  mar: 'Mar',
+  abr: 'Apr',
+  mai: 'May',
+  jun: 'Jun',
+  jul: 'Jul',
+  ago: 'Aug',
+  set: 'Sep',
+  out: 'Oct',
+  nov: 'Nov',
+  dez: 'Dec',
+};
+
+export const skillLabel = (skill: string, lang: 'pt' | 'en') =>
+  lang === 'en' ? (skillsEn[skill] ?? skill) : skill;
+
+export function dateLabel(date: string, lang: 'pt' | 'en') {
+  if (lang === 'pt') return date;
+  if (date === 'em andamento') return 'in progress';
+  const [m, y] = date.split('/');
+  return monthsEn[m] && y ? `${monthsEn[m]} ${y}` : date;
+}
+
+export const nameLabel = (name: string, lang: 'pt' | 'en') =>
+  lang === 'en' ? (namesEn[name] ?? name) : name;

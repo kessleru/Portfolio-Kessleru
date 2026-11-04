@@ -3,18 +3,21 @@ import { Link, NavLink } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import SimpleFooter from './SimpleFooter';
+import LangToggle from '@/components/ui/LangToggle';
+import { useLang } from '@/lib/i18n';
 
 const nav = [
-  { label: 'Início', to: '/' },
-  { label: 'Projetos', to: '/projects' },
-  { label: 'Formação', to: '/training' },
-  { label: 'Contato', to: '/contact' },
+  { label: 'Início', en: 'Home', to: '/' },
+  { label: 'Projetos', en: 'Projects', to: '/projects' },
+  { label: 'Formação', en: 'Education', to: '/training' },
+  { label: 'Contato', en: 'Contact', to: '/contact' },
 ];
 
 /** Moldura da versão simples: uma coluna estreita de texto, como um blog. */
 function SimpleLayout({ children }: { children: ReactNode }) {
   const { theme, setTheme } = useTheme();
   const light = theme === 'latte';
+  const { t } = useLang();
 
   return (
     <div className="simple-page flex min-h-dvh flex-col font-sans">
@@ -27,15 +30,26 @@ function SimpleLayout({ children }: { children: ReactNode }) {
           >
             portfolio<span className="text-ctp-accent">/kessleru</span>
           </Link>
-          <button
-            type="button"
-            onClick={() => setTheme(light ? 'mocha' : 'latte')}
-            aria-label={light ? 'Usar tema escuro' : 'Usar tema claro'}
-            title={light ? 'Tema escuro' : 'Tema claro'}
-            className="cursor-pointer rounded-md p-1.5 text-ctp-subtext-0 transition-colors hover:text-ctp-text"
-          >
-            {light ? <Moon size={17} /> : <Sun size={17} />}
-          </button>
+          <span className="flex items-center gap-1">
+            <LangToggle />
+            <button
+              type="button"
+              onClick={() => setTheme(light ? 'mocha' : 'latte')}
+              aria-label={
+                light
+                  ? t('Usar tema escuro', 'Use dark theme')
+                  : t('Usar tema claro', 'Use light theme')
+              }
+              title={
+                light
+                  ? t('Tema escuro', 'Dark theme')
+                  : t('Tema claro', 'Light theme')
+              }
+              className="cursor-pointer rounded-md p-1.5 text-ctp-subtext-0 transition-colors hover:text-ctp-text"
+            >
+              {light ? <Moon size={17} /> : <Sun size={17} />}
+            </button>
+          </span>
         </div>
         <nav
           aria-label="Principal"
@@ -48,7 +62,7 @@ function SimpleLayout({ children }: { children: ReactNode }) {
               end={item.to === '/'}
               className="nav-link relative whitespace-nowrap py-2.5 text-ctp-subtext-0 transition-colors hover:text-ctp-text aria-[current=page]:text-ctp-text"
             >
-              {item.label}
+              {t(item.label, item.en)}
             </NavLink>
           ))}
         </nav>

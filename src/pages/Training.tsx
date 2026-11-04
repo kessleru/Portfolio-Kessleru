@@ -6,7 +6,13 @@ import BranchList from '@/components/training/BranchList';
 import CommitDetails from '@/components/training/CommitDetails';
 import Extensions from '@/components/training/Extensions';
 import GitTimeline from '@/components/training/GitTimeline';
-import { branches, commits } from '@/components/training/history';
+import {
+  branches,
+  branchesFor,
+  commits,
+  commitsFor,
+} from '@/components/training/history';
+import { useLang } from '@/lib/i18n';
 
 // Começa mostrando o commit mais recente da graduação.
 const latestId = [...commits]
@@ -32,8 +38,11 @@ function Training() {
   const [selected, setSelected] = useState(latestId ?? commits[0].id);
   const [replay, setReplay] = useState(0);
 
-  const index = commits.findIndex((commit) => commit.id === selected);
-  const commit = commits[index];
+  const { t, lang } = useLang();
+  const localCommits = commitsFor(lang);
+  const localBranches = branchesFor(lang);
+  const index = localCommits.findIndex((commit) => commit.id === selected);
+  const commit = localCommits[index];
 
   return (
     <section className="space-y-8">
@@ -42,26 +51,44 @@ function Training() {
           <KessSpot className="-my-2" />
           <div className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-2xl">
             <span className="text-ctp-accent max-sm:hidden">&gt;</span>
-            <h1>Formação</h1>
+            <h1>{t('Formação', 'Education')}</h1>
           </div>
         </div>
         <div className="prose-text">
-          <p>
-            Minha formação contada como um repositório: a{' '}
-            <BranchName name="main" /> é a base, e cada fase abriu uma branch.
-            Hoje seguem abertas a <BranchName name="iftm" />, a{' '}
-            <BranchName name="pet" /> e a <BranchName name="sae" />. Quando a{' '}
-            <BranchName name="iftm" /> for mergeada, é formatura.
-          </p>
-          <p>
-            Clique numa branch para destacar o caminho dela e num commit para
-            ver os detalhes.
-          </p>
+          {lang === 'en' ? (
+            <>
+              <p>
+                My education told as a repository: <BranchName name="main" /> is
+                the base, and each stage opened a branch. Today{' '}
+                <BranchName name="iftm" />, <BranchName name="pet" /> and{' '}
+                <BranchName name="sae" /> are still open. When{' '}
+                <BranchName name="iftm" /> gets merged, it's graduation.
+              </p>
+              <p>
+                Click a branch to highlight its path and a commit to see the
+                details.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                Minha formação contada como um repositório: a{' '}
+                <BranchName name="main" /> é a base, e cada fase abriu uma
+                branch. Hoje seguem abertas a <BranchName name="iftm" />, a{' '}
+                <BranchName name="pet" /> e a <BranchName name="sae" />. Quando
+                a <BranchName name="iftm" /> for mergeada, é formatura.
+              </p>
+              <p>
+                Clique numa branch para destacar o caminho dela e num commit
+                para ver os detalhes.
+              </p>
+            </>
+          )}
         </div>
       </div>
 
       <Card fileName="Branches.tsx" className="w-full">
-        <BranchList branches={branches} focus={focus} onFocus={setFocus} />
+        <BranchList branches={localBranches} focus={focus} onFocus={setFocus} />
       </Card>
 
       <Card fileName="GitGraph.tsx" className="w-full">
@@ -74,7 +101,7 @@ function Training() {
                 className="flex cursor-pointer items-center gap-1 text-ctp-subtext-0 transition-colors hover:text-ctp-accent"
               >
                 <X size={14} aria-hidden="true" />
-                limpar filtro
+                {t('limpar filtro', 'clear filter')}
               </button>
             )}
             <button
@@ -91,20 +118,20 @@ function Training() {
 
         <GitTimeline
           key={replay}
-          commits={commits}
-          branches={branches}
+          commits={localCommits}
+          branches={localBranches}
           focus={focus}
           selected={selected}
           onSelect={setSelected}
         />
         <p className="mb-3 text-[11px] text-ctp-meta sm:hidden">
-          ← arraste para ver o começo
+          {t('← arraste para ver o começo', '← drag to see the beginning')}
         </p>
 
         {commit && (
           <CommitDetails
             commit={commit}
-            branches={branches}
+            branches={localBranches}
             onPrev={
               index > 0 ? () => setSelected(commits[index - 1].id) : undefined
             }
@@ -120,11 +147,13 @@ function Training() {
       <div className="space-y-3 pt-4">
         <div className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-2xl">
           <span className="text-ctp-accent max-sm:hidden">&gt;</span>
-          <h2>Certificados</h2>
+          <h2>{t('Certificados', 'Certificates')}</h2>
         </div>
         <p className="prose-text">
-          Cada curso concluído é uma extensão instalada. Filtre por competência
-          e clique num card para ver a credencial.
+          {t(
+            'Cada curso concluído é uma extensão instalada. Filtre por competência e clique num card para ver a credencial.',
+            'Each finished course is an installed extension. Filter by skill and click a card to see the credential.'
+          )}
         </p>
       </div>
 

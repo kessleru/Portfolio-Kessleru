@@ -1,29 +1,34 @@
-import { branches } from '@/components/training/history';
+import { branchesFor } from '@/components/training/history';
+import { useLang } from '@/lib/i18n';
 import {
   certificates,
+  dateLabel,
   issuers,
+  nameLabel,
   verifyUrl,
 } from '@/components/training/certificates';
 import SectionTitle from './SectionTitle';
 
-// Do mais recente para o mais antigo: estágio, PET, graduação e ensino médio.
-const timeline = [...branches].reverse();
-
 function SimpleTraining() {
+  const { t, lang } = useLang();
+  // Do mais recente para o mais antigo: estágio, PET, graduação e ensino médio.
+  const timeline = [...branchesFor(lang)].reverse();
   return (
     <article className="space-y-16">
       <header>
         <h1 className="text-4xl font-semibold tracking-tight text-ctp-text">
-          Formação
+          {t('Formação', 'Education')}
         </h1>
         <p className="prose-text mt-4">
-          Graduação, extensão e estágio, do mais recente ao mais antigo. Na
-          versão completa, a mesma história aparece como um grafo do git.
+          {t(
+            'Graduação, extensão e estágio, do mais recente ao mais antigo. Na versão completa, a mesma história aparece como um grafo do git.',
+            'Degree, extension programs and internship, from newest to oldest. In the full version, the same story is drawn as a git graph.'
+          )}
         </p>
       </header>
 
       <section aria-labelledby="trajetoria" className="space-y-6">
-        <SectionTitle id="trajetoria">Trajetória</SectionTitle>
+        <SectionTitle id="trajetoria">{t('Trajetória', 'Path')}</SectionTitle>
         <ol className="space-y-6 border-l border-ctp-surface-1 pl-6">
           {timeline.map((branch) => (
             <li key={branch.name} className="relative">
@@ -44,7 +49,7 @@ function SimpleTraining() {
 
       <section aria-labelledby="certificados" className="space-y-8">
         <SectionTitle id="certificados">
-          {`Certificados · ${certificates.length}`}
+          {`${t('Certificados', 'Certificates')} · ${certificates.length}`}
         </SectionTitle>
         {issuers.map((issuer) => (
           <div key={issuer} className="space-y-2">
@@ -64,15 +69,15 @@ function SimpleTraining() {
                         rel="noreferrer"
                         className="text-[15px] text-ctp-subtext-1 underline decoration-ctp-surface-2 underline-offset-4 transition-colors hover:text-ctp-text hover:decoration-ctp-accent"
                       >
-                        {item.name}
+                        {nameLabel(item.name, lang)}
                       </a>
                     ) : (
                       <span className="text-[15px] text-ctp-subtext-1">
-                        {item.name}
+                        {nameLabel(item.name, lang)}
                       </span>
                     )}
                     <span className="shrink-0 font-mono text-xs text-ctp-meta tabular-nums">
-                      {item.date}
+                      {dateLabel(item.date, lang)}
                     </span>
                   </li>
                 ))}
