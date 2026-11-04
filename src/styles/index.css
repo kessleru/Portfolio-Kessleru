@@ -1333,6 +1333,8 @@ img.gravura-footer__art {
   height: 100%;
   object-fit: cover;
   display: block;
+  /* camada própria: o que aparece por cima (dica, hover do card) não faz o vídeo redesenhar */
+  transform: translateZ(0);
 }
 
 .beach__hint {
@@ -1346,14 +1348,12 @@ img.gravura-footer__art {
   padding: 0 9px;
   border-radius: var(--radius-sm, 6px);
   border: 1px solid color-mix(in srgb, var(--ctp-text) 14%, transparent);
-  background: color-mix(in srgb, var(--ctp-crust) 72%, transparent);
-  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--ctp-crust) 88%, transparent);
   font-size: 11px;
   line-height: 1;
   color: var(--ctp-text);
-  transition:
-    opacity 150ms ease-out,
-    translate 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+  transition: opacity 150ms ease-out;
 }
 
 [data-theme='latte'] .beach__hint {
@@ -1364,7 +1364,6 @@ img.gravura-footer__art {
 @media (hover: hover) and (pointer: fine) {
   .beach__art:not(:hover, :focus-visible) .beach__hint {
     opacity: 0;
-    translate: 0 4px;
   }
 }
 
