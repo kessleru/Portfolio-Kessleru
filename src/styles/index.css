@@ -1447,14 +1447,14 @@ img.gravura-footer__art {
 .flap {
   position: relative;
   display: block;
-  width: 84px;
-  height: 104px;
+  width: var(--flap-w, 84px);
+  height: var(--flap-h, 104px);
   perspective: 320px;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-weight: 200;
-  font-size: 64px;
-  line-height: 104px;
-  letter-spacing: -2px;
+  font-size: var(--flap-fs, 64px);
+  line-height: var(--flap-h, 104px);
+  letter-spacing: -0.03em;
   color: var(--flip-ink);
   font-variant-numeric: tabular-nums slashed-zero;
 }
@@ -1496,12 +1496,12 @@ img.gravura-footer__art {
 .flap__digits {
   position: absolute;
   inset-inline: 0;
-  height: 104px;
+  height: var(--flap-h, 104px);
   text-align: center;
 }
 
 .flap__half--bottom .flap__digits {
-  top: -52px;
+  top: calc(var(--flap-h, 104px) / -2);
 }
 
 .flap__fall {
@@ -1545,6 +1545,50 @@ img.gravura-footer__art {
 .flip__date {
   font-size: 13px;
   color: var(--ctp-subtext-0);
+}
+
+/* versão pequena, no rodapé da praia: placa menor e a saudação ao lado */
+.flip--sm {
+  --flap-w: 30px;
+  --flap-h: 36px;
+  --flap-fs: 22px;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-left: auto;
+}
+
+.flip--sm .flip__box {
+  padding: 4px;
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px var(--flip-edge);
+}
+
+.flip--sm .flip__window {
+  gap: 3px;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.flip--sm .flap__half--top { border-radius: 3px 3px 0 0; }
+.flip--sm .flap__half--bottom { border-radius: 0 0 3px 3px; }
+
+.flip--sm .flip__caption {
+  order: -1;
+  gap: 2px;
+  text-align: right;
+}
+
+.flip--sm .flip__greeting {
+  font-size: 12px;
+}
+
+.flip--sm .flip__date {
+  font-size: 11px;
+  color: var(--ctp-meta);
+}
+
+@media (max-width: 480px) {
+  .flip--sm .flip__date { display: none; }
 }
 
 /* controle de volume da praia: trilho fino em mono, com a parte cheia no destaque */

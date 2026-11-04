@@ -55,14 +55,14 @@ const DATE = new Intl.DateTimeFormat('pt-BR', {
 });
 
 /** Relógio de flip na hora de quem visita. Ele decide o período do dia do Kess e da praia. */
-function FlipClock() {
+function FlipClock({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
   const now = useNow();
   const hh = now ? String(now.getHours()).padStart(2, '0') : '--';
   const mm = now ? String(now.getMinutes()).padStart(2, '0') : '--';
   const period = now ? periodOf(now) : null;
 
   return (
-    <div className="flip">
+    <div className={size === 'sm' ? 'flip flip--sm' : 'flip'}>
       <div
         className="flip__box"
         role="img"

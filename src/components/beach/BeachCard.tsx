@@ -1,3 +1,4 @@
+import FlipClock from '@/components/ui/FlipClock';
 import { useEffect, useRef, useState } from 'react';
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import Card from '@/components/ui/Cards/Card';
@@ -342,6 +343,7 @@ function BeachCard() {
               {Math.round(shown * 100)}
             </span>
           </label>
+          <FlipClock size="sm" />
         </div>
       </div>
     </Card>
